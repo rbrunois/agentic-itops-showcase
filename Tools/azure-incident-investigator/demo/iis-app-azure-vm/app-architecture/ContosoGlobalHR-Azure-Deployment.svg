@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1390" viewBox="0 0 1600 1390" role="img" aria-labelledby="title desc">
+  <title id="title">Contoso Global HR - Azure deployment architecture</title>
+  <desc id="desc">Documented deployment in Canada Central. A blue shared hub with Azure Bastion peers with red production and green non-production virtual networks. Each environment has a workstation, IIS web server, and SQL Server. Azure Monitor Agent on all three VMs in each environment sends telemetry to the same teal Log Analytics workspace. A shared DCR defines collection and the workspace destination; the SRE Agent queries this workspace. Addresses and workspace placement reflect the older runbook deployment, not a live Azure inventory or the newer repository configuration.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 9 5 1 9" fill="none" stroke="#2563a0" stroke-width="1.5"/>
+    </marker>
+    <marker id="green-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M1 1 9 5 1 9" fill="none" stroke="#238269" stroke-width="1.5"/>
+    </marker>
+    <style>
+      text { font-family: "DejaVu Sans", sans-serif; fill: #233342; letter-spacing: 0; }
+      .heading { font-size: 32px; font-weight: 700; }
+      .section { font-size: 20px; font-weight: 700; }
+      .name { font-size: 15px; font-weight: 700; }
+      .body { font-size: 14px; }
+      .detail { font-size: 12px; fill: #526474; }
+      .label { font-size: 12px; font-weight: 700; fill: #2563a0; }
+      .muted { fill: #526474; }
+      .boundary { fill: #fff; stroke: #c4d0d9; stroke-width: 1.5; }
+      .rule { stroke: #dce4ea; stroke-width: 1; }
+      .traffic { fill: none; stroke: #2563a0; stroke-width: 2; marker-end: url(#arrow); }
+      .peering { fill: none; stroke: #2563a0; stroke-width: 2; marker-start: url(#arrow); marker-end: url(#arrow); }
+      .telemetry { fill: none; stroke: #238269; stroke-width: 3; stroke-dasharray: 6 5; marker-end: url(#green-arrow); }
+      .policy { fill: none; stroke: #ac6500; stroke-width: 2; stroke-dasharray: 3 5; }
+      .inverse { fill: #fff; }
+      .shared { fill: #e0edfa; stroke: #4385bd; }
+      .production { fill: #ffedf0; stroke: #c44460; }
+      .nonproduction { fill: #def3e9; stroke: #21845d; }
+      .production-vm { fill: #f4bfca; stroke: #cb5b74; }
+      .nonproduction-vm { fill: #a8ddc4; stroke: #32976b; }
+      .telemetry-label { font-size: 14px; font-weight: 700; fill: #176747; }
+    </style>
+  </defs>
+  <rect width="1600" height="1390" fill="#edf2f7"/>
+  <text x="48" y="59" class="heading">Contoso Global HR</text>
+  <text x="48" y="88" class="body muted">Azure deployment architecture / Canada Central</text>
+  <text x="1552" y="57" text-anchor="end" class="detail">3 LAB RESOURCE GROUPS</text>
+  <text x="1552" y="81" text-anchor="end" class="detail">6 WINDOWS VMs / 2 ENVIRONMENTS</text>
+  <line x1="48" y1="110" x2="1552" y2="110" class="rule"/>
+
+  <rect x="360" y="140" width="1192" height="290" rx="8" class="boundary shared"/>
+  <path d="M368 140 H1544 Q1552 140 1552 148 V196 H360 V148 Q360 140 368 140" fill="#1469ac"/>
+  <text x="392" y="178" class="section inverse">Shared services</text>
+  <text x="1520" y="178" text-anchor="end" class="detail inverse">SHARED-SREAgent-IISappAzureVM-01</text>
+  <line x1="392" y1="196" x2="1520" y2="196" class="rule"/>
+  <rect x="392" y="220" width="420" height="178" rx="6" fill="#afd6f5" stroke="#4385bd"/>
+  <text x="416" y="249" class="name">Hub / vnet-shared-01</text>
+  <text x="416" y="272" class="detail">10.100.0.0/16</text>
+  <text x="416" y="310" class="section">Azure Bastion</text>
+  <text x="416" y="334" class="body">Standard / bas-sreagent-iisapp-01</text>
+  <text x="416" y="358" class="detail">AzureBastionSubnet / static public IP</text>
+  <text x="416" y="381" class="detail">Private RDP to all six VMs over peering</text>
+  <text x="850" y="247" class="name">Private DNS zones</text>
+  <text x="850" y="279" class="body">contoso.com</text>
+  <text x="850" y="300" class="detail">Linked to hub + PRD VNet</text>
+  <text x="850" y="331" class="body">nprd.contoso.com</text>
+  <text x="850" y="352" class="detail">Linked to hub + NPRD VNet</text>
+  <text x="850" y="385" class="detail">A records: app1 / sql1 / wks1</text>
+  <line x1="1184" y1="224" x2="1184" y2="398" class="rule"/>
+  <text x="1216" y="247" class="name">Managed identity</text>
+  <text x="1216" y="272" class="detail">id-sreagent-iisapp-shared</text>
+  <text x="1216" y="293" class="detail">Assigned to all six VMs</text>
+  <text x="1216" y="331" class="name">Key Vault</text>
+  <text x="1216" y="356" class="detail">Deployment credential storage</text>
+  <text x="1216" y="385" class="detail">DCR shown in monitoring flow below</text>
+  <rect x="48" y="261" width="220" height="108" rx="6" fill="#f9d77e" stroke="#b58724"/>
+  <text x="72" y="297" class="name">Operator</text>
+  <text x="72" y="323" class="body">Azure portal browser</text>
+  <text x="72" y="347" class="detail">Bastion session</text>
+  <path d="M268 315 H392" class="traffic"/>
+  <text x="330" y="299" text-anchor="middle" class="label">HTTPS</text>
+  <text x="330" y="340" text-anchor="middle" class="detail">443</text>
+  <path d="M560 398 V474 H412 V520" class="peering"/>
+  <path d="M644 398 V474 H1188 V520" class="peering"/>
+  <text x="800" y="459" class="label">Hub-to-spoke VNet peering / RDP 3389</text>
+
+  <rect x="48" y="520" width="728" height="360" rx="8" class="boundary production"/>
+  <path d="M56 520 H768 Q776 520 776 528 V581 H48 V528 Q48 520 56 520" fill="#b93250"/>
+  <text x="72" y="564" class="section inverse">Production</text>
+  <text x="752" y="563" text-anchor="end" class="detail inverse">PRD-SREAgent-IISappAzureVM-01</text>
+  <line x1="72" y1="581" x2="752" y2="581" class="rule"/>
+  <text x="72" y="608" class="body">vnet-PRD-01 / 10.10.0.0/16</text>
+  <text x="752" y="608" text-anchor="end" class="detail">Private DNS: contoso.com</text>
+  <rect x="72" y="630" width="180" height="160" rx="5" class="production-vm"/>
+  <text x="88" y="653" class="detail">snet-wks</text>
+  <text x="88" y="680" class="name">PRD-SRVWKS01</text>
+  <text x="88" y="705" class="body">Edge workstation</text>
+  <text x="88" y="738" class="body">10.10.3.4</text>
+  <text x="88" y="765" class="detail">wks1.contoso.com</text>
+  <rect x="324" y="630" width="180" height="160" rx="5" class="production-vm"/>
+  <text x="340" y="653" class="detail">snet-web</text>
+  <text x="340" y="680" class="name">PRD-SRVIIS01</text>
+  <text x="340" y="705" class="body">IIS / WebForms</text>
+  <text x="340" y="738" class="body">10.10.1.4</text>
+  <text x="340" y="765" class="detail">app1.contoso.com</text>
+  <rect x="576" y="630" width="180" height="160" rx="5" class="production-vm"/>
+  <text x="592" y="653" class="detail">snet-db</text>
+  <text x="592" y="680" class="name">PRD-SRVSQL01</text>
+  <text x="592" y="705" class="body">SQL Server 2022</text>
+  <text x="592" y="738" class="body">10.10.2.4</text>
+  <text x="592" y="765" class="detail">sql1.contoso.com</text>
+  <path d="M252 710 H324" class="traffic"/>
+  <text x="288" y="695" text-anchor="middle" class="label">HTTP</text>
+  <text x="288" y="733" text-anchor="middle" class="detail">80</text>
+  <path d="M504 710 H576" class="traffic"/>
+  <text x="540" y="695" text-anchor="middle" class="label">SQL</text>
+  <text x="540" y="733" text-anchor="middle" class="detail">TCP 1433</text>
+  <text x="72" y="824" class="detail">NSG: nsg-PRD-01 / all three subnets / Internet inbound denied</text>
+  <rect x="72" y="838" width="680" height="30" rx="4" fill="#b93250"/>
+  <text x="412" y="858" text-anchor="middle" class="body inverse">Azure Monitor Agent / all 3 PRD VMs</text>
+
+  <rect x="824" y="520" width="728" height="360" rx="8" class="boundary nonproduction"/>
+  <path d="M832 520 H1544 Q1552 520 1552 528 V581 H824 V528 Q824 520 832 520" fill="#13754f"/>
+  <text x="848" y="564" class="section inverse">Non-production</text>
+  <text x="1528" y="563" text-anchor="end" class="detail inverse">NPRD-SREAgent-IISappAzureVM-01</text>
+  <line x1="848" y1="581" x2="1528" y2="581" class="rule"/>
+  <text x="848" y="608" class="body">vnet-NPRD-01 / 10.20.0.0/16</text>
+  <text x="1528" y="608" text-anchor="end" class="detail">Private DNS: nprd.contoso.com</text>
+  <rect x="848" y="630" width="180" height="160" rx="5" class="nonproduction-vm"/>
+  <text x="864" y="653" class="detail">snet-wks</text>
+  <text x="864" y="680" class="name">NPRD-SRVWKS01</text>
+  <text x="864" y="705" class="body">Edge workstation</text>
+  <text x="864" y="738" class="body">10.20.3.4</text>
+  <text x="864" y="765" class="detail">wks1.nprd.contoso.com</text>
+  <rect x="1100" y="630" width="180" height="160" rx="5" class="nonproduction-vm"/>
+  <text x="1116" y="653" class="detail">snet-web</text>
+  <text x="1116" y="680" class="name">NPRD-SRVIIS01</text>
+  <text x="1116" y="705" class="body">IIS / WebForms</text>
+  <text x="1116" y="738" class="body">10.20.1.4</text>
+  <text x="1116" y="765" class="detail">app1.nprd.contoso.com</text>
+  <rect x="1352" y="630" width="180" height="160" rx="5" class="nonproduction-vm"/>
+  <text x="1368" y="653" class="detail">snet-db</text>
+  <text x="1368" y="680" class="name">NPRD-SRVSQL01</text>
+  <text x="1368" y="705" class="body">SQL Server 2022</text>
+  <text x="1368" y="738" class="body">10.20.2.4</text>
+  <text x="1368" y="765" class="detail">sql1.nprd.contoso.com</text>
+  <path d="M1028 710 H1100" class="traffic"/>
+  <text x="1064" y="695" text-anchor="middle" class="label">HTTP</text>
+  <text x="1064" y="733" text-anchor="middle" class="detail">80</text>
+  <path d="M1280 710 H1352" class="traffic"/>
+  <text x="1316" y="695" text-anchor="middle" class="label">SQL</text>
+  <text x="1316" y="733" text-anchor="middle" class="detail">TCP 1433</text>
+  <text x="848" y="824" class="detail">NSG: nsg-NPRD-01 / all three subnets / Internet inbound denied</text>
+  <rect x="848" y="838" width="680" height="30" rx="4" fill="#13754f"/>
+  <text x="1188" y="858" text-anchor="middle" class="body inverse">Azure Monitor Agent / all 3 NPRD VMs</text>
+
+  <path id="prd-to-law" d="M412 868 V950 H740 V1010" class="telemetry"/>
+  <path id="nprd-to-law" d="M1188 868 V950 H860 V1010" class="telemetry"/>
+  <text x="390" y="912" text-anchor="end" class="telemetry-label">PRD telemetry</text>
+  <text x="1210" y="912" class="telemetry-label">NPRD telemetry</text>
+  <text x="800" y="931" text-anchor="middle" class="body">Both environments send to the same workspace</text>
+  <text x="48" y="984" class="section">Collection policy</text>
+  <text x="1130" y="984" class="section">Investigation</text>
+
+  <rect x="48" y="1010" width="430" height="174" rx="8" fill="#ffe3a2" stroke="#b58724" stroke-width="1.5"/>
+  <text x="72" y="1047" class="name">Data Collection Rule / SHARED RG</text>
+  <text x="72" y="1073" class="body">dcr-sreagent-iisapp-vms</text>
+  <text x="72" y="1106" class="body">Associated with all six VMs</text>
+  <text x="72" y="1132" class="detail">Selects Windows events and performance counters</text>
+  <text x="72" y="1158" class="detail">Defines the Log Analytics destination</text>
+  <path d="M478 1080 H610" class="policy"/>
+  <text x="544" y="1063" text-anchor="middle" class="detail">Destination</text>
+
+  <rect id="log-analytics" x="610" y="1010" width="380" height="174" rx="8" fill="#087e8b" stroke="#05606a" stroke-width="2"/>
+  <text x="634" y="1047" class="section inverse">Log Analytics workspace</text>
+  <text x="634" y="1073" class="body inverse">Existing or lab-created workspace</text>
+  <text x="634" y="1106" class="body inverse">Operator-selected resource group</text>
+  <text x="634" y="1132" class="body inverse">Event + Perf + Heartbeat</text>
+  <text x="634" y="1158" class="detail inverse">Central destination for PRD and NPRD</text>
+  <path d="M990 1080 H1130" class="traffic"/>
+  <text x="1060" y="1063" text-anchor="middle" class="detail">Query results</text>
+
+  <rect x="1130" y="1010" width="422" height="174" rx="8" fill="#c0dcf6" stroke="#4385bd" stroke-width="1.5"/>
+  <text x="1154" y="1047" class="section">Microsoft SRE Agent</text>
+  <text x="1154" y="1073" class="body">Operator-selected resource group</text>
+  <text x="1154" y="1106" class="body">Queries the Log Analytics workspace</text>
+  <text x="1154" y="1132" class="detail">Correlates VM, app, SQL, and operator events</text>
+  <text x="1154" y="1158" class="detail">Investigation and root-cause analysis</text>
+
+  <text x="48" y="1215" class="detail">Telemetry: AMA sends directly to Log Analytics; the DCR is configuration, not a network hop. Heartbeat is emitted by AMA.</text>
+  <line x1="48" y1="1238" x2="1552" y2="1238" class="rule"/>
+  <path d="M48 1267 H92" class="traffic"/>
+  <text x="104" y="1272" class="detail">Traffic / query results</text>
+  <path d="M320 1267 H364" class="peering"/>
+  <text x="376" y="1272" class="detail">Bidirectional peering</text>
+  <path d="M564 1267 H608" class="telemetry"/>
+  <text x="620" y="1272" class="detail">Telemetry ingestion</text>
+  <path d="M804 1267 H848" class="policy"/>
+  <text x="860" y="1272" class="detail">DCR destination association</text>
+  <text x="48" y="1310" class="body muted">No direct PRD-to-NPRD peering. Each environment has its own ContosoHR database.</text>
+  <text x="48" y="1343" class="detail">Illustrative example deployment; not a live Azure inventory. VNet ranges and workspace placement are examples.</text>
+  <text x="48" y="1366" class="detail">Current config differs: 10.50.0.0/26 hub, 10.50.1.0/26 PRD, 10.50.2.0/26 NPRD; a new Log Analytics workspace is created in SHARED.</text>
+</svg>

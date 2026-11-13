@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /Tools/azure-sre-incident-response/app
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: pip
+    directories:
+      - /Tools/microsoft-fabric-monitoring
+      - /Tools/microsoft-fabric-monitoring/services/fabric-admin-mcp
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directories:
+      - /Tools/azure-sre-incident-response/app
+      - /Tools/microsoft-fabric-monitoring/services/fabric-admin-mcp
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5

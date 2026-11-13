@@ -1,0 +1,10 @@
+# Default owner for everything not matched below.
+*                                         @rbrunois
+
+/Tools/azure-incident-investigator/       @pcayerMS @zahirm @rbrunois
+/Tools/azure-sre-incident-response/       @jnephtali-msft @rbrunois
+/Tools/azure-sre-network-troubleshooting/ @rbrunois
+/Tools/microsoft-fabric-monitoring/       @franmer2 @rbrunois
+/.github/workflows/validate-sre-incident-response.yml         @jnephtali-msft @rbrunois
+/.github/workflows/validate-sre-network-troubleshooting.yml   @rbrunois
+/.github/workflows/validate-microsoft-fabric-monitoring.yml   @franmer2 @rbrunois

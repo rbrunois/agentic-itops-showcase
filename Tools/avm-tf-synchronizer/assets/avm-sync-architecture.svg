@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">AVM TF Synchronizer – technical architecture</title>
+  <desc id="d">A scheduled Azure SRE Agent task runs every 6 hours. The agent reads the security controls and the module, checks the latest AVM release, opens at most one pull request that syncs AVM and enforces the controls, CI validates it, a human reviewer squash-merges it, release-please tags the release and the agent updates its Live Report.</desc>
+  <defs>
+    <marker id="a-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#9e9e9e"/></marker>
+    <marker id="a-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ffa726"/></marker>
+    <marker id="a-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ab47bc"/></marker>
+    <marker id="a-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#29b6f6"/></marker>
+    <marker id="a-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#66bb6a"/></marker>
+    <marker id="a-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#26c6da"/></marker>
+    <marker id="a-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ef5350"/></marker>
+    <style>
+      .bg { fill: #1e1f26; }
+      .group { fill: #2a2c35; stroke: #6b6f7a; stroke-width: 1.2; }
+      .subgroup { fill: #32343e; stroke: #8a8e99; stroke-width: 1.2; }
+      .group-title { fill: #e6e6e6; font-size: 15px; font-weight: 600; }
+      .node { fill: #14151a; stroke: #d0d0d0; stroke-width: 1.4; }
+      .node-opt { fill: #14151a; stroke: #d0d0d0; stroke-width: 1.4; stroke-dasharray: 6 4; }
+      .node-title { fill: #ffffff; font-size: 15px; font-weight: 600; }
+      .node-sub { fill: #b8bcc6; font-size: 13px; }
+      .edge { fill: none; stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+      .read { stroke-dasharray: 7 6; }
+      .thick { stroke-width: 4; }
+      .lbl-box { fill: #3c3f4a; stroke: none; }
+      .lbl { fill: #f0f0f0; font-size: 13px; }
+      .lbl-b { fill: #ffffff; font-size: 13px; font-weight: 600; }
+      .legend { fill: #c8ccd4; font-size: 13px; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1400" height="760" rx="8"/>
+
+  <!-- ===== Azure ===== -->
+  <rect class="group" x="20" y="40" width="420" height="630" rx="6"/>
+  <text class="group-title" x="230" y="64" text-anchor="middle">Azure</text>
+
+  <rect class="subgroup" x="40" y="84" width="380" height="460" rx="6"/>
+  <text class="group-title" x="230" y="108" text-anchor="middle">Azure SRE Agent</text>
+
+  <rect class="node" x="60" y="128" width="340" height="66" rx="4"/>
+  <text class="node-title" x="230" y="156" text-anchor="middle">Scheduled task: avm-release-watcher</text>
+  <text class="node-sub" x="230" y="178" text-anchor="middle">every 6h (0 */6 * * *), new thread per run</text>
+
+  <rect class="node" x="60" y="250" width="340" height="160" rx="4"/>
+  <text class="node-title" x="230" y="300" text-anchor="middle">Agent:</text>
+  <text class="node-title" x="230" y="322" text-anchor="middle">AVM TF Synchronizer</text>
+  <text class="node-sub" x="230" y="352" text-anchor="middle">assess: compliance + detection</text>
+  <text class="node-sub" x="230" y="374" text-anchor="middle">→ decide (at most one PR per run)</text>
+
+  <rect class="node" x="60" y="464" width="340" height="62" rx="4"/>
+  <text class="node-title" x="230" y="490" text-anchor="middle">Live Report (preview)</text>
+  <text class="node-sub" x="230" y="511" text-anchor="middle">AVM TF Synchronizer – Activity</text>
+
+  <rect class="node-opt" x="60" y="570" width="340" height="80" rx="4"/>
+  <text class="node-title" x="230" y="598" text-anchor="middle">Sandbox subscription (optional)</text>
+  <text class="node-sub" x="230" y="620" text-anchor="middle">terraform plan from CI via OIDC</text>
+  <text class="node-sub" x="230" y="639" text-anchor="middle">the agent itself has no Azure RBAC</text>
+
+  <!-- ===== Upstream ===== -->
+  <rect class="group" x="660" y="20" width="450" height="140" rx="6"/>
+  <text class="group-title" x="885" y="44" text-anchor="middle">Upstream AVM (public, Microsoft-owned)</text>
+  <rect class="node" x="680" y="58" width="410" height="84" rx="4"/>
+  <text class="node-title" x="885" y="84" text-anchor="middle">Azure Verified Module</text>
+  <text class="node-sub" x="885" y="106" text-anchor="middle">Azure/terraform-azurerm-avm-res-keyvault-vault</text>
+  <text class="node-sub" x="885" y="126" text-anchor="middle">GitHub releases + CHANGELOG</text>
+
+  <!-- ===== Your GitHub.com org ===== -->
+  <rect class="group" x="660" y="186" width="450" height="484" rx="6"/>
+  <text class="group-title" x="885" y="210" text-anchor="middle">Your GitHub.com org</text>
+
+  <rect class="node" x="680" y="226" width="410" height="66" rx="4"/>
+  <text class="node-title" x="885" y="253" text-anchor="middle">sre-agent-avm-security-controls</text>
+  <text class="node-sub" x="885" y="275" text-anchor="middle">read-only for the agent · SC-KV-001 … SC-KV-011</text>
+
+  <rect class="node" x="680" y="318" width="410" height="112" rx="4"/>
+  <text class="node-title" x="885" y="346" text-anchor="middle">sre-agent-avm-keyvault-module-custom</text>
+  <text class="node-sub" x="885" y="370" text-anchor="middle">Terraform module + internal template + .avm-sync/</text>
+  <text class="node-sub" x="885" y="390" text-anchor="middle">vanilla v1.0.0 = AVM v0.10.2, no controls yet</text>
+  <text class="node-sub" x="885" y="410" text-anchor="middle">agent writes branches + PRs only</text>
+
+  <rect class="node" x="680" y="490" width="230" height="124" rx="4"/>
+  <text class="node-title" x="795" y="516" text-anchor="middle">GitHub Actions:</text>
+  <text class="node-title" x="795" y="536" text-anchor="middle">PR validation</text>
+  <text class="node-sub" x="795" y="560" text-anchor="middle">fmt autofix (agent branches)</text>
+  <text class="node-sub" x="795" y="579" text-anchor="middle">fmt / validate / test · tflint</text>
+  <text class="node-sub" x="795" y="598" text-anchor="middle">sandbox plan (optional)</text>
+
+  <rect class="node" x="930" y="490" width="160" height="124" rx="4"/>
+  <text class="node-title" x="1010" y="516" text-anchor="middle">GitHub Actions:</text>
+  <text class="node-title" x="1010" y="536" text-anchor="middle">release-please</text>
+  <text class="node-sub" x="1010" y="560" text-anchor="middle">release PR on main</text>
+  <text class="node-sub" x="1010" y="579" text-anchor="middle">→ tag vX.Y.Z</text>
+  <text class="node-sub" x="1010" y="598" text-anchor="middle">+ GitHub release</text>
+
+  <!-- ===== Human ===== -->
+  <rect class="node" x="1180" y="500" width="200" height="66" rx="4"/>
+  <text class="node-title" x="1280" y="527" text-anchor="middle">Human reviewer</text>
+  <text class="node-sub" x="1280" y="549" text-anchor="middle">(CODEOWNERS)</text>
+
+  <!-- ===== Edges ===== -->
+  <!-- 1. run -->
+  <path class="edge" stroke="#9e9e9e" d="M230,194 L230,246" marker-end="url(#a-grey)"/>
+  <rect class="lbl-box" x="244" y="209" width="56" height="22" rx="3"/>
+  <text class="lbl" x="272" y="225" text-anchor="middle">1. run</text>
+
+  <!-- 2. read controls (purple) -->
+  <path class="edge read" stroke="#ab47bc" d="M400,300 L500,300 L500,260 L676,260" marker-end="url(#a-purple)"/>
+  <rect class="lbl-box" x="516" y="232" width="134" height="22" rx="3"/>
+  <text class="lbl" x="583" y="248" text-anchor="middle">2. read controls</text>
+
+  <!-- 2. read module (blue) -->
+  <path class="edge read" stroke="#29b6f6" d="M400,346 L676,346" marker-end="url(#a-blue)"/>
+  <rect class="lbl-box" x="494" y="318" width="162" height="22" rx="3"/>
+  <text class="lbl" x="575" y="334" text-anchor="middle">2. read module (main)</text>
+
+  <!-- 3. AVM (orange) -->
+  <path class="edge read" stroke="#ffa726" d="M400,272 L460,272 L460,100 L676,100" marker-end="url(#a-orange)"/>
+  <rect class="lbl-box" x="474" y="54" width="180" height="40" rx="3"/>
+  <text class="lbl" x="564" y="70" text-anchor="middle">3. check latest release</text>
+  <text class="lbl" x="564" y="87" text-anchor="middle">+ diff from..to</text>
+
+  <!-- 4. one PR (green) -->
+  <path class="edge thick" stroke="#66bb6a" d="M400,392 L674,392" marker-end="url(#a-green)"/>
+  <rect class="lbl-box" x="446" y="402" width="218" height="58" rx="3"/>
+  <text class="lbl-b" x="555" y="419" text-anchor="middle">4. ONE PR: sync AVM</text>
+  <text class="lbl-b" x="555" y="436" text-anchor="middle">+ enforce controls</text>
+  <text class="lbl" x="555" y="453" text-anchor="middle" style="font-size:12px">(remediation-only if AVM is current)</text>
+
+  <!-- 8. update live report -->
+  <path class="edge" stroke="#9e9e9e" d="M230,410 L230,460" marker-end="url(#a-grey)"/>
+  <rect class="lbl-box" x="244" y="424" width="126" height="22" rx="3"/>
+  <text class="lbl" x="307" y="440" text-anchor="middle">8. update report</text>
+
+  <!-- 5. CI on PR -->
+  <path class="edge" stroke="#26c6da" d="M760,430 L760,486" marker-end="url(#a-teal)"/>
+  <rect class="lbl-box" x="772" y="447" width="64" height="22" rx="3"/>
+  <text class="lbl" x="804" y="463" text-anchor="middle">5. CI</text>
+
+  <!-- sandbox plan -->
+  <path class="edge" stroke="#26c6da" d="M680,600 L404,600" marker-end="url(#a-teal)"/>
+  <rect class="lbl-box" x="474" y="570" width="160" height="22" rx="3"/>
+  <text class="lbl" x="554" y="586" text-anchor="middle">sandbox plan (OIDC)</text>
+
+  <!-- status checks to human -->
+  <path class="edge" stroke="#26c6da" d="M795,614 L795,646 L1310,646 L1310,570" marker-end="url(#a-teal)"/>
+  <rect class="lbl-box" x="1140" y="654" width="112" height="22" rx="3"/>
+  <text class="lbl" x="1196" y="670" text-anchor="middle">status checks</text>
+
+  <!-- 6. review & squash merge -->
+  <path class="edge thick" stroke="#ef5350" d="M1250,500 L1250,374 L1096,374" marker-end="url(#a-red)"/>
+  <rect class="lbl-box" x="1266" y="416" width="118" height="40" rx="3"/>
+  <text class="lbl" x="1325" y="432" text-anchor="middle">6. review &amp;</text>
+  <text class="lbl" x="1325" y="449" text-anchor="middle">squash merge</text>
+
+  <!-- 7. release-please tag -->
+  <path class="edge" stroke="#26c6da" d="M1050,490 L1050,434" marker-end="url(#a-teal)"/>
+  <rect class="lbl-box" x="928" y="447" width="110" height="22" rx="3"/>
+  <text class="lbl" x="983" y="463" text-anchor="middle">7. tag vX.Y.Z</text>
+
+  <!-- ===== Legend ===== -->
+  <g transform="translate(20,722)">
+    <line x1="0" y1="0" x2="36" y2="0" stroke="#d0d0d0" stroke-width="2.2" stroke-dasharray="7 6"/>
+    <text class="legend" x="44" y="5">agent reads</text>
+    <line x1="150" y1="0" x2="186" y2="0" stroke="#66bb6a" stroke-width="4"/>
+    <text class="legend" x="194" y="5">agent writes (PR)</text>
+    <line x1="340" y1="0" x2="376" y2="0" stroke="#26c6da" stroke-width="2.2"/>
+    <text class="legend" x="384" y="5">CI / automation</text>
+    <line x1="510" y1="0" x2="546" y2="0" stroke="#ef5350" stroke-width="4"/>
+    <text class="legend" x="554" y="5">human merge</text>
+    <text class="legend" x="680" y="5">Read colours: purple = security controls · blue = module repo · orange = upstream AVM</text>
+  </g>
+</svg>

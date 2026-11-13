@@ -1,0 +1,42 @@
+name: Validate Azure SRE Network Troubleshooting
+
+on:
+  push:
+    paths:
+      - "Tools/azure-sre-network-troubleshooting/**"
+      - ".github/workflows/validate-sre-network-troubleshooting.yml"
+  pull_request:
+    paths:
+      - "Tools/azure-sre-network-troubleshooting/**"
+      - ".github/workflows/validate-sre-network-troubleshooting.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    name: Offline syntax, infrastructure, safety contracts, and operator mocks
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: Tools/azure-sre-network-troubleshooting
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Prepare local Bicep compiler without Azure authentication
+        run: |
+          az bicep install --version v0.47.16
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          az bicep version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Validate scripts, guest code, Bicep, links, and publication contracts
+        run: |
+          & .\scripts\test-local.ps1
+
+      - name: Test operator execution paths with Azure mocks only
+        run: |
+          & .\tests\operator-tests.ps1

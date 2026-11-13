@@ -1,0 +1,254 @@
+name: Validate repository
+
+on:
+  push:
+    paths:
+      - "Tools/**"
+      - ".github/**"
+      - "*.md"
+  pull_request:
+    paths:
+      - "Tools/**"
+      - ".github/**"
+      - "*.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate manifests and assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate manifests, data files, and links
+        shell: bash
+        run: |
+          set -uo pipefail
+          shopt -s nullglob
+          status=0
+
+          required_sections=(
+            "## Purpose"
+            "## When to use"
+            "## Prerequisites"
+            "## Procedure"
+            "## Safety and approvals"
+            "## Expected output"
+            "## Sample output"
+            "## Accepted exceptions"
+            "## References"
+          )
+          skill_names=()
+          skill_name_manifests=()
+          tools_root="Tools"
+
+          manifests=()
+          if [[ -f "$tools_root/SKILL.md" ]]; then
+            manifests+=("$tools_root/SKILL.md")
+          fi
+          nested_manifests=("$tools_root"/*/SKILL.md)
+          manifests+=("${nested_manifests[@]}")
+
+          mapfile -d '' -t discovered_manifests < <(
+            find "$tools_root" -type f -name SKILL.md -print0
+          )
+          if ((${#manifests[@]} == 0)); then
+            echo "::notice::No SKILL.md manifests found; validating package assets and links."
+          fi
+          if ((${#discovered_manifests[@]} != ${#manifests[@]})); then
+            echo "::error::SKILL.md files must be at Tools/SKILL.md or Tools/<name>/SKILL.md."
+            status=1
+          fi
+
+          for manifest in "${manifests[@]}"; do
+            echo "::group::Validating $manifest"
+            if ! skill_name="$(ruby - "$manifest" <<'RUBY'
+          require "psych"
+
+          path = ARGV.fetch(0)
+          content = File.read(path, encoding: "UTF-8")
+          match = content.match(/\A---[ \t]*\r?\n(.*?)\r?\n---[ \t]*\r?\n/m)
+          abort "missing or unterminated YAML front matter" unless match
+
+          data = Psych.safe_load(match[1], permitted_classes: [], aliases: false)
+          abort "front matter must be a YAML mapping" unless data.is_a?(Hash)
+
+          %w[name description tools].each do |field|
+            abort "missing front matter field: #{field}" unless data.key?(field)
+          end
+          abort "name must be a non-empty string" unless data["name"].is_a?(String) && !data["name"].strip.empty?
+          unless data["description"].is_a?(String) && !data["description"].strip.empty?
+            abort "description must be a non-empty string"
+          end
+          unless data["tools"].is_a?(Array) && !data["tools"].empty? &&
+                 data["tools"].all? { |tool| tool.is_a?(String) && !tool.strip.empty? }
+            abort "tools must be a non-empty list of strings"
+          end
+          puts data["name"].strip
+          RUBY
+          )"
+            then
+              echo "::error file=$manifest::Invalid front matter"
+              status=1
+            else
+              for index in "${!skill_names[@]}"; do
+                if [[ "${skill_names[$index]}" == "$skill_name" ]]; then
+                  echo "::error file=$manifest::Duplicate skill name '$skill_name' also used by ${skill_name_manifests[$index]}"
+                  status=1
+                fi
+              done
+              skill_names+=("$skill_name")
+              skill_name_manifests+=("$manifest")
+            fi
+
+            for section in "${required_sections[@]}"; do
+              if ! grep -Fqx "$section" "$manifest"; then
+                echo "::error file=$manifest::Missing required section: $section"
+                status=1
+              fi
+            done
+            echo "::endgroup::"
+          done
+
+          while IFS= read -r -d '' yaml_file; do
+            if ! ruby -rpsych -e 'Psych.parse_file(ARGV.fetch(0))' "$yaml_file"; then
+              echo "::error file=$yaml_file::Invalid YAML"
+              status=1
+            fi
+          done < <(
+            find "$tools_root" .github -type f \( -name "*.yml" -o -name "*.yaml" \) -print0
+          )
+
+          while IFS= read -r -d '' json_file; do
+            if ! python3 -m json.tool "$json_file" >/dev/null; then
+              echo "::error file=$json_file::Invalid JSON"
+              status=1
+            fi
+          done < <(find "$tools_root" -type f -name "*.json" -print0)
+
+          nested_git="$(find "$tools_root" -mindepth 2 -name .git -print -quit)"
+          if [[ -n "$nested_git" ]]; then
+            echo "::error file=$nested_git::Nested Git metadata is not allowed under Tools/"
+            status=1
+          fi
+
+          while IFS= read -r -d '' python_file; do
+            if ! python3 -m py_compile "$python_file"; then
+              echo "::error file=$python_file::Python syntax validation failed"
+              status=1
+            fi
+          done < <(find "$tools_root" -type f -name "*.py" -print0)
+
+          while IFS= read -r -d '' svg_file; do
+            if ! python3 - "$svg_file" <<'PY'
+          import re
+          import sys
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          path = Path(sys.argv[1])
+          root = ET.parse(path).getroot()
+          namespace = "{http://www.w3.org/2000/svg}"
+          if root.tag != f"{namespace}svg":
+              raise SystemExit("root element must be SVG")
+
+          if "icons" in path.parts:
+              raise SystemExit(0)
+
+          title = root.find(f"{namespace}title")
+          description = root.find(f"{namespace}desc")
+          labelled_by = root.get("aria-labelledby", "").split()
+          ids = {element.get("id") for element in root.iter() if element.get("id")}
+          intrinsic_accessibility = (
+              title is not None
+              and (title.text or "").strip()
+              and description is not None
+              and (description.text or "").strip()
+              and root.get("role") == "img"
+              and len(labelled_by) >= 2
+              and set(labelled_by).issubset(ids)
+          )
+          if intrinsic_accessibility:
+              raise SystemExit(0)
+
+          image_pattern = re.compile(
+              rf"(?<!\\)!\[([^\]]+)\]\((?:\./)?{re.escape(path.name)}(?:#[^)\s]*)?\)"
+          )
+          for markdown in path.parent.glob("*.md"):
+              markdown_text = markdown.read_text(encoding="utf-8")
+              markdown_text = re.sub(
+                  r"```.*?```|~~~.*?~~~", "", markdown_text, flags=re.DOTALL
+              )
+              markdown_text = re.sub(
+                  r"<!--.*?-->", "", markdown_text, flags=re.DOTALL
+              )
+              markdown_text = re.sub(r"`[^`\r\n]*`", "", markdown_text)
+              markdown_text = re.sub(r"^(?: {4}|\t).*$", "", markdown_text, flags=re.MULTILINE)
+              for alt_text in image_pattern.findall(markdown_text):
+                  if alt_text.strip():
+                      raise SystemExit(0)
+
+          raise SystemExit(
+              "standalone SVG requires intrinsic accessibility metadata "
+              "or a sibling Markdown image reference with non-empty alt text"
+          )
+          PY
+            then
+              echo "::error file=$svg_file::Invalid or inaccessible SVG usage"
+              status=1
+            fi
+          done < <(find "$tools_root" -type f -name "*.svg" -print0)
+
+          if ! python3 - <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+          from urllib.parse import unquote
+
+          root = Path.cwd()
+          failures = []
+          link_pattern = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+
+          markdown_files = list(root.glob("*.md"))
+          markdown_files.extend((root / ".github").rglob("*.md"))
+          markdown_files.extend((root / "Tools").rglob("*.md"))
+
+          for markdown in markdown_files:
+              if not markdown.exists():
+                  continue
+              text = markdown.read_text(encoding="utf-8")
+              text = re.sub(r"```.*?```|~~~.*?~~~", "", text, flags=re.DOTALL)
+              for raw_target in link_pattern.findall(text):
+                  target = raw_target.strip()
+                  if target.startswith("<") and target.endswith(">"):
+                      target = target[1:-1]
+                  target = target.split(maxsplit=1)[0]
+                  if not target or target.startswith(("#", "http://", "https://", "mailto:")):
+                      continue
+                  local_path = unquote(target.split("#", 1)[0])
+                  if not local_path:
+                      continue
+                  resolved = (markdown.parent / local_path).resolve()
+                  try:
+                      resolved.relative_to(root)
+                  except ValueError:
+                      failures.append((markdown, target, "escapes the repository"))
+                      continue
+                  if not resolved.exists():
+                      failures.append((markdown, target, "target does not exist"))
+
+          for markdown, target, reason in failures:
+              print(f"::error file={markdown.relative_to(root)}::Broken local link '{target}': {reason}")
+          sys.exit(1 if failures else 0)
+          PY
+          then
+            status=1
+          fi
+
+          exit "$status"

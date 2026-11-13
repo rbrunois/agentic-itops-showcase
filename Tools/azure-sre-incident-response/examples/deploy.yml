@@ -1,0 +1,205 @@
+# INACTIVE BLUEPRINT - this file is NOT a workflow in this repository and never runs here.
+# Copy to .github/workflows in your own repository only after operator review.
+# Configure environment "sre-demo" with required reviewers and restricted branches.
+# Set environment variables AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID.
+# Configure Azure federated OIDC trust for this repository/environment and scope
+# deployment rights to the dedicated demo resource group. No client secret is used.
+# Image publication also requires environment variable SRE_DEMO_ENABLE_IMAGE_PUBLISH=true.
+# Pre-create the GHCR package and explicitly mark it public before using publication.
+# Optional environment secret APPLICATIONINSIGHTS_CONNECTION_STRING enables telemetry.
+# Redeploying an instrumented app without that secret is refused rather than silently
+# removing its telemetry. Never commit or print the connection string.
+# The app gets public, unauthenticated ingress; dispatch requires allow_public_ingress=true.
+# Allow-listed (restricted) apps are refused; redeploy those with Bicep directly.
+name: SRE demo manual deployment (example)
+
+on:
+  workflow_dispatch:
+    inputs:
+      resource_group:
+        description: Existing dedicated demo resource group
+        required: true
+        type: string
+      environment_name:
+        description: Existing Container Apps environment in that resource group
+        required: true
+        type: string
+      app_name:
+        description: Dedicated demo Container App name
+        required: true
+        type: string
+      location:
+        description: Region of the existing Container Apps environment
+        required: true
+        type: string
+      image:
+        description: Public image reference (immutable tag or digest); publishing requires a tag
+        required: true
+        type: string
+      publish_public_image:
+        description: Explicitly opt in to publishing this sample to an already-public GHCR package
+        required: true
+        default: false
+        type: boolean
+      allow_public_ingress:
+        description: Acknowledge that the app gets public, unauthenticated ingress (required; this blueprint does not manage allow-lists)
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sre-demo-${{ inputs.resource_group }}-${{ inputs.app_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: sre-demo
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    env:
+      RESOURCE_GROUP: ${{ inputs.resource_group }}
+      ENVIRONMENT_NAME: ${{ inputs.environment_name }}
+      APP_NAME: ${{ inputs.app_name }}
+      LOCATION: ${{ inputs.location }}
+      IMAGE: ${{ inputs.image }}
+      PUBLISH_IMAGE: ${{ inputs.publish_public_image }}
+      ALLOW_PUBLIC_INGRESS: ${{ inputs.allow_public_ingress }}
+      ENABLE_PUBLISH: ${{ vars.SRE_DEMO_ENABLE_IMAGE_PUBLISH }}
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AI_CONNECTION_STRING: ${{ secrets.APPLICATIONINSIGHTS_CONNECTION_STRING }}
+      REPOSITORY_OWNER_TYPE: ${{ github.event.repository.owner.type }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate explicit configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in RESOURCE_GROUP ENVIRONMENT_NAME APP_NAME LOCATION IMAGE AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
+            [[ -n "${!name}" ]] || { echo "::error::$name is required"; exit 1; }
+          done
+          [[ "$ALLOW_PUBLIC_INGRESS" == true ]] || {
+            echo "::error::Set allow_public_ingress to acknowledge public, unauthenticated ingress, or deploy an allow-listed app with Bicep directly"; exit 1;
+          }
+          if [[ "$PUBLISH_IMAGE" == true ]]; then
+            [[ "$ENABLE_PUBLISH" == true ]] || { echo "::error::Image publication is not enabled by the operator"; exit 1; }
+            owner="${GITHUB_REPOSITORY_OWNER,,}"
+            [[ "$IMAGE" == "ghcr.io/$owner/"* && "$IMAGE" == *:* && "$IMAGE" != *@* ]] || {
+              echo "::error::Publishing requires a tagged GHCR image under this repository owner"; exit 1;
+            }
+          fi
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: Tools/azure-sre-incident-response/app/package-lock.json
+
+      - name: Install and test
+        working-directory: Tools/azure-sre-incident-response/app
+        run: npm ci && npm test
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      - name: Require a public package or anonymous public image access
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ "$PUBLISH_IMAGE" == true ]]; then
+            owner="${GITHUB_REPOSITORY_OWNER,,}"
+            package="${IMAGE#ghcr.io/$owner/}"
+            package="${package%:*}"
+            package=$(jq -rn --arg package "$package" '$package | @uri')
+            scope=users
+            [[ "$REPOSITORY_OWNER_TYPE" != Organization ]] || scope=orgs
+            gh api "/$scope/$owner/packages/container/$package" | jq -e '.visibility == "public"'
+            exit 0
+          fi
+          mkdir -p "$GITHUB_WORKSPACE/.public-image-check"
+          DOCKER_CONFIG="$GITHUB_WORKSPACE/.public-image-check" docker manifest inspect "$IMAGE" >/dev/null
+          rm -rf "$GITHUB_WORKSPACE/.public-image-check"
+
+      - name: Sign in for explicitly enabled public image publication
+        if: inputs.publish_public_image
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish public demo image (opt-in only)
+        if: inputs.publish_public_image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: Tools/azure-sre-incident-response/app
+          push: true
+          tags: ${{ inputs.image }}
+
+      - name: Sign in to Azure using environment-scoped OIDC
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2.3.1
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy the app into the existing environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          az group show --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --name "$RESOURCE_GROUP" --only-show-errors --output json \
+            | jq -e '.tags["sre-demo"] == "true"' >/dev/null || {
+              echo "::error::The target resource group must already be designated sre-demo=true"; exit 1;
+            }
+          apps=$(az containerapp list --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --resource-group "$RESOURCE_GROUP" --only-show-errors --output json)
+          existing=$(jq -c --arg name "$APP_NAME" 'map(select(.name == $name)) | first // null' <<< "$apps")
+          if [[ "$existing" != null ]]; then
+            jq -e '.tags["sre-demo"] == "true"' <<< "$existing" >/dev/null || {
+              echo "::error::Refusing to overwrite an app that is not designated sre-demo=true"; exit 1;
+            }
+            jq -e '(.properties.configuration.registries // []) | length == 0' <<< "$existing" >/dev/null || {
+              echo "::error::This public-image blueprint cannot redeploy an app with private registry configuration"; exit 1;
+            }
+            jq -e '(.properties.configuration.ingress.ipSecurityRestrictions // []) | length == 0' <<< "$existing" >/dev/null || {
+              echo "::error::This blueprint does not manage ingress allow-lists; redeploy restricted apps with allowedIngressCidrs via Bicep"; exit 1;
+            }
+            if jq -e 'any(.properties.template.containers[]?.env[]?; .name == "APPLICATIONINSIGHTS_CONNECTION_STRING")' \
+                <<< "$existing" >/dev/null && [[ -z "$AI_CONNECTION_STRING" ]]; then
+              echo "::error::Set the environment telemetry secret before redeploying this instrumented app"; exit 1
+            fi
+          fi
+          az deployment group create \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "sre-demo-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --template-file Tools/azure-sre-incident-response/infra/containerapp.bicep \
+            --parameters environmentName="$ENVIRONMENT_NAME" appName="$APP_NAME" \
+              location="$LOCATION" image="$IMAGE" \
+              revisionSuffix="run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+              applicationInsightsConnectionString="$AI_CONNECTION_STRING" \
+              allowPublicIngress=true \
+            --only-show-errors --output none
+
+      - name: Verify probes
+        shell: bash
+        run: |
+          set -euo pipefail
+          fqdn=$(az containerapp show --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --resource-group "$RESOURCE_GROUP" --name "$APP_NAME" \
+            --query properties.configuration.ingress.fqdn --output tsv)
+          [[ -n "$fqdn" ]]
+          curl --retry 10 --retry-all-errors --retry-delay 5 -fsS "https://$fqdn/healthz" \
+            | jq -e '.status == "ok" and .version == "1.2.0"'
+          curl --retry 10 --retry-all-errors --retry-delay 5 -fsS "https://$fqdn/readyz" \
+            | jq -e '.ready == true'

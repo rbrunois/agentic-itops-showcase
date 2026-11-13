@@ -1,0 +1,54 @@
+name: Validate Azure SRE Incident Response
+
+on:
+  push:
+    paths:
+      - "Tools/azure-sre-incident-response/**"
+      - ".github/workflows/validate-sre-incident-response.yml"
+  pull_request:
+    paths:
+      - "Tools/azure-sre-incident-response/**"
+      - ".github/workflows/validate-sre-incident-response.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    name: App, operator, infrastructure, and container checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: Tools/azure-sre-incident-response/app/package-lock.json
+
+      - name: Install locked app dependencies
+        working-directory: Tools/azure-sre-incident-response/app
+        run: npm ci
+
+      - name: Test app endpoints
+        working-directory: Tools/azure-sre-incident-response/app
+        run: npm test
+
+      - name: Test operator scripts without Azure
+        shell: pwsh
+        run: |
+          & ./Tools/azure-sre-incident-response/tests/scripts.Tests.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build Bicep without deployment
+        run: |
+          az bicep build \
+            --file Tools/azure-sre-incident-response/infra/containerapp.bicep \
+            --outfile "$RUNNER_TEMP/sre-containerapp.json"
+
+      - name: Build container without publishing
+        run: docker build --tag azure-sre-incident-response:ci Tools/azure-sre-incident-response/app

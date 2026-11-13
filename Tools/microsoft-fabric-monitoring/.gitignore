@@ -1,0 +1,26 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+dist/
+build/
+
+# Local environment and secrets
+.env
+.azure/
+config/client.parameters.yaml
+
+# Power BI Desktop / Fabric local artifacts
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# Local outputs
+.foundry/results/
+report-screenshots/
+*.log

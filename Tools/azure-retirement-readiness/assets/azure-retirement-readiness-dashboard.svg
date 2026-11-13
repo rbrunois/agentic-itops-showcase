@@ -1,0 +1,241 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="2091" viewBox="0 0 1440 2091" role="img" aria-labelledby="dashboard-title dashboard-desc" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif">
+<title id="dashboard-title">Illustrative Azure Retirement Readiness dashboard</title>
+<desc id="dashboard-desc">Illustrative example with synthetic data for the Contoso-Platform-Production subscription, evidence date September 25, 2026. KPI tiles: 126 ARM resources scanned; next deadline in 46 days because Azure Functions support for .NET 8 ends November 10, 2026; 4 resources to validate now (1 Bing grounding account and 3 Azure Bot Service resources); 0 legacy ARM types. Retirement queue: P0 orders-api, an Azure Functions Flex Consumption app on .NET 8 isolated, to be upgraded to .NET 10 isolated by November 10, 2026; P1 web-grounding, a Grounding with Bing Custom Search resource to validate after the Bing Search APIs retired August 11, 2025; P1 three Azure Bot Service resources (customer-support-bot, claims-assistant, field-service-bot) needing source-code assessment because Bot Framework SDK support tickets are no longer serviced as of December 31, 2025; P2 orders-insights, workspace-based Application Insights with no migration required. The direct subscription Owner is the Platform Operations Team, platform-operations@contoso.example. No exportable Service Health events or Service Health alerts were found, which is reported as a coverage gap. A four-phase migration plan runs from day 0 to day 46.</desc>
+<defs>
+  <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#003A70"/>
+    <stop offset="1" stop-color="#0063B1"/>
+  </linearGradient>
+  <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1B3A57" flood-opacity="0.10"/>
+  </filter>
+</defs>
+<rect width="1440" height="2091" fill="#F3F5F8"/>
+<rect x="64" y="36" width="1312" height="262" rx="6" fill="url(#hero)" filter="url(#shadow)"/>
+<path d="M884,36 L1376,36 L1376,106 L964,236 Z" fill="#FFFFFF" fill-opacity="0.07"/>
+<text x="108" y="84" fill="#CFE7FF" font-size="12" font-weight="600" letter-spacing="1.6">AZURE RETIREMENT READINESS / SUBSCRIPTION SNAPSHOT</text>
+<text x="108" y="144" fill="#FFFFFF" font-size="50" font-weight="700">Azure Retirement Readiness</text>
+<text x="108" y="186" fill="#FFFFFF" font-size="17">Executive view of verified service retirement exposure, runtime support deadlines,</text>
+<text x="108" y="212" fill="#FFFFFF" font-size="17">and remediation actions for one Azure subscription.</text>
+<rect x="108" y="240" width="304.83" height="30" rx="3" fill="#FFFFFF"/>
+<text x="260.42" y="260" fill="#003A70" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.8">ILLUSTRATIVE EXAMPLE — SYNTHETIC DATA</text>
+<rect x="426.83" y="240" width="273.24" height="30" rx="3" fill="none" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="563.45" y="260" fill="#FFFFFF" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.8">EVIDENCE DATE: SEPTEMBER 25, 2026</text>
+<rect x="64" y="320" width="313" height="150" rx="4" fill="#FFFFFF" stroke="#C9D4E0" stroke-width="1" filter="url(#shadow)"/>
+<rect x="64" y="320" width="313" height="5" fill="#0063B1"/>
+<text x="86" y="356" fill="#4A5B6C" font-size="13" font-weight="700" letter-spacing="0.9">ARM RESOURCES SCANNED</text>
+<text x="86" y="408" fill="#0063B1" font-size="46" font-weight="700">126</text>
+<text x="86" y="434" fill="#4A5B6C" font-size="13">Subscription inventory returned by Azure</text>
+<text x="86" y="452.85" fill="#4A5B6C" font-size="13">Resource Graph.</text>
+<rect x="397" y="320" width="313" height="150" rx="4" fill="#FFFFFF" stroke="#C9D4E0" stroke-width="1" filter="url(#shadow)"/>
+<rect x="397" y="320" width="313" height="5" fill="#B3261E"/>
+<text x="419" y="356" fill="#4A5B6C" font-size="13" font-weight="700" letter-spacing="0.9">NEXT DEADLINE</text>
+<text x="419" y="408" fill="#B3261E" font-size="46" font-weight="700">46d</text>
+<text x="419" y="434" fill="#4A5B6C" font-size="13">.NET 8 support in Azure Functions ends</text>
+<text x="419" y="452.85" fill="#4A5B6C" font-size="13">November 10, 2026 for orders-api.</text>
+<rect x="730" y="320" width="313" height="150" rx="4" fill="#FFFFFF" stroke="#C9D4E0" stroke-width="1" filter="url(#shadow)"/>
+<rect x="730" y="320" width="313" height="5" fill="#7A4D00"/>
+<text x="752" y="356" fill="#4A5B6C" font-size="13" font-weight="700" letter-spacing="0.9">VALIDATE NOW</text>
+<text x="752" y="408" fill="#7A4D00" font-size="46" font-weight="700">4</text>
+<text x="752" y="434" fill="#4A5B6C" font-size="13">1 Bing grounding account and 3 Azure Bot</text>
+<text x="752" y="452.85" fill="#4A5B6C" font-size="13">Service resources.</text>
+<rect x="1063" y="320" width="313" height="150" rx="4" fill="#FFFFFF" stroke="#C9D4E0" stroke-width="1" filter="url(#shadow)"/>
+<rect x="1063" y="320" width="313" height="5" fill="#0E6B38"/>
+<text x="1085" y="356" fill="#4A5B6C" font-size="13" font-weight="700" letter-spacing="0.9">LEGACY ARM TYPES</text>
+<text x="1085" y="408" fill="#0063B1" font-size="46" font-weight="700">0</text>
+<text x="1085" y="434" fill="#4A5B6C" font-size="13">No classic Compute, Storage, or Network</text>
+<text x="1085" y="452.85" fill="#4A5B6C" font-size="13">resource types found.</text>
+<text x="64" y="532" fill="#14212E" font-size="28" font-weight="700">Retirement Queue</text>
+<text x="323.48" y="530" fill="#4A5B6C" font-size="14">Prioritized by verified lifecycle dates and configuration evidence</text>
+<rect x="1000" y="556" width="376" height="371" fill="#E8F3FD" stroke="#A9CCEB" stroke-width="1"/>
+<rect x="1000" y="556" width="376" height="4" fill="#0063B1"/>
+<text x="1022" y="596" fill="#003A70" font-size="20" font-weight="700">Subscription Context</text>
+<text x="1022" y="632" fill="#0063B1" font-size="11.5" font-weight="600" font-family="Cascadia Mono, Consolas, Menlo, monospace" letter-spacing="0.6">SUBSCRIPTION NAME</text>
+<text x="1022" y="654" fill="#14212E" font-size="14" font-weight="700">Contoso-Platform-Production</text>
+<path d="M1022,670 L1354,670" stroke="#BCD6EE" stroke-width="1"/>
+<text x="1022" y="695" fill="#0063B1" font-size="11.5" font-weight="600" font-family="Cascadia Mono, Consolas, Menlo, monospace" letter-spacing="0.6">SUBSCRIPTION ID</text>
+<text x="1022" y="717" fill="#14212E" font-size="14" font-weight="700" font-family="Cascadia Mono, Consolas, Menlo, monospace">00000000-0000-0000-</text>
+<text x="1022" y="738" fill="#14212E" font-size="14" font-weight="700" font-family="Cascadia Mono, Consolas, Menlo, monospace">0000-000000000000</text>
+<path d="M1022,754 L1354,754" stroke="#BCD6EE" stroke-width="1"/>
+<text x="1022" y="779" fill="#0063B1" font-size="11.5" font-weight="600" font-family="Cascadia Mono, Consolas, Menlo, monospace" letter-spacing="0.6">DIRECT RBAC OWNER</text>
+<text x="1022" y="801" fill="#14212E" font-size="14" font-weight="700">Platform Operations Team</text>
+<text x="1022" y="822" fill="#14212E" font-size="14" font-weight="700">platform-operations@contoso.example</text>
+<path d="M1022,838 L1354,838" stroke="#BCD6EE" stroke-width="1"/>
+<text x="1022" y="867" fill="#4A5B6C" font-size="12.5">Owner information reflects direct subscription-scope</text>
+<text x="1022" y="886" fill="#4A5B6C" font-size="12.5">RBAC assignments only. Inherited management-group</text>
+<text x="1022" y="905" fill="#4A5B6C" font-size="12.5">assignments are outside this assessment.</text>
+<rect x="1000" y="945" width="376" height="298" fill="#FFFFFF" stroke="#C9D4E0" stroke-width="1" filter="url(#shadow)"/>
+<rect x="1000" y="945" width="376" height="4" fill="#003A70"/>
+<text x="1022" y="983" fill="#14212E" font-size="18" font-weight="700">Lifecycle timeline</text>
+<path d="M1030,1025 L1030,1209" stroke="#B9C7D6" stroke-width="2"/>
+<circle cx="1030" cy="1025" r="6" fill="#4A5B6C" stroke="#FFFFFF" stroke-width="2"/>
+<text x="1050" y="1022" fill="#14212E" font-size="13.5" font-weight="700">August 11, 2025</text>
+<text x="1050" y="1041" fill="#4A5B6C" font-size="12.5">Bing Search APIs retired</text>
+<rect x="1309.87" y="1008" width="44.13" height="20" rx="3" fill="#FFFFFF" stroke="#4A5B6C" stroke-width="1"/>
+<text x="1331.93" y="1022" fill="#4A5B6C" font-size="11" font-weight="700" text-anchor="middle">PAST</text>
+<circle cx="1030" cy="1071" r="6" fill="#4A5B6C" stroke="#FFFFFF" stroke-width="2"/>
+<text x="1050" y="1068" fill="#14212E" font-size="13.5" font-weight="700">December 31, 2025</text>
+<text x="1050" y="1087" fill="#4A5B6C" font-size="12.5">Bot Framework SDK support tickets end</text>
+<rect x="1309.87" y="1054" width="44.13" height="20" rx="3" fill="#FFFFFF" stroke="#4A5B6C" stroke-width="1"/>
+<text x="1331.93" y="1068" fill="#4A5B6C" font-size="11" font-weight="700" text-anchor="middle">PAST</text>
+<circle cx="1030" cy="1117" r="6" fill="#0063B1" stroke="#FFFFFF" stroke-width="2"/>
+<text x="1050" y="1114" fill="#14212E" font-size="13.5" font-weight="700">September 25, 2026</text>
+<text x="1050" y="1133" fill="#4A5B6C" font-size="12.5">Evidence date for this snapshot</text>
+<rect x="1306.1" y="1100" width="47.9" height="20" rx="3" fill="#FFFFFF" stroke="#0063B1" stroke-width="1"/>
+<text x="1330.05" y="1114" fill="#0063B1" font-size="11" font-weight="700" text-anchor="middle">DAY 0</text>
+<circle cx="1030" cy="1163" r="6" fill="#B3261E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="1050" y="1160" fill="#14212E" font-size="13.5" font-weight="700">November 10, 2026</text>
+<text x="1050" y="1179" fill="#4A5B6C" font-size="12.5">.NET 8 support ends in Azure Functions</text>
+<rect x="1275.97" y="1146" width="78.03" height="20" rx="3" fill="#FFFFFF" stroke="#B3261E" stroke-width="1"/>
+<text x="1314.99" y="1160" fill="#B3261E" font-size="11" font-weight="700" text-anchor="middle">IN 46 DAYS</text>
+<circle cx="1030" cy="1209" r="6" fill="#0E6B38" stroke="#FFFFFF" stroke-width="2"/>
+<text x="1050" y="1206" fill="#14212E" font-size="13.5" font-weight="700">November 14, 2028</text>
+<text x="1050" y="1225" fill="#4A5B6C" font-size="12.5">.NET 10 support ends (upgrade target)</text>
+<rect x="1294.8" y="1192" width="59.2" height="20" rx="3" fill="#FFFFFF" stroke="#0E6B38" stroke-width="1"/>
+<text x="1324.4" y="1206" fill="#0E6B38" font-size="11" font-weight="700" text-anchor="middle">TARGET</text>
+<rect x="64" y="556" width="916" height="687" fill="#FFFFFF" stroke="#C9D4E0" stroke-width="1" filter="url(#shadow)"/>
+<rect x="64" y="556" width="916" height="4" fill="#0063B1"/>
+<path d="M250,560 L250,1243" stroke="#DDE5EE" stroke-width="1"/>
+<path d="M752,560 L752,1243" stroke="#DDE5EE" stroke-width="1"/>
+<text x="82" y="587" fill="#B3261E" font-size="15" font-weight="700" font-family="Cascadia Mono, Consolas, Menlo, monospace">P0</text>
+<text x="82" y="606" fill="#0063B1" font-size="11.5" font-family="Cascadia Mono, Consolas, Menlo, monospace">action required</text>
+<text x="82" y="640" fill="#14212E" font-size="23" font-weight="700">Function</text>
+<text x="82" y="667" fill="#14212E" font-size="23" font-weight="700">runtime</text>
+<text x="270" y="590" font-size="17" fill="#14212E" font-weight="700"><tspan font-family="Cascadia Mono, Consolas, Menlo, monospace">orders-api</tspan> — Azure Functions Flex Consumption</text>
+<text x="270" y="616" fill="#4A5B6C" font-size="13.5">Linux Flex Consumption app on the .NET 8 isolated worker model. Azure</text>
+<text x="270" y="636.5" fill="#4A5B6C" font-size="13.5">Functions support for .NET 8 ends November 10, 2026, 46 days after the</text>
+<text x="270" y="657" fill="#4A5B6C" font-size="13.5">evidence date. Upgrade to .NET 10 isolated (supported until November 14,</text>
+<text x="270" y="677.5" fill="#4A5B6C" font-size="13.5">2028) and complete functional, scale, and rollback validation before the</text>
+<text x="270" y="698" fill="#4A5B6C" font-size="13.5">deadline.</text>
+<rect x="768" y="574" width="199.96" height="26" rx="3" fill="#FDECEA" stroke="#B3261E" stroke-width="1.2"/>
+<text x="867.98" y="591.5" fill="#B3261E" font-size="11.5" font-weight="700" text-anchor="middle" letter-spacing="0.4">REMEDIATE BY NOV 10, 2026</text>
+<text x="768" y="638" fill="#005A9E" font-size="13.5" font-weight="600" text-decoration="underline">Functions supported</text>
+<text x="768" y="657" fill="#005A9E" font-size="13.5" font-weight="600" text-decoration="underline">languages</text>
+<path d="M64,734.38 L980,734.38" stroke="#DDE5EE" stroke-width="1"/>
+<text x="82" y="765.38" fill="#7A4D00" font-size="15" font-weight="700" font-family="Cascadia Mono, Consolas, Menlo, monospace">P1</text>
+<text x="82" y="784.38" fill="#0063B1" font-size="11.5" font-family="Cascadia Mono, Consolas, Menlo, monospace">validation required</text>
+<text x="82" y="818.38" fill="#14212E" font-size="23" font-weight="700">Bing</text>
+<text x="82" y="845.38" fill="#14212E" font-size="23" font-weight="700">grounding</text>
+<text x="270" y="768.38" font-size="17" fill="#14212E" font-weight="700"><tspan font-family="Cascadia Mono, Consolas, Menlo, monospace">web-grounding</tspan> — Grounding with Bing Custom Search</text>
+<text x="270" y="794.38" fill="#4A5B6C" font-size="13.5">Microsoft.Bing/accounts resource on the documented successor path for</text>
+<text x="270" y="814.88" fill="#4A5B6C" font-size="13.5">the Bing Search APIs, which retired August 11, 2025. Confirm the</text>
+<text x="270" y="835.38" fill="#4A5B6C" font-size="13.5">application no longer calls retired Bing Search endpoints, then validate</text>
+<text x="270" y="855.88" fill="#4A5B6C" font-size="13.5">response contracts, quota behavior, and cost.</text>
+<rect x="768" y="752.38" width="152.71" height="26" rx="3" fill="#FFF4D6" stroke="#7A4D00" stroke-width="1.2"/>
+<text x="844.36" y="769.88" fill="#7A4D00" font-size="11.5" font-weight="700" text-anchor="middle" letter-spacing="0.4">VALIDATE WORKLOAD</text>
+<text x="768" y="816.38" fill="#005A9E" font-size="13.5" font-weight="600" text-decoration="underline">Bing Search APIs</text>
+<text x="768" y="835.38" fill="#005A9E" font-size="13.5" font-weight="600" text-decoration="underline">retirement notice</text>
+<path d="M64,892.25 L980,892.25" stroke="#DDE5EE" stroke-width="1"/>
+<text x="82" y="923.25" fill="#7A4D00" font-size="15" font-weight="700" font-family="Cascadia Mono, Consolas, Menlo, monospace">P1</text>
+<text x="82" y="942.25" fill="#0063B1" font-size="11.5" font-family="Cascadia Mono, Consolas, Menlo, monospace">code assessment</text>
+<text x="82" y="976.25" fill="#14212E" font-size="23" font-weight="700">Bot services</text>
+<text x="270" y="926.25" fill="#14212E" font-size="17" font-weight="700">3 Azure Bot Service resources</text>
+<text x="270" y="952.25" fill="#14212E" font-size="13" font-family="Cascadia Mono, Consolas, Menlo, monospace">customer-support-bot, claims-assistant, field-service-bot</text>
+<text x="270" y="976.25" fill="#4A5B6C" font-size="13.5">Channels: Web Chat, Direct Line, and Microsoft Teams. The Bot</text>
+<text x="270" y="996.75" fill="#4A5B6C" font-size="13.5">Framework SDK is archived and its support tickets are no longer serviced</text>
+<text x="270" y="1017.25" fill="#4A5B6C" font-size="13.5">as of December 31, 2025. Azure Resource Manager cannot show which</text>
+<text x="270" y="1037.75" fill="#4A5B6C" font-size="13.5">SDK each backend uses; assess source code and plan moves to the</text>
+<text x="270" y="1058.25" fill="#4A5B6C" font-size="13.5">Microsoft 365 Agents SDK where needed.</text>
+<rect x="768" y="910.25" width="157.88" height="26" rx="3" fill="#FFF4D6" stroke="#7A4D00" stroke-width="1.2"/>
+<text x="846.94" y="927.75" fill="#7A4D00" font-size="11.5" font-weight="700" text-anchor="middle" letter-spacing="0.4">ASSESS SOURCE CODE</text>
+<text x="768" y="974.25" fill="#005A9E" font-size="13.5" font-weight="600" text-decoration="underline">Bot Framework SDK</text>
+<text x="768" y="993.25" fill="#005A9E" font-size="13.5" font-weight="600" text-decoration="underline">status</text>
+<path d="M64,1094.62 L980,1094.62" stroke="#DDE5EE" stroke-width="1"/>
+<text x="82" y="1125.62" fill="#0E6B38" font-size="15" font-weight="700" font-family="Cascadia Mono, Consolas, Menlo, monospace">P2</text>
+<text x="82" y="1144.62" fill="#0063B1" font-size="11.5" font-family="Cascadia Mono, Consolas, Menlo, monospace">no migration indicated</text>
+<text x="82" y="1178.62" fill="#14212E" font-size="23" font-weight="700">Observability</text>
+<text x="270" y="1128.62" font-size="17" fill="#14212E" font-weight="700"><tspan font-family="Cascadia Mono, Consolas, Menlo, monospace">orders-insights</tspan> — Application Insights</text>
+<text x="270" y="1154.62" fill="#4A5B6C" font-size="13.5">Workspace-based Application Insights (IngestionMode: LogAnalytics)</text>
+<text x="270" y="1175.12" fill="#4A5B6C" font-size="13.5">linked to a Log Analytics workspace. No classic Application Insights</text>
+<text x="270" y="1195.62" fill="#4A5B6C" font-size="13.5">resource was found, so no classic-resource migration is indicated.</text>
+<rect x="768" y="1112.62" width="150" height="26" rx="3" fill="#E7F6EC" stroke="#0E6B38" stroke-width="1.2"/>
+<text x="843" y="1130.12" fill="#0E6B38" font-size="11.5" font-weight="700" text-anchor="middle" letter-spacing="0.4">NO ACTION REQUIRED</text>
+<text x="768" y="1176.62" fill="#005A9E" font-size="13.5" font-weight="600" text-decoration="underline">Workspace-based</text>
+<text x="768" y="1195.62" fill="#005A9E" font-size="13.5" font-weight="600" text-decoration="underline">migration guide</text>
+<rect x="64" y="1267" width="1312" height="72" fill="#E8F3FD"/>
+<rect x="64" y="1267" width="5" height="72" fill="#0063B1"/>
+<text x="88" y="1294" font-size="13.5" fill="#14212E"><tspan font-weight="700">Service Health coverage:</tspan> As of September 25, 2026, no exportable Microsoft.ResourceHealth/events resources and no Service Health Activity Log alert were found. This does not prove that no retirement</text>
+<text x="88" y="1315" fill="#14212E" font-size="13.5">notices exist; review Service Health in the Azure portal and configure alerting for future notices.</text>
+<text x="64" y="1405" fill="#14212E" font-size="28" font-weight="700">Migration Plan</text>
+<text x="281.53" y="1403" fill="#4A5B6C" font-size="14">Controlled sequence counted from the evidence date to the Nov 10 deadline</text>
+<rect x="64" y="1429" width="316" height="259.5" fill="#FFFFFF" stroke="#C9D4E0" stroke-width="1" filter="url(#shadow)"/>
+<rect x="64" y="1429" width="316" height="4" fill="#0063B1"/>
+<rect x="396" y="1429" width="316" height="259.5" fill="#FFFFFF" stroke="#C9D4E0" stroke-width="1" filter="url(#shadow)"/>
+<rect x="396" y="1429" width="316" height="4" fill="#2B88D8"/>
+<rect x="728" y="1429" width="316" height="259.5" fill="#FFFFFF" stroke="#C9D4E0" stroke-width="1" filter="url(#shadow)"/>
+<rect x="728" y="1429" width="316" height="4" fill="#0099BC"/>
+<rect x="1060" y="1429" width="316" height="259.5" fill="#FFFFFF" stroke="#C9D4E0" stroke-width="1" filter="url(#shadow)"/>
+<rect x="1060" y="1429" width="316" height="4" fill="#003A70"/>
+<text x="84" y="1461" fill="#0063B1" font-size="11.5" font-weight="600" font-family="Cascadia Mono, Consolas, Menlo, monospace">DAYS 0–7 · BY OCT 2</text>
+<text x="84" y="1491" fill="#14212E" font-size="19" font-weight="700">Establish accountability</text>
+<circle cx="87" cy="1518.55" r="2.6" fill="#0063B1"/>
+<text x="100" y="1523" fill="#14212E" font-size="13.5">Assign an owner and business criticality</text>
+<text x="100" y="1543.25" fill="#14212E" font-size="13.5">to orders-api and each bot workload.</text>
+<circle cx="87" cy="1568.05" r="2.6" fill="#0063B1"/>
+<text x="100" y="1572.5" fill="#14212E" font-size="13.5">Confirm source repositories, release</text>
+<text x="100" y="1592.75" fill="#14212E" font-size="13.5">pipelines, and production dependencies.</text>
+<circle cx="87" cy="1617.55" r="2.6" fill="#0063B1"/>
+<text x="100" y="1622" fill="#14212E" font-size="13.5">Inventory Bot Framework SDK packages</text>
+<text x="100" y="1642.25" fill="#14212E" font-size="13.5">and channel dependencies.</text>
+<text x="416" y="1461" fill="#0063B1" font-size="11.5" font-weight="600" font-family="Cascadia Mono, Consolas, Menlo, monospace">DAYS 8–21 · BY OCT 16</text>
+<text x="416" y="1491" fill="#14212E" font-size="19" font-weight="700">Implement modernization</text>
+<circle cx="419" cy="1518.55" r="2.6" fill="#0063B1"/>
+<text x="432" y="1523" fill="#14212E" font-size="13.5">Retarget orders-api from .NET 8 to the</text>
+<text x="432" y="1543.25" fill="#14212E" font-size="13.5">.NET 10 isolated worker.</text>
+<circle cx="419" cy="1568.05" r="2.6" fill="#0063B1"/>
+<text x="432" y="1572.5" fill="#14212E" font-size="13.5">Plan Agents SDK moves for any bot</text>
+<text x="432" y="1592.75" fill="#14212E" font-size="13.5">backend still on the Bot Framework SDK.</text>
+<circle cx="419" cy="1617.55" r="2.6" fill="#0063B1"/>
+<text x="432" y="1622" fill="#14212E" font-size="13.5">Run representative Bing grounding</text>
+<text x="432" y="1642.25" fill="#14212E" font-size="13.5">requests, including error handling and</text>
+<text x="432" y="1662.5" fill="#14212E" font-size="13.5">quotas.</text>
+<text x="748" y="1461" fill="#0063B1" font-size="11.5" font-weight="600" font-family="Cascadia Mono, Consolas, Menlo, monospace">DAYS 22–35 · BY OCT 30</text>
+<text x="748" y="1491" fill="#14212E" font-size="19" font-weight="700">Validate readiness</text>
+<circle cx="751" cy="1518.55" r="2.6" fill="#0063B1"/>
+<text x="764" y="1523" fill="#14212E" font-size="13.5">Complete functional, cold-start, scale,</text>
+<text x="764" y="1543.25" fill="#14212E" font-size="13.5">and integration tests for the Function.</text>
+<circle cx="751" cy="1568.05" r="2.6" fill="#0063B1"/>
+<text x="764" y="1572.5" fill="#14212E" font-size="13.5">Validate Teams, Web Chat, and Direct</text>
+<text x="764" y="1592.75" fill="#14212E" font-size="13.5">Line conversations for each bot.</text>
+<circle cx="751" cy="1617.55" r="2.6" fill="#0063B1"/>
+<text x="764" y="1622" fill="#14212E" font-size="13.5">Compare grounding response quality,</text>
+<text x="764" y="1642.25" fill="#14212E" font-size="13.5">citations, latency, limits, and cost.</text>
+<text x="1080" y="1461" fill="#0063B1" font-size="11.5" font-weight="600" font-family="Cascadia Mono, Consolas, Menlo, monospace">DAYS 36–46 · BY NOV 10</text>
+<text x="1080" y="1491" fill="#14212E" font-size="19" font-weight="700">Deploy with control</text>
+<circle cx="1083" cy="1518.55" r="2.6" fill="#0063B1"/>
+<text x="1096" y="1523" fill="#14212E" font-size="13.5">Canary the Function release and keep a</text>
+<text x="1096" y="1543.25" fill="#14212E" font-size="13.5">validated rollback artifact.</text>
+<circle cx="1083" cy="1568.05" r="2.6" fill="#0063B1"/>
+<text x="1096" y="1572.5" fill="#14212E" font-size="13.5">Deploy bot backend changes</text>
+<text x="1096" y="1592.75" fill="#14212E" font-size="13.5">progressively by channel.</text>
+<circle cx="1083" cy="1617.55" r="2.6" fill="#0063B1"/>
+<text x="1096" y="1622" fill="#14212E" font-size="13.5">Remove superseded keys, SDKs, and</text>
+<text x="1096" y="1642.25" fill="#14212E" font-size="13.5">endpoints only after telemetry confirms</text>
+<text x="1096" y="1662.5" fill="#14212E" font-size="13.5">stability.</text>
+<rect x="64" y="1728.5" width="680" height="299" fill="#FFFFFF" stroke="#C9D4E0" stroke-width="1" filter="url(#shadow)"/>
+<rect x="64" y="1728.5" width="680" height="4" fill="#0063B1"/>
+<text x="90" y="1766.5" fill="#4A5B6C" font-size="12" font-weight="700" letter-spacing="1.2">GOVERNANCE AND FOLLOW-UP</text>
+<text x="90" y="1802.5" fill="#14212E" font-size="27" font-weight="700">Ongoing readiness controls</text>
+<circle cx="93" cy="1833.71" r="2.6" fill="#0063B1"/>
+<text x="106" y="1838.5" fill="#14212E" font-size="14.5">Review Azure Service Health retirement notices scoped to this subscription.</text>
+<circle cx="93" cy="1867.46" r="2.6" fill="#0063B1"/>
+<text x="106" y="1872.25" fill="#14212E" font-size="14.5">Confirm orders-api runs on the .NET 10 isolated worker before November 10, 2026.</text>
+<circle cx="93" cy="1901.21" r="2.6" fill="#0063B1"/>
+<text x="106" y="1906" fill="#14212E" font-size="14.5">Confirm bot backend SDKs and accountable owners for each external or AI-project endpoint.</text>
+<circle cx="93" cy="1934.96" r="2.6" fill="#0063B1"/>
+<text x="106" y="1939.75" fill="#14212E" font-size="14.5">Monitor Bing grounding telemetry, usage limits, and cost.</text>
+<circle cx="93" cy="1968.71" r="2.6" fill="#0063B1"/>
+<text x="106" y="1973.5" fill="#14212E" font-size="14.5">Re-verify every lifecycle date against Microsoft documentation on each refresh.</text>
+<rect x="764" y="1728.5" width="612" height="299" fill="#0B2E59" filter="url(#shadow)"/>
+<text x="790" y="1772.5" fill="#FFFFFF" font-size="25" font-weight="700">Evidence &amp; sources</text>
+<text x="790" y="1804.5" fill="#E3EEF9" font-size="13.5">Inventory facts come from Azure Resource Graph. Service Health was checked on</text>
+<text x="790" y="1824.75" fill="#E3EEF9" font-size="13.5">September 25, 2026. Each lifecycle date was verified against Microsoft documentation:</text>
+<text x="790" y="1853.5" fill="#A8DBFF" font-size="13.5" text-decoration="underline">Azure Functions supported languages</text>
+<text x="790" y="1877.5" fill="#A8DBFF" font-size="13.5" text-decoration="underline">.NET and .NET Core support policy</text>
+<text x="790" y="1901.5" fill="#A8DBFF" font-size="13.5" text-decoration="underline">Migrate Functions apps to the isolated worker model</text>
+<text x="790" y="1925.5" fill="#A8DBFF" font-size="13.5" text-decoration="underline">Bing Search APIs retirement announcement</text>
+<text x="790" y="1949.5" fill="#A8DBFF" font-size="13.5" text-decoration="underline">What&#x27;s new in the Bot Framework SDK</text>
+<text x="790" y="1973.5" fill="#A8DBFF" font-size="13.5" text-decoration="underline">Migrate to workspace-based Application Insights</text>
+<text x="790" y="1997.5" fill="#A8DBFF" font-size="13.5" text-decoration="underline">Azure Service Health overview</text>
+<text x="64" y="2061.5" fill="#4A5B6C" font-size="12.5">Illustrative example — subscription identity, owners, resource names, and counts are synthetic. Day counts are calculated from the September 25, 2026 evidence date.</text>
+</svg>

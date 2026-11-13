@@ -1,0 +1,2 @@
+upstream_repo: Azure/terraform-azurerm-avm-res-keyvault-vault
+last_synced_tag: v0.10.2

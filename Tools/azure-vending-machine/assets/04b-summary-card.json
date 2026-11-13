@@ -1,0 +1,116 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "${if(lang == 'fr', 'Récapitulatif de ta demande', 'Summary of your request')}",
+      "weight": "Bolder",
+      "size": "Large",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "${if(lang == 'fr', 'Vérifie les deux colonnes. La colonne de droite est dérivée automatiquement selon les standards de la plateforme.', 'Check both columns. The right column is derived automatically from platform standards.')}",
+      "wrap": true,
+      "isSubtle": true,
+      "spacing": "Small"
+    },
+
+    {
+      "type": "TextBlock",
+      "text": "${if(lang == 'fr', '1. Ta demande', '1. Your request')}",
+      "weight": "Bolder",
+      "spacing": "Medium",
+      "separator": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        { "title": "${if(lang == 'fr', 'Application', 'Application')}", "value": "${appId} — ${appName}" },
+        { "title": "${if(lang == 'fr', 'Environnement', 'Environment')}", "value": "${environment}" },
+        { "title": "${if(lang == 'fr', 'Centre de coût', 'Cost center')}", "value": "${costCenter} — ${costCenterName}" },
+        { "title": "${if(lang == 'fr', 'Classification', 'Classification')}", "value": "${dataClassification}" },
+        { "title": "${if(lang == 'fr', 'Dépôt', 'Repository')}", "value": "${workzoneRepo}" },
+        { "title": "${if(lang == 'fr', 'Besoin réseau', 'Network need')}", "value": "${networkNeed}" },
+        { "title": "${if(lang == 'fr', 'Budget mensuel', 'Monthly budget')}", "value": "${formatNumber(monthlyBudget, 0)} CAD" },
+        { "title": "${if(lang == 'fr', 'Persona d''accès', 'Access persona')}", "value": "${accessPersona}" },
+        { "title": "${if(lang == 'fr', 'Demandeur', 'Requester')}", "value": "${ownerName} (${ownerUpn})" },
+        { "title": "${if(lang == 'fr', 'Décommissionnement', 'Decommission')}", "value": "${decommissionDate}" }
+      ]
+    },
+
+    {
+      "type": "TextBlock",
+      "text": "${if(lang == 'fr', '2. Configuration technique dérivée', '2. Derived technical configuration')}",
+      "weight": "Bolder",
+      "spacing": "Medium",
+      "separator": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        { "title": "${if(lang == 'fr', 'Alias souscription', 'Subscription alias')}", "value": "${derived.subscriptionAliasName}" },
+        { "title": "${if(lang == 'fr', 'Nom affiché', 'Display name')}", "value": "${derived.subscriptionDisplayName}" },
+        { "title": "Management Group", "value": "${derived.managementGroupId}" },
+        { "title": "Workload", "value": "${derived.subscriptionWorkload}" },
+        { "title": "${if(lang == 'fr', 'Région', 'Region')}", "value": "${derived.location}" },
+        { "title": "${if(lang == 'fr', 'Groupes de ressources', 'Resource groups')}", "value": "${derived.resourceGroups}" },
+        { "title": "${if(lang == 'fr', 'Réseau', 'Network')}", "value": "${derived.networkSummary}" },
+        { "title": "${if(lang == 'fr', 'Identité gérée', 'Managed identity')}", "value": "${derived.managedIdentityName}" },
+        { "title": "Federated subject", "value": "${derived.federatedSubject}" },
+        { "title": "${if(lang == 'fr', 'Groupe Entra', 'Entra group')}", "value": "${derived.entraGroup}" },
+        { "title": "${if(lang == 'fr', 'Rôle IIQ', 'IIQ role')}", "value": "${derived.iiqRole}" },
+        { "title": "${if(lang == 'fr', 'Rôle Azure', 'Azure role')}", "value": "${derived.azureRoleSummary}" },
+        { "title": "Resource providers", "value": "${derived.resourceProviders}" },
+        { "title": "${if(lang == 'fr', 'Alertes budget', 'Budget alerts')}", "value": "${derived.budgetSummary}" }
+      ]
+    },
+
+    {
+      "type": "Container",
+      "style": "warning",
+      "isVisible": "${securityReviewRequired}",
+      "spacing": "Medium",
+      "items": [
+        {
+          "type": "TextBlock",
+          "wrap": true,
+          "text": "${if(lang == 'fr', '⚠ Classification « restreint » : une revue sécurité obligatoire par SEC-CLOUD-REVIEW s''ajoute au circuit d''approbation. Délai supplémentaire attendu : 3 à 5 jours ouvrables.', '⚠ Restricted classification: a mandatory security review by SEC-CLOUD-REVIEW is added to the approval flow. Expect 3 to 5 extra business days.')}"
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "style": "accent",
+      "spacing": "Medium",
+      "items": [
+        {
+          "type": "TextBlock",
+          "wrap": true,
+          "text": "${if(lang == 'fr', 'La soumission n''approuve rien. Une personne doit approuver dans ServiceNow avant tout déploiement.', 'Submitting approves nothing. A human must approve in ServiceNow before any deployment happens.')}"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "${if(lang == 'fr', 'Confirmer et soumettre', 'Confirm and submit')}",
+      "style": "positive",
+      "data": { "action": "confirm" }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "${if(lang == 'fr', 'Modifier un champ', 'Change a field')}",
+      "data": { "action": "edit" }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "${if(lang == 'fr', 'Annuler', 'Cancel')}",
+      "style": "destructive",
+      "data": { "action": "cancel" }
+    }
+  ]
+}

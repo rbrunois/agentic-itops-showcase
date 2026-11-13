@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">GitHub-side integration: who touches what</title>
+  <desc id="d">Who acts on GitHub and what each actor can touch: the SRE Agent uses the GitHub connector to read the security-controls repo and open pull requests on the Key Vault module repo, tf-fmt-bot formats agent branches, a human reviewer is the only one who merges, and release-please uses GITHUB_TOKEN to create releases. The agent token cannot merge, tag, edit workflows, write to security-controls or touch Azure.</desc>
+  <defs>
+    <marker id="a-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ffa726"/></marker>
+    <marker id="a-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#26c6da"/></marker>
+    <marker id="a-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#66bb6a"/></marker>
+    <marker id="a-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ab47bc"/></marker>
+    <marker id="a-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#29b6f6"/></marker>
+    <marker id="a-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#9e9e9e"/></marker>
+    <style>
+      .bg { fill: #1e1f26; }
+      .title { fill: #ffffff; font-size: 20px; font-weight: 700; }
+      .group { fill: #2a2c35; stroke: #6b6f7a; stroke-width: 1.2; }
+      .subgroup { fill: #32343e; stroke: #8a8e99; stroke-width: 1.2; }
+      .group-title { fill: #e6e6e6; font-size: 15px; font-weight: 600; }
+      .node { fill: #14151a; stroke: #d0d0d0; stroke-width: 1.4; }
+      .pending { stroke: #9e9e9e; stroke-dasharray: 6 5; }
+      .warn { fill: #2b1a1c; stroke: #ef5350; stroke-dasharray: 6 5; stroke-width: 1.4; }
+      .node-title { fill: #ffffff; font-size: 15px; font-weight: 600; }
+      .node-sub { fill: #b8bcc6; font-size: 13px; }
+      .note { fill: #ffa726; font-size: 13px; }
+      .mono { font-family: Consolas, Menlo, monospace; font-size: 12.5px; fill: #d7dae0; }
+      .edge { fill: none; stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+      .read { stroke-dasharray: 7 6; }
+      .lbl-box { fill: #3c3f4a; }
+      .lbl { fill: #f0f0f0; font-size: 12px; }
+      .legend { fill: #c8ccd4; font-size: 13px; }
+      .bar-orange { fill: #ffa726; } .bar-teal { fill: #26c6da; } .bar-green { fill: #66bb6a; } .bar-purple { fill: #ab47bc; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1400" height="860" rx="8"/>
+  <text class="title" x="20" y="30">GitHub-side integration: who touches what</text>
+
+  <!-- ===== Left: actors ===== -->
+  <rect class="group" x="20" y="60" width="300" height="730" rx="6"/>
+  <text class="group-title" x="170" y="83" text-anchor="middle">Who acts on GitHub</text>
+
+  <rect class="node" x="35" y="100" width="270" height="110" rx="5"/>
+  <rect class="bar-orange" x="35" y="100" width="6" height="110" rx="2"/>
+  <text class="node-title" x="52" y="124">SRE Agent</text>
+  <text class="node-sub" x="52" y="146">AVM TF Synchronizer</text>
+  <text class="node-sub" x="52" y="166">GitHub connector:</text>
+  <text class="node-sub" x="52" y="186">GitHub App or fine-grained PAT</text>
+
+  <rect class="node" x="35" y="275" width="270" height="90" rx="5"/>
+  <rect class="bar-teal" x="35" y="275" width="6" height="90" rx="2"/>
+  <text class="node-title" x="52" y="299">tf-fmt-bot[bot]</text>
+  <text class="node-sub" x="52" y="321">GitHub App · Contents: read &amp; write</text>
+  <text class="node-sub" x="52" y="341">module repo only · 1-hour tokens</text>
+
+  <rect class="node" x="35" y="385" width="270" height="75" rx="5"/>
+  <rect class="bar-green" x="35" y="385" width="6" height="75" rx="2"/>
+  <text class="node-title" x="52" y="409">Human reviewer</text>
+  <text class="node-sub" x="52" y="431">@User1 · CODEOWNERS</text>
+  <text class="node-sub" x="52" y="450">the only one who merges</text>
+
+  <rect class="warn" x="35" y="495" width="270" height="140" rx="5"/>
+  <text class="node-title" x="52" y="519">The agent's token can't:</text>
+  <text class="node-sub" x="52" y="543">✗ merge pull requests</text>
+  <text class="node-sub" x="52" y="563">✗ create tags or releases</text>
+  <text class="node-sub" x="52" y="583">✗ edit workflows or settings</text>
+  <text class="node-sub" x="52" y="603">✗ write to security-controls</text>
+  <text class="node-sub" x="52" y="623">✗ touch Azure (no RBAC)</text>
+
+  <rect class="node" x="35" y="670" width="270" height="90" rx="5"/>
+  <rect class="bar-purple" x="35" y="670" width="6" height="90" rx="2"/>
+  <text class="node-title" x="52" y="694">GITHUB_TOKEN</text>
+  <text class="node-sub" x="52" y="716">release-please workflow</text>
+  <text class="node-sub" x="52" y="736">contents + pull-requests: write</text>
+
+  <!-- ===== Middle: GitHub.com ===== -->
+  <rect class="group" x="470" y="60" width="540" height="730" rx="6"/>
+  <text class="group-title" x="740" y="83" text-anchor="middle">GitHub.com</text>
+
+  <rect class="subgroup" x="490" y="95" width="500" height="130" rx="6"/>
+  <text class="group-title" x="740" y="117" text-anchor="middle">sre-agent-avm-security-controls</text>
+  <rect class="node" x="510" y="128" width="460" height="82" rx="5"/>
+  <text class="mono" x="525" y="150">controls/key-vault.md</text>
+  <text class="node-sub" x="525" y="172">SC-KV-001 … SC-KV-011, plain-language controls</text>
+  <text class="node-sub" x="525" y="194">README: a control always wins over AVM defaults</text>
+
+  <rect class="subgroup" x="490" y="245" width="500" height="530" rx="6"/>
+  <text class="group-title" x="740" y="268" text-anchor="middle">sre-agent-avm-keyvault-module-custom</text>
+
+  <rect class="node" x="510" y="285" width="460" height="85" rx="5"/>
+  <text class="node-title" x="525" y="308">Branches</text>
+  <text class="mono" x="525" y="330">main · avm-sync/&lt;tag&gt; · remediation/&lt;date&gt;</text>
+  <text class="note" x="525" y="352">No branch protection on GitHub Free (private)</text>
+
+  <rect class="node" x="510" y="385" width="460" height="75" rx="5"/>
+  <text class="node-title" x="525" y="408">Pull requests</text>
+  <text class="mono" x="525" y="430">feat!: sync AVM … · fix!: enforce security controls</text>
+  <text class="node-sub" x="525" y="450">.github/CODEOWNERS: * @User1 · one agent PR open</text>
+
+  <rect class="node" x="510" y="475" width="460" height="95" rx="5"/>
+  <text class="node-title" x="525" y="498">Workflows</text>
+  <text class="mono" x="525" y="520">pr-format-and-validate.yml</text>
+  <text class="node-sub" x="525" y="540">fmt-autofix → terraform, tflint → sandbox-plan</text>
+  <text class="mono" x="525" y="560">release-please.yml <tspan class="node-sub">(on push to main)</tspan></text>
+
+  <rect class="node" x="510" y="585" width="460" height="75" rx="5"/>
+  <text class="node-title" x="525" y="608">Settings, variables &amp; secrets</text>
+  <text class="node-sub" x="525" y="630">Squash only, title = PR title · Actions may create PRs</text>
+  <text class="mono" x="525" y="650">FMT_BOT_APP_ID (var) · FMT_BOT_PRIVATE_KEY (secret)</text>
+
+  <rect class="node" x="510" y="675" width="460" height="85" rx="5"/>
+  <text class="node-title" x="525" y="698">Tags &amp; releases</text>
+  <text class="node-sub" x="525" y="720">vX.Y.Z tags + GitHub releases (release-please)</text>
+  <text class="node-sub" x="525" y="742">baseline v1.0.0 · the agent never tags</text>
+
+  <!-- ===== Right: external ===== -->
+  <rect class="group" x="1070" y="60" width="310" height="730" rx="6"/>
+  <text class="group-title" x="1225" y="83" text-anchor="middle">External</text>
+
+  <rect class="node" x="1085" y="100" width="280" height="110" rx="5"/>
+  <text class="node-title" x="1100" y="124">AVM upstream (public)</text>
+  <text class="mono" x="1100" y="146">Azure/terraform-azurerm-</text>
+  <text class="mono" x="1100" y="164">avm-res-keyvault-vault</text>
+  <text class="node-sub" x="1100" y="188">releases, tags, compare diffs</text>
+
+  <rect class="node pending" x="1085" y="475" width="280" height="95" rx="5"/>
+  <text class="node-title" x="1100" y="498">Azure sandbox subscription</text>
+  <text class="node-sub" x="1100" y="520">terraform plan via OIDC</text>
+  <text class="node-sub" x="1100" y="542">Optional: enabled by the</text>
+  <text class="node-sub" x="1100" y="560">AZURE_* repo variables</text>
+
+  <rect class="node" x="1085" y="675" width="280" height="85" rx="5"/>
+  <text class="node-title" x="1100" y="698">Consumer pipelines</text>
+  <text class="mono" x="1100" y="720">source = git::…?ref=vX.Y.Z</text>
+  <text class="node-sub" x="1100" y="742">bump the tag · never pin main</text>
+
+  <!-- ===== Edges ===== -->
+  <path class="edge read" stroke="#29b6f6" d="M305,150 L506,150" marker-end="url(#a-blue)"/>
+  <rect class="lbl-box" x="345" y="134" width="90" height="18" rx="3"/>
+  <text class="lbl" x="390" y="147" text-anchor="middle">read controls</text>
+
+  <path class="edge" stroke="#ffa726" d="M305,190 L440,190 L440,312 L506,312" marker-end="url(#a-orange)"/>
+  <rect class="lbl-box" x="320" y="174" width="110" height="18" rx="3"/>
+  <text class="lbl" x="375" y="187" text-anchor="middle">push · open PRs</text>
+
+  <path class="edge read" stroke="#29b6f6" d="M170,100 L170,46 L1330,46 L1330,96" marker-end="url(#a-blue)"/>
+  <rect class="lbl-box" x="655" y="37" width="200" height="18" rx="3"/>
+  <text class="lbl" x="755" y="50" text-anchor="middle">read releases &amp; diffs (public API)</text>
+
+  <path class="edge" stroke="#26c6da" d="M305,345 L506,345" marker-end="url(#a-teal)"/>
+  <rect class="lbl-box" x="320" y="329" width="170" height="18" rx="3"/>
+  <text class="lbl" x="405" y="342" text-anchor="middle">push style: terraform fmt</text>
+
+  <path class="edge" stroke="#66bb6a" d="M305,425 L506,425" marker-end="url(#a-green)"/>
+  <rect class="lbl-box" x="320" y="409" width="170" height="18" rx="3"/>
+  <text class="lbl" x="405" y="422" text-anchor="middle">review · squash merge</text>
+
+  <path class="edge" stroke="#ab47bc" d="M305,718 L506,718" marker-end="url(#a-purple)"/>
+  <rect class="lbl-box" x="320" y="702" width="170" height="18" rx="3"/>
+  <text class="lbl" x="405" y="715" text-anchor="middle">release PR · tag · release</text>
+
+  <path class="edge read" stroke="#9e9e9e" d="M970,522 L1081,522" marker-end="url(#a-grey)"/>
+  <rect class="lbl-box" x="985" y="506" width="80" height="18" rx="3"/>
+  <text class="lbl" x="1025" y="519" text-anchor="middle">OIDC plan</text>
+
+  <path class="edge" stroke="#29b6f6" d="M970,718 L1081,718" marker-end="url(#a-blue)"/>
+  <rect class="lbl-box" x="985" y="702" width="80" height="18" rx="3"/>
+  <text class="lbl" x="1025" y="715" text-anchor="middle">pinned tag</text>
+
+  <!-- ===== Legend ===== -->
+  <line x1="20" y1="825" x2="60" y2="825" stroke="#ffa726" stroke-width="2.2"/>
+  <text class="legend" x="68" y="830">write (push, PR, merge, tag)</text>
+  <line x1="270" y1="825" x2="310" y2="825" stroke="#29b6f6" stroke-width="2.2" stroke-dasharray="7 6"/>
+  <text class="legend" x="318" y="830">read only</text>
+  <line x1="410" y1="825" x2="450" y2="825" stroke="#9e9e9e" stroke-width="2.2" stroke-dasharray="7 6"/>
+  <text class="legend" x="458" y="830">optional (not set yet)</text>
+  <rect x="640" y="816" width="30" height="18" rx="3" fill="#2b1a1c" stroke="#ef5350" stroke-dasharray="4 3"/>
+  <text class="legend" x="678" y="830">limits enforced by token permissions</text>
+</svg>

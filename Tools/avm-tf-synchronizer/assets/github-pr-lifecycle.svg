@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="660" viewBox="0 0 1400 660" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">Lifecycle of an agent PR on GitHub</title>
+  <desc id="d">Step-by-step lifecycle of a pull request opened by the agent: branch creation, pr-format-and-validate.yml checks with terraform fmt autofix, human review and squash-merge, then release-please creating the release tag.</desc>
+  <defs>
+    <marker id="a-w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#d0d0d0"/></marker>
+    <marker id="a-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#26c6da"/></marker>
+    <style>
+      .bg { fill: #1e1f26; }
+      .title { fill: #ffffff; font-size: 20px; font-weight: 700; }
+      .lane { fill: #2a2c35; stroke: #6b6f7a; stroke-width: 1.2; }
+      .lane-title { fill: #e6e6e6; font-size: 15px; font-weight: 600; }
+      .node { fill: #14151a; stroke: #d0d0d0; stroke-width: 1.4; }
+      .info { fill: #32343e; stroke: #8a8e99; stroke-width: 1.2; }
+      .node-title { fill: #ffffff; font-size: 15px; font-weight: 600; }
+      .node-sub { fill: #b8bcc6; font-size: 13px; }
+      .mono { font-family: Consolas, Menlo, monospace; font-size: 12.5px; fill: #d7dae0; }
+      .num { font-size: 14px; font-weight: 700; fill: #1e1f26; }
+      .edge { fill: none; stroke: #d0d0d0; stroke-width: 2.2; stroke-linejoin: round; }
+      .loop { fill: none; stroke: #26c6da; stroke-width: 2.2; stroke-dasharray: 7 6; }
+      .lbl-box { fill: #3c3f4a; }
+      .lbl { fill: #f0f0f0; font-size: 12px; }
+      .ok { fill: #66bb6a; font-weight: 600; }
+      .pend { fill: #ffa726; font-weight: 600; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1400" height="660" rx="8"/>
+  <text class="title" x="20" y="30">Lifecycle of an agent PR on GitHub</text>
+
+  <!-- ===== Lane 1: agent PR ===== -->
+  <rect class="lane" x="15" y="50" width="1370" height="275" rx="6"/>
+  <text class="lane-title" x="30" y="73">Agent PR  ·  pr-format-and-validate.yml</text>
+
+  <rect class="node" x="30" y="125" width="235" height="115" rx="5"/>
+  <circle cx="52" cy="147" r="13" fill="#ffa726"/><text class="num" x="52" y="152" text-anchor="middle">1</text>
+  <text class="node-title" x="74" y="152">SRE Agent opens PR</text>
+  <text class="mono" x="45" y="178">avm-sync/&lt;tag&gt;</text>
+  <text class="mono" x="45" y="196">remediation/&lt;date&gt;</text>
+  <text class="node-sub" x="45" y="220">one PR per run · connector</text>
+
+  <rect class="node" x="305" y="125" width="235" height="115" rx="5"/>
+  <circle cx="327" cy="147" r="13" fill="#26c6da"/><text class="num" x="327" y="152" text-anchor="middle">2</text>
+  <text class="node-title" x="349" y="152">fmt-autofix</text>
+  <text class="mono" x="320" y="178">terraform fmt -recursive</text>
+  <text class="node-sub" x="320" y="200">changed: tf-fmt-bot pushes</text>
+  <text class="node-sub" x="320" y="220">clean: go to validation</text>
+
+  <rect class="node" x="580" y="125" width="235" height="115" rx="5"/>
+  <circle cx="602" cy="147" r="13" fill="#29b6f6"/><text class="num" x="602" y="152" text-anchor="middle">3</text>
+  <text class="node-title" x="624" y="152">Validation</text>
+  <text class="node-sub" x="595" y="178">fmt -check · validate · test</text>
+  <text class="node-sub" x="595" y="198">tflint (azurerm ruleset)</text>
+  <text class="node-sub" x="595" y="218">sandbox plan (if AZURE_* set)</text>
+
+  <rect class="node" x="855" y="125" width="235" height="115" rx="5"/>
+  <circle cx="877" cy="147" r="13" fill="#66bb6a"/><text class="num" x="877" y="152" text-anchor="middle">4</text>
+  <text class="node-title" x="899" y="152">Human review</text>
+  <text class="node-sub" x="870" y="178">CODEOWNERS (@User1)</text>
+  <text class="node-sub" x="870" y="198">checks changes + controls</text>
+  <text class="node-sub" x="870" y="218">fixes the PR title if needed</text>
+
+  <rect class="node" x="1130" y="125" width="235" height="115" rx="5"/>
+  <circle cx="1152" cy="147" r="13" fill="#66bb6a"/><text class="num" x="1152" y="152" text-anchor="middle">5</text>
+  <text class="node-title" x="1174" y="152">Squash merge</text>
+  <text class="node-sub" x="1145" y="178">squash only, by a human</text>
+  <text class="node-sub" x="1145" y="198">commit message = PR title</text>
+  <text class="node-sub" x="1145" y="218">the title sets the version</text>
+
+  <path class="edge" d="M265,182 L301,182" marker-end="url(#a-w)"/>
+  <path class="edge" d="M540,200 L576,200" marker-end="url(#a-w)"/>
+  <path class="edge" d="M815,182 L851,182" marker-end="url(#a-w)"/>
+  <path class="edge" d="M1090,182 L1126,182" marker-end="url(#a-w)"/>
+
+  <!-- autofix loop: pushed=true starts a new run -->
+  <path class="loop" d="M500,125 L500,100 L345,100 L345,121" marker-end="url(#a-teal)"/>
+  <rect class="lbl-box" x="360" y="91" width="125" height="18" rx="3"/>
+  <text class="lbl" x="422" y="104" text-anchor="middle">pushed → new run</text>
+
+  <!-- PR titles -->
+  <rect class="info" x="30" y="255" width="1060" height="55" rx="5"/>
+  <text class="node-title" x="45" y="278">Agent PR titles</text>
+  <text class="mono" x="190" y="278">feat!: sync AVM &lt;from&gt; → &lt;to&gt; and enforce security controls</text>
+  <text class="node-sub" x="705" y="278">or</text>
+  <text class="mono" x="730" y="278">fix!: enforce security controls</text>
+  <text class="node-sub" x="45" y="299">Breaking (!) because enforcing a control locks or removes inputs. release-please reads only this title.</text>
+
+  <!-- ===== Lane 2: release ===== -->
+  <rect class="lane" x="15" y="340" width="1370" height="175" rx="6"/>
+  <text class="lane-title" x="30" y="363">Release  ·  release-please.yml (GITHUB_TOKEN)</text>
+
+  <rect class="info" x="30" y="380" width="235" height="115" rx="5"/>
+  <text class="node-title" x="45" y="403">PR title sets the version</text>
+  <text class="mono" x="45" y="427">fix:</text><text class="node-sub" x="165" y="427">→ patch</text>
+  <text class="mono" x="45" y="449">feat:</text><text class="node-sub" x="165" y="449">→ minor</text>
+  <text class="mono" x="45" y="471">fix!: / feat!:</text><text class="node-sub" x="165" y="471">→ major</text>
+
+  <rect class="node" x="305" y="380" width="235" height="115" rx="5"/>
+  <circle cx="327" cy="402" r="13" fill="#29b6f6"/><text class="num" x="327" y="407" text-anchor="middle">9</text>
+  <text class="node-title" x="349" y="407">Consumers upgrade</text>
+  <text class="node-sub" x="320" y="433">bump the module source</text>
+  <text class="mono" x="320" y="455">?ref=vX.Y.Z</text>
+  <text class="node-sub" x="320" y="477">never reference main</text>
+
+  <rect class="node" x="580" y="380" width="235" height="115" rx="5"/>
+  <circle cx="602" cy="402" r="13" fill="#ab47bc"/><text class="num" x="602" y="407" text-anchor="middle">8</text>
+  <text class="node-title" x="624" y="407">Tag + GitHub release</text>
+  <text class="mono" x="595" y="433">vX.Y.Z</text>
+  <text class="node-sub" x="595" y="455">notes from CHANGELOG.md</text>
+  <text class="node-sub" x="595" y="477">the agent never tags</text>
+
+  <rect class="node" x="855" y="380" width="235" height="115" rx="5"/>
+  <circle cx="877" cy="402" r="13" fill="#66bb6a"/><text class="num" x="877" y="407" text-anchor="middle">7</text>
+  <text class="node-title" x="899" y="407">Human merges</text>
+  <text class="node-sub" x="870" y="433">the release PR</text>
+  <text class="node-sub" x="870" y="455">after review</text>
+
+  <rect class="node" x="1130" y="380" width="235" height="115" rx="5"/>
+  <circle cx="1152" cy="402" r="13" fill="#ab47bc"/><text class="num" x="1152" y="407" text-anchor="middle">6</text>
+  <text class="node-title" x="1174" y="407">Release PR</text>
+  <text class="node-sub" x="1145" y="433">on push to main</text>
+  <text class="mono" x="1145" y="455">chore(main): release</text>
+  <text class="node-sub" x="1145" y="477">CHANGELOG + manifest</text>
+
+  <path class="edge" d="M1247,240 L1247,376" marker-end="url(#a-w)"/>
+  <path class="edge" d="M1130,437 L1094,437" marker-end="url(#a-w)"/>
+  <path class="edge" d="M855,437 L819,437" marker-end="url(#a-w)"/>
+  <path class="edge" d="M580,437 L544,437" marker-end="url(#a-w)"/>
+
+  <!-- ===== Gates ===== -->
+  <rect class="lane" x="15" y="530" width="1370" height="110" rx="6"/>
+  <text class="lane-title" x="30" y="553">Merge and release gates</text>
+
+  <rect class="info" x="30" y="568" width="440" height="58" rx="5"/>
+  <text class="ok" x="45" y="591" font-size="13">TOKEN PERMISSIONS</text>
+  <text class="node-sub" x="45" y="612">Agent token: no merge, tag, admin or workflow rights</text>
+
+  <rect class="info" x="490" y="568" width="440" height="58" rx="5"/>
+  <text class="pend" x="505" y="591" font-size="13">PROCESS GATE (private repos on GitHub Free)</text>
+  <text class="node-sub" x="505" y="612">No branch protection: merge only green, reviewed PRs</text>
+
+  <rect class="info" x="950" y="568" width="415" height="58" rx="5"/>
+  <text class="ok" x="965" y="591" font-size="13">ONE AGENT PR AT A TIME</text>
+  <text class="node-sub" x="965" y="612">none while avm-sync/* or remediation/* is open</text>
+</svg>

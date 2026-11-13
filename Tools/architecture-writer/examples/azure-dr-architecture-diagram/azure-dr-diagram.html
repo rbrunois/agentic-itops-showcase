@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Azure DR Architecture - Resource Group: rg-contoso-dr</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:#f0f2f5; padding:24px; min-height:100vh; }
+.diagram-title { text-align:center; margin-bottom:24px; }
+.diagram-title h1 { font-size:22px; color:#1a1a2e; font-weight:600; }
+.diagram-title p { font-size:13px; color:#666; margin-top:4px; }
+.main-container { max-width:1480px; margin:0 auto; position:relative; }
+.dr-layout { display:grid; grid-template-columns:1fr 200px 1fr; gap:0; align-items:start; }
+.region-box { background:#fff; border-radius:12px; border:2px solid #0078d4; padding:20px; position:relative; }
+.region-box.source { border-color:#0078d4; }
+.region-box.target { border-color:#e74c3c; border-style:dashed; }
+.region-header { display:flex; align-items:center; gap:8px; margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid #eee; }
+.region-header .region-badge { padding:4px 12px; border-radius:16px; font-size:11px; font-weight:600; color:#fff; }
+.region-badge.primary { background:#0078d4; }
+.region-badge.dr { background:#e74c3c; }
+.region-header h2 { font-size:16px; color:#1a1a2e; }
+.vnet-section { background:#f0f7ff; border:1.5px solid #b3d7ff; border-radius:10px; padding:16px; margin-bottom:14px; }
+.vnet-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.vnet-header img { width:28px; height:28px; }
+.vnet-header span { font-size:14px; font-weight:600; color:#0078d4; }
+.vnet-header .addr { font-size:11px; color:#888; margin-left:8px; }
+.subnet-box { background:#fff; border:1px solid #d0e8ff; border-radius:8px; padding:12px; margin-bottom:10px; }
+.subnet-label { font-size:12px; font-weight:600; color:#333; margin-bottom:8px; padding:3px 8px; background:#e8f4fd; border-radius:4px; display:inline-block; }
+.cards-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:10px; }
+.card { background:#fff; border:1px solid #e0e0e0; border-radius:8px; padding:10px; display:flex; align-items:center; gap:10px; transition:box-shadow .2s; position:relative; cursor:default; }
+.card:hover { box-shadow:0 2px 12px rgba(0,0,0,0.1); }
+.card img { width:32px; height:32px; flex-shrink:0; }
+.card-info { min-width:0; }
+.card-info .name { font-size:12px; font-weight:600; color:#1a1a2e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card-info .type { font-size:10px; color:#888; }
+.card-info .detail { font-size:10px; color:#0078d4; }
+.card.ghost { opacity:0.5; border-style:dashed; border-color:#e74c3c; }
+.card.ghost .card-info .name { color:#999; }
+.protection-badge { position:absolute; top:-6px; right:-6px; width:20px; height:20px; background:#27ae60; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.asr-center { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px 10px; gap:16px; }
+.asr-vault-card { background:#fff; border:2px solid #0078d4; border-radius:12px; padding:16px; text-align:center; width:160px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+.asr-vault-card img { width:48px; height:48px; margin-bottom:8px; }
+.asr-vault-card .name { font-size:13px; font-weight:700; color:#1a1a2e; }
+.asr-vault-card .type { font-size:10px; color:#888; }
+.repl-arrow { display:flex; align-items:center; gap:4px; font-size:10px; color:#0078d4; font-weight:600; }
+.repl-arrow .arrow-line { flex:1; height:2px; background:linear-gradient(90deg,#0078d4,#e74c3c); min-width:30px; }
+.repl-arrow .arrow-head { color:#e74c3c; font-size:14px; }
+.standalone-section { margin-top:14px; }
+.standalone-section h3 { font-size:13px; color:#555; margin-bottom:8px; padding-left:4px; }
+.legend { display:flex; gap:20px; justify-content:center; margin-top:20px; flex-wrap:wrap; }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:11px; color:#555; }
+.legend-swatch { width:14px; height:14px; border-radius:3px; }
+.tooltip { display:none; position:absolute; z-index:100; background:#1a1a2e; color:#fff; padding:8px 12px; border-radius:6px; font-size:11px; max-width:280px; line-height:1.4; white-space:pre-line; pointer-events:none; top:100%; left:50%; transform:translateX(-50%); margin-top:6px; }
+.card:hover .tooltip { display:block; }
+</style>
+</head>
+<body>
+<div class="diagram-title">
+<h1>Azure DR Architecture Diagram — Resource Group: rg-contoso-dr</h1>
+<p>Disaster Recovery: Canada Central (Primary) → East US (DR) | 24 Resources | 3 Regions | Updated: 2026-07-06</p>
+</div>
+<div class="main-container">
+<div class="dr-layout">
+
+<!-- ========== SOURCE REGION (Canada Central) ========== -->
+<div class="region-box source">
+  <div class="region-header">
+    <span class="region-badge primary">PRIMARY</span>
+    <h2>Canada Central</h2>
+  </div>
+
+  <!-- VNet: vnet-canadacentral-1 -->
+  <div class="vnet-section">
+    <div class="vnet-header">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOS44OCIgeTE9IjguNTkiIHgyPSIxMS41MiIgeTI9IjEwLjIzIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKC0uMDggLTI4NS40NjQgLTE0NTQuMDgpIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjODZkNjMzIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNWU5NjI0Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImIiIHgxPSI2LjE4IiB5MT0iOC41OSIgeDI9IjcuODEiIHkyPSIxMC4yMyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzg2ZDYzMyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzVlOTYyNCIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJjIiB4MT0iMi40OCIgeTE9IjguNTkiIHgyPSI0LjExIiB5Mj0iMTAuMjMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM4NmQ2MzMiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1ZTk2MjQiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSIxMi43NCIgY3k9IjguOTkiIHI9IjEuMTYiIGZpbGw9InVybCgjYSkiLz48Y2lyY2xlIGN4PSI5LjA0IiBjeT0iOSIgcj0iMS4xNiIgZmlsbD0idXJsKCNiKSIvPjxjaXJjbGUgY3g9IjUuMzQiIGN5PSI5IiByPSIxLjE2IiBmaWxsPSJ1cmwoI2MpIi8+PHBhdGggZD0iTTYuMTgyIDEzLjYzOGwtLjY2NC42NjVhLjMuMyAwIDAxLS40MjQgMEwuMTggOS40MDRhLjYuNiAwIDAxLS4wMDEtLjg0OGwuNjYzLS42NjYgNS4zNCA1LjMyNGEuMy4zIDAgMDEwIC40MjV6IiBmaWxsPSIjNTBlNmZmIi8+PHBhdGggZD0iTTUuNDE4IDMuNzA4bC42NjYuNjY0YS4zLjMgMCAwMTAgLjQyNEwuODM4IDEwLjA1N2wtLjY2Ni0uNjYzYS42LjYgMCAwMS0uMDAxLS44NDlMNC45OTQgMy43MWEuMy4zIDAgMDEuNDI0IDB6IiBmaWxsPSIjMTQ5MGRmIi8+PHBhdGggZD0iTTE3LjE1NyA3Ljg4bC42NjMuNjY2YS42LjYgMCAwMTAgLjg0OGwtNC45MTUgNC45YS4zLjMgMCAwMS0uNDI0IDBsLS42NjQtLjY2NmEuMy4zIDAgMDEwLS40MjRsNS4zNC01LjMyNHoiIGZpbGw9IiM1MGU2ZmYiLz48cGF0aCBkPSJNMTcuODE4IDkuMzg3bC0uNjY1LjY2NC01LjI0Ny01LjI2MWEuMy4zIDAgMDEwLS40MjVsLjY3NC0uNjdhLjMuMyAwIDAxLjQyNCAwbDQuODIzIDQuODM2YS42LjYgMCAwMS0uMDAyLjg0OXoiIGZpbGw9IiMxNDkwZGYiLz48L3N2Zz4=" alt="VNet">
+      <span>vnet-canadacentral-1</span>
+      <span class="addr">172.16.0.0/16</span>
+    </div>
+
+    <!-- Subnet: snet-canadacentral-1 -->
+    <div class="subnet-box">
+      <div class="subnet-label">snet-canadacentral-1 — 172.16.0.0/24</div>
+      <div class="cards-grid">
+        <div class="card">
+          <div class="protection-badge">&#10003;</div>
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOC44OCIgeTE9IjEyLjIxIiB4Mj0iOC44OCIgeTI9Ii4yMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzAwNzhkNCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjNWVhMGVmIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImIiIHgxPSI4Ljg4IiB5MT0iMTYuODQiIHgyPSI4Ljg4IiB5Mj0iMTIuMjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9Ii4xNSIgc3RvcC1jb2xvcj0iI2NjYyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzcwNzA3MCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHg9Ii0uMTIiIHk9Ii4yMSIgd2lkdGg9IjE4IiBoZWlnaHQ9IjEyIiByeD0iLjYiIGZpbGw9InVybCgjYSkiLz48cGF0aCBmaWxsPSIjNTBlNmZmIiBkPSJNMTEuODggNC40NnYzLjQ5bC0zIDEuNzZ2LTMuNWwzLTEuNzV6Ii8+PHBhdGggZmlsbD0iI2MzZjFmZiIgZD0iTTExLjg4IDQuNDZsLTMgMS43Ni0zLTEuNzYgMy0xLjc1IDMgMS43NXoiLz48cGF0aCBmaWxsPSIjOWNlYmZmIiBkPSJNOC44OCA2LjIydjMuNDlsLTMtMS43NlY0LjQ2bDMgMS43NnoiLz48cGF0aCBmaWxsPSIjYzNmMWZmIiBkPSJNNS44OCA3Ljk1bDMtMS43NHYzLjVsLTMtMS43NnoiLz48cGF0aCBmaWxsPSIjOWNlYmZmIiBkPSJNMTEuODggNy45NWwtMy0xLjc0djMuNWwzLTEuNzZ6Ii8+PHBhdGggZD0iTTEyLjQ5IDE1Ljg0Yy0xLjc4LS4yOC0xLjg1LTEuNTYtMS44NS0zLjYzSDcuMTFjMCAyLjA3LS4wNiAzLjM1LTEuODQgMy42M2ExIDEgMCAwMC0uODkgMWg5YTEgMSAwIDAwLS44OS0xeiIgZmlsbD0idXJsKCNiKSIvPjwvc3ZnPg==" alt="VM">
+          <div class="card-info">
+            <div class="name">vm-app01</div>
+            <div class="type">Virtual Machine</div>
+            <div class="detail">Standard_D4as_v4 · Deallocated</div>
+          </div>
+          <div class="tooltip">VM: vm-app01&#10;Size: Standard_D4as_v4&#10;OS: Ubuntu 24.04 LTS&#10;State: Deallocated&#10;Admin: azureadmin&#10;ASR: Protected &#10003;</div>
+        </div>
+        <div class="card">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOS4wMSIgeTE9IjE2LjUiIHgyPSI5LjAxIiB5Mj0iMS41IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjNWU5NjQxIi8+PHN0b3Agb2Zmc2V0PSIuMzQiIHN0b3AtY29sb3I9IiM2YmFhNDIiLz48c3RvcCBvZmZzZXQ9Ii42NyIgc3RvcC1jb2xvcj0iIzczYjc0MyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzc2YmI0MyIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0xNS44OSAyLjkxaDEuMjdhLjM0LjM0IDAgMDEuMzQuMzR2My41YS4zNC4zNCAwIDAxLS4zNC4zNGgtMS4yN1YyLjkxek0xNS44OSA5aDEuMjdhLjM0LjM0IDAgMDEuMzQuMzR2NS44NmEuMzQuMzQgMCAwMS0uMzQuMzRoLTEuMjdWOXoiIGZpbGw9IiNmZmNhMDAiLz48cmVjdCB4PSIyLjEzIiB5PSIxLjUiIHdpZHRoPSIxMy43NiIgaGVpZ2h0PSIxNSIgcng9Ii42OSIgZmlsbD0idXJsKCNhKSIvPjxwYXRoIGQ9Ik01LjkgMTIuOWgtLjcxYS4yLjIgMCAwMS0uMTktLjIxVjQuMzRhLjE5LjE5IDAgMDEuMTktLjJoMS45M2EuMTkuMTkgMCAwMS4xOS4yLjIuMiAwIDAxLS4xOS4yMUg1LjM4djcuOTNoLjUyYS4yLjIgMCAwMS4xOS4yMS4yMS4yMSAwIDAxLS4xOS4yMXoiIGZpbGw9IiNiNGVjMzYiLz48cGF0aCBkPSJNNiAxMy45Mkg0LjRhLjIuMiAwIDAxLS4xOS0uMjFMNC4wOCAzLjM4YS4yLjIgMCAwMS4wNi0uMTUuMTYuMTYgMCAwMS4xMy0uMDZoMi44NXYuNDFINC40N2wuMTIgOS45Mkg2ek0xMiAxM2gtMS41OWEuMTkuMTkgMCAwMS0uMTQtLjA3LjE4LjE4IDAgMDEtLjA2LS4xNFY3LjlhLjE5LjE5IDAgMDEuMTktLjJoLjkxVjUuNDVoLjM4djIuNDRhLjIuMiAwIDAxLS4xOC4yMWgtLjkxdjQuNDJIMTJ6IiBmaWxsPSIjYjRlYzM2Ii8+PHJlY3QgeD0iNy4wNyIgeT0iMi4yOSIgd2lkdGg9IjYuMTQiIGhlaWdodD0iMy4xMSIgcng9Ii4yNiIgZmlsbD0iIzM2NTYxNSIvPjxyZWN0IHg9IjUuODYiIHk9IjEyLjY5IiB3aWR0aD0iNC45IiBoZWlnaHQ9IjEuMDkiIHJ4PSIuMjYiIHRyYW5zZm9ybT0icm90YXRlKDkwIDguMzA1IDEzLjIzNSkiIGZpbGw9IiMzNjU2MTUiLz48cmVjdCB4PSIzLjk5IiB5PSIxMi43MSIgd2lkdGg9IjQuOSIgaGVpZ2h0PSIxLjA5IiByeD0iLjI2IiB0cmFuc2Zvcm09InJvdGF0ZSg5MCA2LjQ0IDEzLjI2KSIgZmlsbD0iIzM2NTYxNSIvPjxyZWN0IHg9IjkuOTgiIHk9IjEyLjcxIiB3aWR0aD0iNC45IiBoZWlnaHQ9IjEuMDkiIHJ4PSIuMjYiIHRyYW5zZm9ybT0icm90YXRlKDkwIDEyLjQyNSAxMy4yNTUpIiBmaWxsPSIjZjJmMmYyIi8+PGVsbGlwc2UgY3g9IjguMTEiIGN5PSI4LjA2IiByeD0iMS4wNCIgcnk9IjEuMTIiIGZpbGw9IiNmMmYyZjIiLz48cGF0aCBkPSJNMi4xMSAxMi4yNUguODRhLjM0LjM0IDAgMDEtLjM0LS4zVjYuMDlhLjM0LjM0IDAgMDEuMzQtLjM0aDEuMjd2Ni41eiIgZmlsbD0iIzNiM2IzYiIvPjwvc3ZnPg==" alt="NIC">
+          <div class="card-info">
+            <div class="name">vm-app01-nic</div>
+            <div class="type">Network Interface</div>
+            <div class="detail">172.16.0.4 · Accel Net</div>
+          </div>
+          <div class="tooltip">NIC: vm-app01-nic&#10;Private IP: 172.16.0.4&#10;Accelerated Networking: Enabled&#10;NSG: vm-app01-nsg (NIC-level)</div>
+        </div>
+        <div class="card">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOSIgeTE9IjE1LjgzIiB4Mj0iOSIgeTI9IjUuNzkiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMzMmJlZGQiLz48c3RvcCBvZmZzZXQ9Ii4xOCIgc3RvcC1jb2xvcj0iIzMyY2FlYSIvPjxzdG9wIG9mZnNldD0iLjQxIiBzdG9wLWNvbG9yPSIjMzJkMmYyIi8+PHN0b3Agb2Zmc2V0PSIuNzgiIHN0b3AtY29sb3I9IiMzMmQ0ZjUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cGF0aCBkPSJNLjUgNS43OWgxN3Y5LjQ4YS41Ny41NyAwIDAxLS41Ny41N0gxLjA3YS41Ny41NyAwIDAxLS41Ny0uNTdWNS43OXoiIGZpbGw9InVybCgjYSkiLz48cGF0aCBkPSJNMS4wNyAyLjE3aDE1Ljg2YS41Ny41NyAwIDAxLjU3LjU3djMuMDVILjVWMi43M2EuNTcuNTcgMCAwMS41Ny0uNTZ6IiBmaWxsPSIjNzY3Njc2Ii8+PGNpcmNsZSBjeD0iMTIuODIiIGN5PSIxMC4xOSIgcj0iMS4zOCIgZmlsbD0iI2YyZjJmMiIvPjxjaXJjbGUgY3g9IjkuMDYiIGN5PSIxMC4xOSIgcj0iMS4zOCIgZmlsbD0iI2YyZjJmMiIvPjxjaXJjbGUgY3g9IjUuMTgiIGN5PSIxMC4xOSIgcj0iMS4zOCIgZmlsbD0iI2YyZjJmMiIvPjxyZWN0IHg9IjIuNzkiIHk9IjMuMjUiIHdpZHRoPSIxMi40MyIgaGVpZ2h0PSIxLjQ2IiByeD0iLjI4IiBmaWxsPSIjZjJmMmYyIi8+PC9zdmc+" alt="PIP">
+          <div class="card-info">
+            <div class="name">vm-app01-ip</div>
+            <div class="type">Public IP</div>
+            <div class="detail">203.0.113.10 · Static</div>
+          </div>
+          <div class="tooltip">Public IP: vm-app01-ip&#10;IP: 203.0.113.10&#10;Allocation: Static&#10;SKU: Standard</div>
+        </div>
+        <div class="card">
+          <div class="protection-badge">&#10003;</div>
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iMTUuMzUiIHkxPSIxMy40MSIgeDI9IjE1LjM3IiB5Mj0iMTMuNDEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMwMDc4ZDQiLz48c3RvcCBvZmZzZXQ9Ii4xNCIgc3RvcC1jb2xvcj0iIzE3ODJkYSIvPjxzdG9wIG9mZnNldD0iLjM3IiBzdG9wLWNvbG9yPSIjMzY4ZmUzIi8+PHN0b3Agb2Zmc2V0PSIuNTkiIHN0b3AtY29sb3I9IiM0Yzk4ZWEiLz48c3RvcCBvZmZzZXQ9Ii44IiBzdG9wLWNvbG9yPSIjNTk5ZWVlIi8+PHN0b3Agb2Zmc2V0PSIuOTkiIHN0b3AtY29sb3I9IiM1ZWEwZWYiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0iYiIgeDE9IjUuNTEiIHkxPSI4MDIuNSIgeDI9IjEyLjk0IiB5Mj0iODEwLjU4IiBncmFkaWVudFRyYW5zZm9ybT0ibWF0cml4KDEgMCAwIDEuNTkgMCAtMTI3OC43NikiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMwMDc4ZDQiLz48c3RvcCBvZmZzZXQ9Ii4wMiIgc3RvcC1jb2xvcj0iIzBkN2VkOCIvPjxzdG9wIG9mZnNldD0iLjA4IiBzdG9wLWNvbG9yPSIjMmI4YWUwIi8+PHN0b3Agb2Zmc2V0PSIuMTUiIHN0b3AtY29sb3I9IiM0MTk0ZTciLz48c3RvcCBvZmZzZXQ9Ii4yMiIgc3RvcC1jb2xvcj0iIzUxOWJlYiIvPjxzdG9wIG9mZnNldD0iLjI5IiBzdG9wLWNvbG9yPSIjNWI5ZmVlIi8+PHN0b3Agb2Zmc2V0PSIuNCIgc3RvcC1jb2xvcj0iIzVlYTBlZiIvPjxzdG9wIG9mZnNldD0iLjU1IiBzdG9wLWNvbG9yPSIjNWI5ZmVlIi8+PHN0b3Agb2Zmc2V0PSIuNjgiIHN0b3AtY29sb3I9IiM1MDlhZWIiLz48c3RvcCBvZmZzZXQ9Ii44IiBzdG9wLWNvbG9yPSIjM2Y5MmU2Ii8+PHN0b3Agb2Zmc2V0PSIuOTEiIHN0b3AtY29sb3I9IiMyNjg4ZGYiLz48c3RvcCBvZmZzZXQ9Ii45OSIgc3RvcC1jb2xvcj0iIzEyN2ZkOSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxlbGxpcHNlIGN4PSI4Ljk2IiBjeT0iMTEuODIiIHJ4PSI3LjUiIHJ5PSIzLjA4IiBmaWxsPSIjNzZiYzJkIi8+PGVsbGlwc2UgY3g9IjkuMTUiIGN5PSIxMS43OSIgcng9IjIuNDkiIHJ5PSIuNjgiIGZpbGw9IiM1ZTk2MjQiLz48cGF0aCBkPSJNMTUuMzUgMTMuNHoiIGZpbGw9InVybCgjYSkiLz48ZWxsaXBzZSBjeD0iOC45NiIgY3k9IjQuOTkiIHJ4PSI3LjUiIHJ5PSIzLjA4IiBmaWxsPSJ1cmwoI2IpIi8+PGVsbGlwc2UgY3g9IjkuMTUiIGN5PSI0Ljk1IiByeD0iMi40OSIgcnk9Ii42OCIgZmlsbD0iIzAwNWJhMSIvPjxwYXRoIGQ9Ik05IDE0Ljg0YzQuMTUgMCA3LjUtMS4zOCA3LjUtMy4wOHYxLjgyYy0uMTQgMS42NS0zLjQ0IDMtNy41IDNTMS41IDE1LjIgMS41IDEzLjV2LTEuNzRjLS4wNCAxLjcgMy4zMiAzLjA4IDcuNSAzLjA4eiIgZmlsbD0iIzVlOTYyNCIvPjxwYXRoIGQ9Ik0xNS4zNSAxMy40eiIgZmlsbD0idXJsKCNhKSIvPjxwYXRoIGQ9Ik05IDhjNC4xNSAwIDcuNS0xLjM4IDcuNS0zLjA4djEuODJjLS4xNCAxLjY1LTMuNDQgMy03LjUgM1MxLjUgOC4zNiAxLjUgNi42NlY0LjkyQzEuNDYgNi42MiA0LjgyIDggOSA4eiIgZmlsbD0iIzAwNzhkNCIvPjwvc3ZnPg==" alt="Disk">
+          <div class="card-info">
+            <div class="name">vm-app01_OsDisk_1</div>
+            <div class="type">Managed Disk</div>
+            <div class="detail">30 GB · 500 IOPS</div>
+          </div>
+          <div class="tooltip">Disk: vm-app01_OsDisk_1&#10;Size: 30 GB&#10;IOPS: 500&#10;Type: OS Disk (Linux)&#10;ASR: Protected &#10003;</div>
+        </div>
+        <div class="card">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOS4wMSIgeTE9Ii43NSIgeDI9IjkuMDEiIHkyPSIxNy4yNSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzVlYTBlZiIvPjxzdG9wIG9mZnNldD0iLjE4IiBzdG9wLWNvbG9yPSIjNTU5Y2VjIi8+PHN0b3Agb2Zmc2V0PSIuNDciIHN0b3AtY29sb3I9IiMzYzkxZTUiLz48c3RvcCBvZmZzZXQ9Ii44NCIgc3RvcC1jb2xvcj0iIzEzODBkYSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzAwNzhkNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0xNi4zNiA4LjRjMCA0Ljg0LTUuODUgOC43NC03LjEyIDkuNTNhLjQ2LjQ2IDAgMDEtLjQ4IDBjLTEuMjctLjc5LTcuMTItNC42OS03LjEyLTkuNTNWMi41OGEuNDYuNDYgMCAwMS40NS0uNDZDNi42NCAyIDUuNTkgMCA5IDBzMi4zNiAyIDYuOTEgMi4xMmEuNDYuNDYgMCAwMS40NS40NnoiIGZpbGw9IiMwMDc4ZDQiLz48cGF0aCBkPSJNMTUuNzUgOC40NWMwIDQuNDQtNS4zNiA4LTYuNTMgOC43NGEuNDMuNDMgMCAwMS0uNDQgMGMtMS4xNy0uNzItNi41My00LjMtNi41My04Ljc0VjMuMTFhLjQyLjQyIDAgMDEuNDEtLjQyQzYuODMgMi41OCA1Ljg3Ljc1IDkgLjc1czIuMTcgMS44MyA2LjM0IDEuOTRhLjQyLjQyIDAgMDEuNDEuNDJ6IiBmaWxsPSIjNmJiOWYyIi8+PHBhdGggZD0iTTkgOVYuNzVjMy4xMyAwIDIuMTcgMS44MyA2LjM0IDEuOTRhLjQzLjQzIDAgMDEuNDEuNDN2NS4zNGE0Ljg5IDQuODkgMCAwMTAgLjU0em0wIDBIMi4yOGMuNCA0LjE4IDUuMzggNy41IDYuNSA4LjE5YS4zOS4zOSAwIDAwLjE4LjA2SDl6IiBmaWxsPSJ1cmwoI2EpIi8+PHBhdGggZD0iTTIuNjYgMi42OUM2LjgzIDIuNTggNS44Ny43NSA5IC43NVY5SDIuMjhhNC44OSA0Ljg5IDAgMDEwLS41NFYzLjEyYS40My40MyAwIDAxLjM4LS40M3pNMTUuNzIgOUg5djguMjVhLjM5LjM5IDAgMDAuMTgtLjA2YzEuMTYtLjY5IDYuMTQtNC4wMSA2LjU0LTguMTl6IiBmaWxsPSIjNTBlNmZmIi8+PC9zdmc+" alt="NSG">
+          <div class="card-info">
+            <div class="name">vm-app01-nsg</div>
+            <div class="type">NSG (NIC-level)</div>
+            <div class="detail">Attached to vm-app01-nic</div>
+          </div>
+          <div class="tooltip">NSG: vm-app01-nsg&#10;Scope: NIC-level&#10;Attached to: vm-app01-nic</div>
+        </div>
+        <div class="card">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOS4wMSIgeTE9Ii43NSIgeDI9IjkuMDEiIHkyPSIxNy4yNSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzVlYTBlZiIvPjxzdG9wIG9mZnNldD0iLjE4IiBzdG9wLWNvbG9yPSIjNTU5Y2VjIi8+PHN0b3Agb2Zmc2V0PSIuNDciIHN0b3AtY29sb3I9IiMzYzkxZTUiLz48c3RvcCBvZmZzZXQ9Ii44NCIgc3RvcC1jb2xvcj0iIzEzODBkYSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzAwNzhkNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0xNi4zNiA4LjRjMCA0Ljg0LTUuODUgOC43NC03LjEyIDkuNTNhLjQ2LjQ2IDAgMDEtLjQ4IDBjLTEuMjctLjc5LTcuMTItNC42OS03LjEyLTkuNTNWMi41OGEuNDYuNDYgMCAwMS40NS0uNDZDNi42NCAyIDUuNTkgMCA5IDBzMi4zNiAyIDYuOTEgMi4xMmEuNDYuNDYgMCAwMS40NS40NnoiIGZpbGw9IiMwMDc4ZDQiLz48cGF0aCBkPSJNMTUuNzUgOC40NWMwIDQuNDQtNS4zNiA4LTYuNTMgOC43NGEuNDMuNDMgMCAwMS0uNDQgMGMtMS4xNy0uNzItNi41My00LjMtNi41My04Ljc0VjMuMTFhLjQyLjQyIDAgMDEuNDEtLjQyQzYuODMgMi41OCA1Ljg3Ljc1IDkgLjc1czIuMTcgMS44MyA2LjM0IDEuOTRhLjQyLjQyIDAgMDEuNDEuNDJ6IiBmaWxsPSIjNmJiOWYyIi8+PHBhdGggZD0iTTkgOVYuNzVjMy4xMyAwIDIuMTcgMS44MyA2LjM0IDEuOTRhLjQzLjQzIDAgMDEuNDEuNDN2NS4zNGE0Ljg5IDQuODkgMCAwMTAgLjU0em0wIDBIMi4yOGMuNCA0LjE4IDUuMzggNy41IDYuNSA4LjE5YS4zOS4zOSAwIDAwLjE4LjA2SDl6IiBmaWxsPSJ1cmwoI2EpIi8+PHBhdGggZD0iTTIuNjYgMi42OUM2LjgzIDIuNTggNS44Ny43NSA5IC43NVY5SDIuMjhhNC44OSA0Ljg5IDAgMDEwLS41NFYzLjEyYS40My40MyAwIDAxLjM4LS40M3pNMTUuNzIgOUg5djguMjVhLjM5LjM5IDAgMDAuMTgtLjA2YzEuMTYtLjY5IDYuMTQtNC4wMSA2LjU0LTguMTl6IiBmaWxsPSIjNTBlNmZmIi8+PC9zdmc+" alt="NSG">
+          <div class="card-info">
+            <div class="name">snet-cc-1-nsg</div>
+            <div class="type">NSG (Subnet-level)</div>
+            <div class="detail">Subnet protection</div>
+          </div>
+          <div class="tooltip">NSG: vnet-canadacentral-1-snet-canadacentral-1-nsg-canadacentral&#10;Scope: Subnet-level&#10;Protects: snet-canadacentral-1</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subnet: AzureBastionSubnet -->
+    <div class="subnet-box">
+      <div class="subnet-label">AzureBastionSubnet</div>
+      <div class="cards-grid">
+        <div class="card">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MCA1MCI+PHBhdGggZD0iTTQ5IDF2NDhIMVYxaDQ4bTEtMUgwdjUwaDUwVjBoMHoiIG9wYWNpdHk9Ii4wMSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9Ii4wMDEiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIvPjxwYXRoIGQ9Ik0yMi4zIDM3LjNDMTUuOCA0MS44IDUuNCA0OC43IDQuNCA0OS41Yy0xLjMuOS0zLjIuNS0zLjgtLjMtLjYtLjktLjYtMi44LjctMy43LjgtLjUgMTQuNS05LjggMTguNy0xMi43bDIuNCAyLjZjMS4xIDEuMS0uMSAxLjktLjEgMS45ek0yMiAzMVMxMCAxOC4xIDguNiAxNi43Yy0xLjMtMS41LS4xLTMuMi42LTMuOC43LS42IDIuOC0xLjUgMy45LS40UzI3LjYgMjggMjguNiAyOS4xcy45IDIuOC0uOCA0Yy0uMy4yLTEuMS44LTIuMyAxLjYtLjEuMS0uNi41LTEuMS44IDAgMCAxLjEtLjguMy0xLjdMMjIgMzF6bTguNi04LjVjNS40IDUuOCAxMy44IDE0LjkgMTQuNyAxNS44IDEuMSAxLjIgMyAxLjIgMy44LjVzMS4yLTIuNS4xLTMuN2MtLjYtLjctMTEuOS0xMi44LTE1LjMtMTYuNWwtMi45IDJjLTEuNC44LS40IDEuOS0uNCAxLjl6bTEuMi01LjlTNDYuMyA2LjUgNDcuOSA1LjNzLjgtMy4xLjItMy44UzQ1LjctLjYgNDQuNC4zIDI3IDEyLjQgMjUuOCAxMy4zcy0xLjUgMi41IDAgNC4xYy4yLjMuOSAxIDEuOSAyLjEuMS4xLjUuNi45IDEgMCAwLS45LTEgLjEtMS43bDMuMS0yLjJ6IiBmaWxsPSIjMDA3MmM2Ii8+PC9zdmc+" alt="Bastion">
+          <div class="card-info">
+            <div class="name">vnet-cc-1-bastion</div>
+            <div class="type">Azure Bastion</div>
+            <div class="detail">Developer Model</div>
+          </div>
+          <div class="tooltip">Bastion: vnet-canadacentral-1-bastion&#10;SKU: Developer&#10;Provides secure RDP/SSH access</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VNet: vnet-db -->
+  <div class="vnet-section">
+    <div class="vnet-header">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOS44OCIgeTE9IjguNTkiIHgyPSIxMS41MiIgeTI9IjEwLjIzIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKC0uMDggLTI4NS40NjQgLTE0NTQuMDgpIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjODZkNjMzIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNWU5NjI0Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImIiIHgxPSI2LjE4IiB5MT0iOC41OSIgeDI9IjcuODEiIHkyPSIxMC4yMyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzg2ZDYzMyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzVlOTYyNCIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJjIiB4MT0iMi40OCIgeTE9IjguNTkiIHgyPSI0LjExIiB5Mj0iMTAuMjMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM4NmQ2MzMiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1ZTk2MjQiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSIxMi43NCIgY3k9IjguOTkiIHI9IjEuMTYiIGZpbGw9InVybCgjYSkiLz48Y2lyY2xlIGN4PSI5LjA0IiBjeT0iOSIgcj0iMS4xNiIgZmlsbD0idXJsKCNiKSIvPjxjaXJjbGUgY3g9IjUuMzQiIGN5PSI5IiByPSIxLjE2IiBmaWxsPSJ1cmwoI2MpIi8+PHBhdGggZD0iTTYuMTgyIDEzLjYzOGwtLjY2NC42NjVhLjMuMyAwIDAxLS40MjQgMEwuMTggOS40MDRhLjYuNiAwIDAxLS4wMDEtLjg0OGwuNjYzLS42NjYgNS4zNCA1LjMyNGEuMy4zIDAgMDEwIC40MjV6IiBmaWxsPSIjNTBlNmZmIi8+PHBhdGggZD0iTTUuNDE4IDMuNzA4bC42NjYuNjY0YS4zLjMgMCAwMTAgLjQyNEwuODM4IDEwLjA1N2wtLjY2Ni0uNjYzYS42LjYgMCAwMS0uMDAxLS44NDlMNC45OTQgMy43MWEuMy4zIDAgMDEuNDI0IDB6IiBmaWxsPSIjMTQ5MGRmIi8+PHBhdGggZD0iTTE3LjE1NyA3Ljg4bC42NjMuNjY2YS42LjYgMCAwMTAgLjg0OGwtNC45MTUgNC45YS4zLjMgMCAwMS0uNDI0IDBsLS42NjQtLjY2NmEuMy4zIDAgMDEwLS40MjRsNS4zNC01LjMyNHoiIGZpbGw9IiM1MGU2ZmYiLz48cGF0aCBkPSJNMTcuODE4IDkuMzg3bC0uNjY1LjY2NC01LjI0Ny01LjI2MWEuMy4zIDAgMDEwLS40MjVsLjY3NC0uNjdhLjMuMyAwIDAxLjQyNCAwbDQuODIzIDQuODM2YS42LjYgMCAwMS0uMDAyLjg0OXoiIGZpbGw9IiMxNDkwZGYiLz48L3N2Zz4=" alt="VNet">
+      <span>vnet-db</span>
+      <span class="addr">10.0.0.0/16</span>
+    </div>
+    <div class="subnet-box">
+      <div class="subnet-label">default — 10.0.0.0/24</div>
+      <div class="cards-grid">
+        <div class="card">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOS4wMSIgeTE9Ii43NSIgeDI9IjkuMDEiIHkyPSIxNy4yNSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzVlYTBlZiIvPjxzdG9wIG9mZnNldD0iLjE4IiBzdG9wLWNvbG9yPSIjNTU5Y2VjIi8+PHN0b3Agb2Zmc2V0PSIuNDciIHN0b3AtY29sb3I9IiMzYzkxZTUiLz48c3RvcCBvZmZzZXQ9Ii44NCIgc3RvcC1jb2xvcj0iIzEzODBkYSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzAwNzhkNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0xNi4zNiA4LjRjMCA0Ljg0LTUuODUgOC43NC03LjEyIDkuNTNhLjQ2LjQ2IDAgMDEtLjQ4IDBjLTEuMjctLjc5LTcuMTItNC42OS03LjEyLTkuNTNWMi41OGEuNDYuNDYgMCAwMS40NS0uNDZDNi42NCAyIDUuNTkgMCA5IDBzMi4zNiAyIDYuOTEgMi4xMmEuNDYuNDYgMCAwMS40NS40NnoiIGZpbGw9IiMwMDc4ZDQiLz48cGF0aCBkPSJNMTUuNzUgOC40NWMwIDQuNDQtNS4zNiA4LTYuNTMgOC43NGEuNDMuNDMgMCAwMS0uNDQgMGMtMS4xNy0uNzItNi41My00LjMtNi41My04Ljc0VjMuMTFhLjQyLjQyIDAgMDEuNDEtLjQyQzYuODMgMi41OCA1Ljg3Ljc1IDkgLjc1czIuMTcgMS44MyA2LjM0IDEuOTRhLjQyLjQyIDAgMDEuNDEuNDJ6IiBmaWxsPSIjNmJiOWYyIi8+PHBhdGggZD0iTTkgOVYuNzVjMy4xMyAwIDIuMTcgMS44MyA2LjM0IDEuOTRhLjQzLjQzIDAgMDEuNDEuNDN2NS4zNGE0Ljg5IDQuODkgMCAwMTAgLjU0em0wIDBIMi4yOGMuNCA0LjE4IDUuMzggNy41IDYuNSA4LjE5YS4zOS4zOSAwIDAwLjE4LjA2SDl6IiBmaWxsPSJ1cmwoI2EpIi8+PHBhdGggZD0iTTIuNjYgMi42OUM2LjgzIDIuNTggNS44Ny43NSA5IC43NVY5SDIuMjhhNC44OSA0Ljg5IDAgMDEwLS41NFYzLjEyYS40My40MyAwIDAxLjM4LS40M3pNMTUuNzIgOUg5djguMjVhLjM5LjM5IDAgMDAuMTgtLjA2YzEuMTYtLjY5IDYuMTQtNC4wMSA2LjU0LTguMTl6IiBmaWxsPSIjNTBlNmZmIi8+PC9zdmc+" alt="NSG">
+                  <div class="card" style="border-left:3px solid #8764B8;">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJwZSIgeDE9IjkiIHkxPSIxNy4yNSIgeDI9IjkiIHkyPSIuNzUiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMwMDc4ZDQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1ZWEwZWYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB4PSIuNzUiIHk9Ii43NSIgd2lkdGg9IjE2LjUiIGhlaWdodD0iMTYuNSIgcng9IjIuNSIgZmlsbD0idXJsKCNwZSkiLz48Y2lyY2xlIGN4PSI2IiBjeT0iOSIgcj0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEuMyIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iOSIgcj0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEuMyIvPjxyZWN0IHg9IjYiIHk9IjcuOCIgd2lkdGg9IjYiIGhlaWdodD0iMi40IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjkiIHI9IjEiIGZpbGw9IiM1MGU2ZmYiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjkiIHI9IjEiIGZpbGw9IiM1MGU2ZmYiLz48L3N2Zz4=" alt="PE">
+          <div class="card-info">
+            <div class="name">pe-pgsql-cc01</div>
+            <div class="type">Private Endpoint</div>
+            <div class="detail">Cross-RG: rg-pgsql01</div>
+          </div>
+          <div class="tooltip">Private Endpoint: pe-pgsql-cc01&#10;Source RG: rg-pgsql01&#10;Subnet: vnet-db/default&#10;Service: PostgreSQL</div>
+        </div>
+<div class="card-info">
+            <div class="name">vnet-db-default-nsg</div>
+            <div class="type">NSG (Subnet-level)</div>
+            <div class="detail">Subnet protection</div>
+          </div>
+          <div class="tooltip">NSG: vnet-db-default-nsg-canadacentral&#10;Scope: Subnet-level</div>
+        </div>
+      </div>
+    </div>
+    <div class="subnet-box">
+      <div class="subnet-label">GatewaySubnet — 10.0.1.0/24</div>
+      <div class="cards-grid" style="opacity:0.5;">
+        <div class="card" style="border-style:dashed;">
+          <div class="card-info">
+            <div class="name" style="color:#999;">No gateway deployed</div>
+            <div class="type">Reserved subnet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- VNet: vnet-spare (NEW) -->
+  <div class="vnet-section">
+    <div class="vnet-header">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOS44OCIgeTE9IjguNTkiIHgyPSIxMS41MiIgeTI9IjEwLjIzIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKC0uMDggLTI4NS40NjQgLTE0NTQuMDgpIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjODZkNjMzIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNWU5NjI0Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImIiIHgxPSI2LjE4IiB5MT0iOC41OSIgeDI9IjcuODEiIHkyPSIxMC4yMyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzg2ZDYzMyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzVlOTYyNCIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJjIiB4MT0iMi40OCIgeTE9IjguNTkiIHgyPSI0LjExIiB5Mj0iMTAuMjMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM4NmQ2MzMiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1ZTk2MjQiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSIxMi43NCIgY3k9IjguOTkiIHI9IjEuMTYiIGZpbGw9InVybCgjYSkiLz48Y2lyY2xlIGN4PSI5LjA0IiBjeT0iOSIgcj0iMS4xNiIgZmlsbD0idXJsKCNiKSIvPjxjaXJjbGUgY3g9IjUuMzQiIGN5PSI5IiByPSIxLjE2IiBmaWxsPSJ1cmwoI2MpIi8+PHBhdGggZD0iTTYuMTgyIDEzLjYzOGwtLjY2NC42NjVhLjMuMyAwIDAxLS40MjQgMEwuMTggOS40MDRhLjYuNiAwIDAxLS4wMDEtLjg0OGwuNjYzLS42NjYgNS4zNCA1LjMyNGEuMy4zIDAgMDEwIC40MjV6IiBmaWxsPSIjNTBlNmZmIi8+PHBhdGggZD0iTTUuNDE4IDMuNzA4bC42NjYuNjY0YS4zLjMgMCAwMTAgLjQyNEwuODM4IDEwLjA1N2wtLjY2Ni0uNjYzYS42LjYgMCAwMS0uMDAxLS44NDlMNC45OTQgMy43MWEuMy4zIDAgMDEuNDI0IDB6IiBmaWxsPSIjMTQ5MGRmIi8+PHBhdGggZD0iTTE3LjE1NyA3Ljg4bC42NjMuNjY2YS42LjYgMCAwMTAgLjg0OGwtNC45MTUgNC45YS4zLjMgMCAwMS0uNDI0IDBsLS42NjQtLjY2NmEuMy4zIDAgMDEwLS40MjRsNS4zNC01LjMyNHoiIGZpbGw9IiM1MGU2ZmYiLz48cGF0aCBkPSJNMTcuODE4IDkuMzg3bC0uNjY1LjY2NC01LjI0Ny01LjI2MWEuMy4zIDAgMDEwLS40MjVsLjY3NC0uNjdhLjMuMyAwIDAxLjQyNCAwbDQuODIzIDQuODM2YS42LjYgMCAwMS0uMDAyLjg0OXoiIGZpbGw9IiMxNDkwZGYiLz48L3N2Zz4=" alt="VNet">
+      <span>vnet-spare</span>
+      <span class="addr">10.0.0.0/16</span>
+      <span style="margin-left:8px;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:600;background:#e8fde8;color:#27ae60;border:1px solid #27ae60;">NEW</span>
+    </div>
+    <div class="subnet-box">
+      <div class="subnet-label">default &#8212; 10.0.0.0/24</div>
+      <div class="cards-grid">
+        <div class="card" style="overflow:visible;">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOS4wMSIgeTE9Ii43NSIgeDI9IjkuMDEiIHkyPSIxNy4yNSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzVlYTBlZiIvPjxzdG9wIG9mZnNldD0iLjE4IiBzdG9wLWNvbG9yPSIjNTU5Y2VjIi8+PHN0b3Agb2Zmc2V0PSIuNDciIHN0b3AtY29sb3I9IiMzYzkxZTUiLz48c3RvcCBvZmZzZXQ9Ii44NCIgc3RvcC1jb2xvcj0iIzEzODBkYSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzAwNzhkNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0xNi4zNiA4LjRjMCA0Ljg0LTUuODUgOC43NC03LjEyIDkuNTNhLjQ2LjQ2IDAgMDEtLjQ4IDBjLTEuMjctLjc5LTcuMTItNC42OS03LjEyLTkuNTNWMi41OGEuNDYuNDYgMCAwMS40NS0uNDZDNi42NCAyIDUuNTkgMCA5IDBzMi4zNiAyIDYuOTEgMi4xMmEuNDYuNDYgMCAwMS40NS40NnoiIGZpbGw9IiMwMDc4ZDQiLz48cGF0aCBkPSJNMTUuNzUgOC40NWMwIDQuNDQtNS4zNiA4LTYuNTMgOC43NGEuNDMuNDMgMCAwMS0uNDQgMGMtMS4xNy0uNzItNi41My00LjMtNi41My04Ljc0VjMuMTFhLjQyLjQyIDAgMDEuNDEtLjQyQzYuODMgMi41OCA1Ljg3Ljc1IDkgLjc1czIuMTcgMS44MyA2LjM0IDEuOTRhLjQyLjQyIDAgMDEuNDEuNDJ6IiBmaWxsPSIjNmJiOWYyIi8+PHBhdGggZD0iTTkgOVYuNzVjMy4xMyAwIDIuMTcgMS44MyA2LjM0IDEuOTRhLjQzLjQzIDAgMDEuNDEuNDN2NS4zNGE0Ljg5IDQuODkgMCAwMTAgLjU0em0wIDBIMi4yOGMuNCA0LjE4IDUuMzggNy41IDYuNSA4LjE5YS4zOS4zOSAwIDAwLjE4LjA2SDl6IiBmaWxsPSJ1cmwoI2EpIi8+PHBhdGggZD0iTTIuNjYgMi42OUM2LjgzIDIuNTggNS44Ny43NSA5IC43NVY5SDIuMjhhNC44OSA0Ljg5IDAgMDEwLS41NFYzLjEyYS40My40MyAwIDAxLjM4LS40M3pNMTUuNzIgOUg5djguMjVhLjM5LjM5IDAgMDAuMTgtLjA2YzEuMTYtLjY5IDYuMTQtNC4wMSA2LjU0LTguMTl6IiBmaWxsPSIjNTBlNmZmIi8+PC9zdmc+" alt="NSG">
+          <div class="card-info">
+            <div class="name">vnet-spare-default-nsg</div>
+            <div class="type">NSG (Subnet-level)</div>
+            <div class="detail">Protects default subnet</div>
+          </div>
+          <span style="position:absolute;top:-6px;right:-6px;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:600;background:#e8fde8;color:#27ae60;border:1px solid #27ae60;">NEW</span>
+          <div class="tooltip">NSG: vnet-spare-default-nsg-canadacentral&#10;Scope: Subnet-level&#10;Protects: vnet-spare/default&#10;Custom Rules: 0&#10;Location: Canada Central</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Standalone resources -->
+  <div class="standalone-section">
+    <h3>Standalone Resources</h3>
+    <div class="cards-grid">
+      <div class="card">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJhIiBjeD0iLTY4MTEuNCIgY3k9IjY3MjkuNjkiIHI9IjE3IiBncmFkaWVudFRyYW5zZm9ybT0ibWF0cml4KC41IDAgMCAtLjUgMzQxNC45MSAzMzc0LjA1KSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iLjE4IiBzdG9wLWNvbG9yPSIjNWVhMGVmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMDA3OGQ0Ii8+PC9yYWRpYWxHcmFkaWVudD48L2RlZnM+PHBhdGggZD0iTTE0LjIxIDE1LjcyQTguNSA4LjUgMCAwMTMuNzkgMi4yOGwuMDktLjA2YTguNSA4LjUgMCAwMTEwLjMzIDEzLjUiIGZpbGw9InVybCgjYSkiLz48cGF0aCBkPSJNOSAxLjMxQTcuNjkgNy42OSAwIDEwMTYuNjkgOSA3LjcgNy43IDAgMDA5IDEuMzF6bTUuMTUgMi41OWE3LjM3IDcuMzcgMCAwMS0yLjE1LjhBOC44MyA4LjgzIDAgMDAxMC43NSAyYTcuMiA3LjIgMCAwMTMuNCAxLjl6TTkgMS43NGE2LjU5IDYuNTkgMCAwMTEuMDkuMDkgNy40OCA3LjQ4IDAgMDExLjUzIDMgMTUuMTIgMTUuMTIgMCAwMS01LjQ1IDAgNy4zOCA3LjM4IDAgMDExLjUxLTIuOTRBNy4zNCA3LjM0IDAgMDE5IDEuNzR6TTcgMmE4LjcyIDguNzIgMCAwMC0xLjI3IDIuNjggNS41OCA1LjU4IDAgMDEtMS45LS43N0E3LjM1IDcuMzUgMCAwMTcgMnpNMy43MiAxNGE1LjI3IDUuMjcgMCAwMTEuNzgtLjc2IDcuMDggNy4wOCAwIDAwMS4zNSAyLjcyQTcuMjUgNy4yNSAwIDAxMy43MiAxNHptNi40MSAyLjJhNy4wOCA3LjA4IDAgMDEtMS4xMy4wNiA2LjgzIDYuODMgMCAwMS0xLjQ0LS4xNSA2IDYgMCAwMS0xLjY3LTMgMTQuNzMgMTQuNzMgMCAwMTUuODggMCA2IDYgMCAwMS0xLjY5IDN6bS43My0uMTZhNy4xMyA3LjEzIDAgMDAxLjM4LTIuOCA2LjY4IDYuNjggMCAwMTIgLjgzQTcuMTMgNy4xMyAwIDAxMTAuODYgMTZ6bTEuNDgtMy4yMmMuMDgtLjM2LjE1LS43My4yLTEuMTJsLS40Ni4xMWMtLjA1LjMxLS4xLjYyLS4xNy45MWExNS4yMyAxNS4yMyAwIDAwLTYuMDkgMGMtLjA3LS4yNy0uMTItLjU2LS4xNy0uODZhLjI4LjI4IDAgMDEwLS4wOWwtLjQ2LS4xM2EyLjM2IDIuMzYgMCAwMDAgLjI4YzAgLjMyLjExLjYyLjE3LjkxYTUuOSA1LjkgMCAwMC0yIC44NSA3LjI0IDcuMjQgMCAwMS4xMS05LjQgNi4yOSA2LjI5IDAgMDAyLjA4Ljg2Yy0uMDcuMjQtLjEzLjUtLjE4Ljc2czAgLjI1LS4wOC4zN2wuNDctLjExdi0uMTdjLjA2LS4yNi4xMi0uNTEuMTktLjc1QTE0Ljg5IDE0Ljg5IDAgMDA5IDUuNDhhMTUgMTUgMCAwMDIuNzgtLjI2Yy4wNy4yNy4xNC41Ni4yLjg1bC40Ni4xMXEtLjExLS41NC0uMjQtMWE3LjczIDcuNzMgMCAwMDIuMy0uOTEgNy4yMiA3LjIyIDAgMDEuMDYgOS40OSA3LjI4IDcuMjggMCAwMC0yLjIyLS45N3oiIGZpbGw9IiM1ZWEwZWYiLz48cGF0aCBkPSJNMy42OSA3YTcuOTIgNy45MiAwIDAxMS4xNi0uMDggMi40NCAyLjQ0IDAgMDExLjcxLjUyIDIgMiAwIDAxLjU5IDEuNDYgMi4yMSAyLjIxIDAgMDEtLjYxIDEuNjQgMi42IDIuNiAwIDAxLTEuODYuNjEgOS4xNyA5LjE3IDAgMDEtMS0uMDV6bS41NSAzLjczYTQgNCAwIDAwLjU1IDAgMS42MiAxLjYyIDAgMDAxLjc5LTEuODFBMS41IDEuNSAwIDAwNC44NyA3LjNhMy4xNyAzLjE3IDAgMDAtLjYzIDB6TTcuODYgMTEuMTFWNi45aC41OUw5LjggOWExMi4xOCAxMi4xOCAwIDAxLjc2IDEuMzdjLS4wNS0uNTYtLjA2LTEuMDctLjA2LTEuNzNWNi45aC41djQuMjFoLS41NUw5LjEzIDljLS4yOS0uNDctLjU3LTEtLjc5LTEuNHYzLjU0ek0xMS44OSAxMC40NWEyIDIgMCAwMDEgLjI3Yy41NiAwIC44OC0uMjkuODgtLjcycy0uMjItLjYyLS43OS0uODMtMS4xMi0uNi0xLjEyLTEuMmExLjIyIDEuMjIgMCAwMTEuMzctMS4xNCAyIDIgMCAwMS45My4ybC0uMTYuNDVhMS42MyAxLjYzIDAgMDAtLjgtLjJjLS41OCAwLS44LjM0LS44LjYzcy4yNi41OS44NC44MSAxLjA4LjYyIDEuMDggMS4yNC0uNDggMS4yMS0xLjQ4IDEuMjFhMi4xNiAyLjE2IDAgMDEtMS4wNy0uMjd6IiBmaWxsPSIjZmZmIi8+PC9zdmc+" alt="DNS">
+        <div class="card-info">
+          <div class="name">privatelink.documents...</div>
+          <div class="type">Private DNS Zone</div>
+          <div class="detail">Linked → vnet-db</div>
+        </div>
+        <div class="tooltip">Private DNS Zone: privatelink.documents.azure.com&#10;VNet Link: link-vnet-db01 → vnet-db</div>
+      </div>
+      <div class="card">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iMTAuNTYiIHkxPSI3Ljc3IiB4Mj0iMTAuNTYiIHkyPSIxOS4yNCIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iLjIyIiBzdG9wLWNvbG9yPSIjMzJkNGY1Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMTk4YWIzIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImIiIHgxPSIxMC4yMyIgeTE9IjEuNjMiIHgyPSIxMS4wNyIgeTI9IjEyLjA0IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIuMjIiIHN0b3AtY29sb3I9IiMzMmQ0ZjUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMxOThhYjMiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cGF0aCBkPSJNMTYuMjMgMTcuMTdBMS4yMSAxLjIxIDAgMDAxNy40NiAxNnYtLjJjLS40OS0zLjg2LTIuNjktNy02Ljg5LTdzLTYuNDggMi42Ni02LjkxIDdhMS4yNCAxLjI0IDAgMDAxLjEgMS4zNmgxMS40N3oiIGZpbGw9InVybCgjYSkiLz48cGF0aCBkPSJNMTAuNTcgOS43MWEzLjg2IDMuODYgMCAwMS0yLjEtLjYxbDIuMDggNS40MiAyLjA2LTUuMzlhMy44MyAzLjgzIDAgMDEtMi4wNC41OHoiIGZpbGw9IiNmZmYiIG9wYWNpdHk9Ii44Ii8+PGNpcmNsZSBjeD0iMTAuNTciIGN5PSI1Ljg0IiByPSIzLjg3IiBmaWxsPSJ1cmwoI2IpIi8+PHBhdGggZD0iTTYgNS44OFYxYS4xNi4xNiAwIDAwLS4xNi0uMTdINC41N2EuMTcuMTcgMCAwMC0uMTguMTd2NC43MWEuMTguMTggMCAwMS0uMTcuMTdIMy4xYS4xMi4xMiAwIDAxLS4xLS4xMlY0LjQ1YS4xMS4xMSAwIDAwLS4xOS0uMDhMLjU5IDYuNTdhLjE2LjE2IDAgMDAwIC4yNEwyLjc5IDlBLjExLjExIDAgMDAzIDguOTNWNy42MWEuMTEuMTEgMCAwMS4xLS4xMWgyLjc0QS4xNy4xNyAwIDAwNiA3LjMzVjUuODh6IiBmaWxsPSIjMDA3OGQ0Ii8+PC9zdmc+" alt="RT">
+        <div class="card-info">
+          <div class="name">rt-test</div>
+          <div class="type">Route Table</div>
+          <div class="detail">0 routes · Unattached</div>
+        </div>
+        <div class="tooltip">Route Table: rt-test&#10;Routes: 0&#10;Status: Unattached</div>
+      </div>
+      <div class="card">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOS44OCIgeTE9IjguNTkiIHgyPSIxMS41MiIgeTI9IjEwLjIzIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKC0uMDggLTI4NS40NjQgLTE0NTQuMDgpIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjODZkNjMzIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNWU5NjI0Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImIiIHgxPSI2LjE4IiB5MT0iOC41OSIgeDI9IjcuODEiIHkyPSIxMC4yMyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzg2ZDYzMyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzVlOTYyNCIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJjIiB4MT0iMi40OCIgeTE9IjguNTkiIHgyPSI0LjExIiB5Mj0iMTAuMjMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM4NmQ2MzMiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1ZTk2MjQiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSIxMi43NCIgY3k9IjguOTkiIHI9IjEuMTYiIGZpbGw9InVybCgjYSkiLz48Y2lyY2xlIGN4PSI5LjA0IiBjeT0iOSIgcj0iMS4xNiIgZmlsbD0idXJsKCNiKSIvPjxjaXJjbGUgY3g9IjUuMzQiIGN5PSI5IiByPSIxLjE2IiBmaWxsPSJ1cmwoI2MpIi8+PHBhdGggZD0iTTYuMTgyIDEzLjYzOGwtLjY2NC42NjVhLjMuMyAwIDAxLS40MjQgMEwuMTggOS40MDRhLjYuNiAwIDAxLS4wMDEtLjg0OGwuNjYzLS42NjYgNS4zNCA1LjMyNGEuMy4zIDAgMDEwIC40MjV6IiBmaWxsPSIjNTBlNmZmIi8+PHBhdGggZD0iTTUuNDE4IDMuNzA4bC42NjYuNjY0YS4zLjMgMCAwMTAgLjQyNEwuODM4IDEwLjA1N2wtLjY2Ni0uNjYzYS42LjYgMCAwMS0uMDAxLS44NDlMNC45OTQgMy43MWEuMy4zIDAgMDEuNDI0IDB6IiBmaWxsPSIjMTQ5MGRmIi8+PHBhdGggZD0iTTE3LjE1NyA3Ljg4bC42NjMuNjY2YS42LjYgMCAwMTAgLjg0OGwtNC45MTUgNC45YS4zLjMgMCAwMS0uNDI0IDBsLS42NjQtLjY2NmEuMy4zIDAgMDEwLS40MjRsNS4zNC01LjMyNHoiIGZpbGw9IiM1MGU2ZmYiLz48cGF0aCBkPSJNMTcuODE4IDkuMzg3bC0uNjY1LjY2NC01LjI0Ny01LjI2MWEuMy4zIDAgMDEwLS40MjVsLjY3NC0uNjdhLjMuMyAwIDAxLjQyNCAwbDQuODIzIDQuODM2YS42LjYgMCAwMS0uMDAyLjg0OXoiIGZpbGw9IiMxNDkwZGYiLz48L3N2Zz4=" alt="AVNM">
+        <div class="card-info">
+          <div class="name">avnm-cc</div>
+          <div class="type">Network Manager</div>
+          <div class="detail">Canada Central</div>
+        </div>
+        <div class="tooltip">Azure Virtual Network Manager: avnm-cc&#10;Location: Canada Central</div>
+      </div>
+      <div class="card" style="overflow:visible;">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJzZyIgeDE9IjkiIHkxPSIxNS44MyIgeDI9IjkiIHkyPSIyLjE3IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMDA3OGQ0Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNWVhMGVmIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3QgeD0iLjUiIHk9IjIuMTciIHdpZHRoPSIxNyIgaGVpZ2h0PSIxMy42NiIgcng9Ii42IiBmaWxsPSJ1cmwoI3NnKSIvPjxyZWN0IHg9IjIuNSIgeT0iNCIgd2lkdGg9IjEzIiBoZWlnaHQ9IjIuNSIgcng9Ii4zIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMi41IiB5PSI3LjUiIHdpZHRoPSIxMyIgaGVpZ2h0PSIyLjUiIHJ4PSIuMyIgZmlsbD0iI2MzZjFmZiIvPjxyZWN0IHg9IjIuNSIgeT0iMTEiIHdpZHRoPSIxMyIgaGVpZ2h0PSIyLjUiIHJ4PSIuMyIgZmlsbD0iIzljZWJmZiIvPjxjaXJjbGUgY3g9IjEzLjUiIGN5PSI1LjI1IiByPSIuOCIgZmlsbD0iIzAwNzhkNCIvPjxjaXJjbGUgY3g9IjEzLjUiIGN5PSI4Ljc1IiByPSIuOCIgZmlsbD0iIzAwNzhkNCIvPjxjaXJjbGUgY3g9IjEzLjUiIGN5PSIxMi4yNSIgcj0iLjgiIGZpbGw9IiMwMDc4ZDQiLz48L3N2Zz4=" alt="Storage">
+        <div class="card-info">
+          <div class="name">stcontososreagent</div>
+          <div class="type">Storage Account</div>
+          <div class="detail">Standard_LRS · Hot</div>
+        </div>
+        
+        
+        <div class="tooltip">Storage: stcontososreagent&#10;SKU: Standard_LRS&#10;Tier: Hot&#10;Location: Canada Central&#10;TLS: 1.2 minimum&#10;Shared Key Access: Disabled&#10;Public Blob Access: Disabled&#10;HTTPS Only: Yes&#10;Encryption: Microsoft-managed key&#10;Created: 2026-05-25</div>
+      </div>
+      <div class="card" style="border-left:3px solid #0078d4;">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJlZyIgeDE9IjkiIHkxPSIxNy4yNSIgeDI9IjkiIHkyPSIuNzUiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMwMDc4ZDQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1MGU2ZmYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB4PSIuNzUiIHk9Ii43NSIgd2lkdGg9IjE2LjUiIGhlaWdodD0iMTYuNSIgcng9IjIiIGZpbGw9InVybCgjZWcpIi8+PHBhdGggZD0iTTUgNWg4djJINXpNNSA4LjVoOHYySDV6TTUgMTJoOHYySDV6IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTMuNSIgY3k9IjYiIHI9IjEuMiIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjEzLjUiIGN5PSI5LjUiIHI9IjEuMiIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjEzLjUiIGN5PSIxMyIgcj0iMS4yIiBmaWxsPSIjZmZmIi8+PC9zdmc+" alt="EventGrid">
+        <div class="card-info">
+          <div class="name">EG: stcontososre...</div>
+          <div class="type">Event Grid System Topic</div>
+          <div class="detail">Source: stcontososreagent</div>
+        </div>
+        <span style="position:absolute;top:-6px;right:-6px;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:600;background:#e8f4fd;color:#0078d4;border:1px solid #b3d7ff;">NEW</span>
+        <div class="tooltip">Event Grid System Topic&#10;Name: stcontososreagent-00000000-0000-0000-0000-000000000001&#10;Source: stcontososreagent (Storage Account)&#10;Topic Type: Microsoft.Storage.StorageAccounts&#10;Location: Canada Central</div>
+      </div>
+      <div class="card" style="border-left:3px solid #0078d4; overflow:visible;">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJlZyIgeDE9IjkiIHkxPSIxNy4yNSIgeDI9IjkiIHkyPSIuNzUiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMwMDc4ZDQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1MGU2ZmYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB4PSIuNzUiIHk9Ii43NSIgd2lkdGg9IjE2LjUiIGhlaWdodD0iMTYuNSIgcng9IjIiIGZpbGw9InVybCgjZWcpIi8+PHBhdGggZD0iTTUgNWg4djJINXpNNSA4LjVoOHYySDV6TTUgMTJoOHYySDV6IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTMuNSIgY3k9IjYiIHI9IjEuMiIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjEzLjUiIGN5PSI5LjUiIHI9IjEuMiIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjEzLjUiIGN5PSIxMyIgcj0iMS4yIiBmaWxsPSIjZmZmIi8+PC9zdmc+" alt="EventGrid">
+        <div class="card-info">
+          <div class="name">EG: stcontosofunc</div>
+          <div class="type">Event Grid System Topic</div>
+          <div class="detail">Source: stcontosofunc</div>
+        </div>
+        <span style="position:absolute;top:-6px;right:-6px;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:600;background:#e8fde8;color:#27ae60;border:1px solid #27ae60;">NEW</span>
+        <div class="tooltip">Event Grid System Topic&#10;Name: stcontosofunc-00000000-0000-0000-0000-000000000002&#10;Source: stcontosofunc (Storage Account)&#10;Topic Type: Microsoft.Storage.StorageAccounts&#10;Location: Canada Central</div>
+      </div>
+      <div class="card" style="overflow:visible;">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJzZyIgeDE9IjkiIHkxPSIxNS44MyIgeDI9IjkiIHkyPSIyLjE3IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMDA3OGQ0Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNWVhMGVmIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3QgeD0iLjUiIHk9IjIuMTciIHdpZHRoPSIxNyIgaGVpZ2h0PSIxMy42NiIgcng9Ii42IiBmaWxsPSJ1cmwoI3NnKSIvPjxyZWN0IHg9IjIuNSIgeT0iNCIgd2lkdGg9IjEzIiBoZWlnaHQ9IjIuNSIgcng9Ii4zIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMi41IiB5PSI3LjUiIHdpZHRoPSIxMyIgaGVpZ2h0PSIyLjUiIHJ4PSIuMyIgZmlsbD0iI2MzZjFmZiIvPjxyZWN0IHg9IjIuNSIgeT0iMTEiIHdpZHRoPSIxMyIgaGVpZ2h0PSIyLjUiIHJ4PSIuMyIgZmlsbD0iIzljZWJmZiIvPjxjaXJjbGUgY3g9IjEzLjUiIGN5PSI1LjI1IiByPSIuOCIgZmlsbD0iIzAwNzhkNCIvPjxjaXJjbGUgY3g9IjEzLjUiIGN5PSI4Ljc1IiByPSIuOCIgZmlsbD0iIzAwNzhkNCIvPjxjaXJjbGUgY3g9IjEzLjUiIGN5PSIxMi4yNSIgcj0iLjgiIGZpbGw9IiMwMDc4ZDQiLz48L3N2Zz4=" alt="Storage">
+        <div class="card-info">
+          <div class="name">stcontosofunc</div>
+          <div class="type">Storage Account</div>
+          <div class="detail">Standard_LRS · Hot</div>
+        </div>
+        <span style="position:absolute;top:-6px;right:-6px;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:600;background:#e8fde8;color:#27ae60;border:1px solid #27ae60;">NEW</span>
+        <div class="tooltip">Storage: stcontosofunc&#10;SKU: Standard_LRS&#10;Tier: Hot&#10;Location: Canada Central&#10;TLS: 1.2 minimum&#10;Shared Key Access: Disabled&#10;HTTPS Only: Yes&#10;Used by: Function App func-contoso-dr (deployment)&#10;Created: 2026-06-22</div>
+      </div>
+      <div class="card" style="border-left:3px solid #a385e0; overflow:visible;">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhcCIgeDE9IjkiIHkxPSIxNy4yNSIgeDI9IjkiIHkyPSIuNzUiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM1YjRhOWUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNhMzg1ZTAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB4PSIuNzUiIHk9Ii43NSIgd2lkdGg9IjE2LjUiIGhlaWdodD0iMTYuNSIgcng9IjIiIGZpbGw9InVybCgjYXApIi8+PHJlY3QgeD0iMyIgeT0iMy41IiB3aWR0aD0iMTIiIGhlaWdodD0iMi44IiByeD0iLjQiIGZpbGw9IiNmZmYiLz48cmVjdCB4PSIzIiB5PSI3LjYiIHdpZHRoPSIxMiIgaGVpZ2h0PSIyLjgiIHJ4PSIuNCIgZmlsbD0iI2Q0YzRmNSIvPjxyZWN0IHg9IjMiIHk9IjExLjciIHdpZHRoPSIxMiIgaGVpZ2h0PSIyLjgiIHJ4PSIuNCIgZmlsbD0iI2I4YTRlOCIvPjxjaXJjbGUgY3g9IjEzIiBjeT0iNC45IiByPSIuNyIgZmlsbD0iIzViNGE5ZSIvPjxjaXJjbGUgY3g9IjEzIiBjeT0iOSIgcj0iLjciIGZpbGw9IiM1YjRhOWUiLz48Y2lyY2xlIGN4PSIxMyIgY3k9IjEzLjEiIHI9Ii43IiBmaWxsPSIjNWI0YTllIi8+PC9zdmc+" alt="ASP">
+        <div class="card-info">
+          <div class="name">ASP-rgdr-0001</div>
+          <div class="type">App Service Plan</div>
+          <div class="detail">Flex Consumption · FC1</div>
+        </div>
+        <span style="position:absolute;top:-6px;right:-6px;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:600;background:#e8fde8;color:#27ae60;border:1px solid #27ae60;">NEW</span>
+        <div class="tooltip">App Service Plan: ASP-rgdr-0001&#10;SKU: FC1 (Flex Consumption)&#10;Tier: FlexConsumption&#10;Compute: Dynamic&#10;Location: Canada Central&#10;Hosts: Function App func-contoso-dr&#10;Created: 2026-06-22</div>
+      </div>
+      <div class="card" style="border-left:3px solid #faa21d; overflow:visible;">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJmYSIgeDE9IjkiIHkxPSIxNy4yNSIgeDI9IjkiIHkyPSIuNzUiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmYWEyMWQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmQ3MGEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB4PSIuNzUiIHk9Ii43NSIgd2lkdGg9IjE2LjUiIGhlaWdodD0iMTYuNSIgcng9IjIiIGZpbGw9InVybCgjZmEpIi8+PHBhdGggZD0iTTEwLjUgMkw1IDEwaDMuNUw3IDE2bDYuNS04SDEweiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==" alt="FuncApp">
+        <div class="card-info">
+          <div class="name">func-contoso-dr</div>
+          <div class="type">Function App</div>
+          <div class="detail">.NET 8.0 · Running</div>
+        </div>
+        <span style="position:absolute;top:-6px;right:-6px;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:600;background:#e8fde8;color:#27ae60;border:1px solid #27ae60;">NEW</span>
+        <div class="tooltip">Function App: func-contoso-dr&#10;Runtime: dotnet-isolated 8.0&#10;SKU: Flex Consumption&#10;State: Running&#10;HTTPS Only: Yes&#10;Host: func-contoso-dr-example.canadacentral-01.azurewebsites.net&#10;Plan: ASP-rgdr-0001&#10;Deploy Storage: stcontosofunc&#10;Max Instances: 100&#10;Created: 2026-06-22</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== ASR CENTER COLUMN ========== -->
+<div class="asr-center">
+  <div class="repl-arrow">
+    <span>Replication</span>
+    <span class="arrow-line"></span>
+    <span class="arrow-head">&#9654;</span>
+  </div>
+
+  <div class="asr-vault-card">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iMTEuMTMiIHkxPSIxMC45NSIgeDI9IjExLjEzIiB5Mj0iMS4yMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzAwNzhkNCIvPjxzdG9wIG9mZnNldD0iLjE2IiBzdG9wLWNvbG9yPSIjMTM4MGRhIi8+PHN0b3Agb2Zmc2V0PSIuNTMiIHN0b3AtY29sb3I9IiMzYzkxZTUiLz48c3RvcCBvZmZzZXQ9Ii44MiIgc3RvcC1jb2xvcj0iIzU1OWNlYyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzVlYTBlZiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJiIiB4MT0iNy4wNiIgeTE9IjE2Ljc5IiB4Mj0iNy4wNiIgeTI9IjYuNzgiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMxOThhYjMiLz48c3RvcCBvZmZzZXQ9Ii4xMyIgc3RvcC1jb2xvcj0iIzIxYTBjNyIvPjxzdG9wIG9mZnNldD0iLjMxIiBzdG9wLWNvbG9yPSIjMjhiN2RiIi8+PHN0b3Agb2Zmc2V0PSIuNSIgc3RvcC1jb2xvcj0iIzJlYzdlYSIvPjxzdG9wIG9mZnNldD0iLjcyIiBzdG9wLWNvbG9yPSIjMzFkMWYyIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMzJkNGY1Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHBhdGggZD0iTTE4IDcuOWEzLjA5IDMuMDkgMCAwMC0yLjY4LTMgMy44OSAzLjg5IDAgMDAtNC0zLjcyQTQgNCAwIDAwNy41IDMuODFhMy42OCAzLjY4IDAgMDAtMy4yNCAzLjU1QTMuNzQgMy43NCAwIDAwOC4xMyAxMWg2Ljc3QTMuMTMgMy4xMyAwIDAwMTggNy45eiIgZmlsbD0idXJsKCNhKSIvPjxwYXRoIGQ9Ik0xNC4zOSA1LjIybC0xLjgzLTEuNzhjLS4yLS4yLS4zNy0uMTMtLjM3LjE4di44YS4yMi4yMiAwIDAxLS4yMy4yMmMtMS4xOCAwLTQuNDcuMzEtNC41OSA0LjgxYS4yMy4yMyAwIDAwLjIzLjIzaDEuMTdBLjIzLjIzIDAgMDA5IDkuNDNhMi43NiAyLjc2IDAgMDEzLTMuMzMuMjMuMjMgMCAwMS4yMy4yM3YuNzRjMCAuMzcuMTIuNDMuMzcuMThsMS43OS0xLjY1YS4yMy4yMyAwIDAwMC0uMzh6IiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTE0LjEyIDEzLjY2YTMuMTcgMy4xNyAwIDAwLTIuNzUtMy4wNSA0IDQgMCAwMC00LjEyLTMuODMgNC4xIDQuMSAwIDAwLTMuOTIgMi42OEEzLjc4IDMuNzggMCAwMDAgMTMuMWEzLjg0IDMuODQgMCAwMDQgMy42OWg2Ljc4YS40Ny40NyAwIDAwLjE3IDAgMy4yMSAzLjIxIDAgMDAzLjE3LTMuMTN6IiBmaWxsPSJ1cmwoI2IpIi8+PC9zdmc+" alt="ASR">
+    <div class="name">rsv-contoso-dr</div>
+    <div class="type">Recovery Services Vault</div>
+    <div style="font-size:9px;color:#e74c3c;margin-top:4px;">Recommended</div>
+  </div>
+
+  <div class="asr-vault-card" style="border-color:#27ae60;">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOSIgeTE9IjE1LjgzIiB4Mj0iOSIgeTI9IjUuNzkiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNiM2IzYjMiLz48c3RvcCBvZmZzZXQ9Ii4yNiIgc3RvcC1jb2xvcj0iI2MxYzFjMSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2U2ZTZlNiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0uNSA1Ljc5aDE3djkuNDhhLjU3LjU3IDAgMDEtLjU3LjU3SDEuMDdhLjU3LjU3IDAgMDEtLjU3LS41N1Y1Ljc5eiIgZmlsbD0idXJsKCNhKSIvPjxwYXRoIGQ9Ik0xLjA3IDIuMTdoMTUuODZhLjU3LjU3IDAgMDEuNTcuNTd2My4wNUguNVYyLjczYS41Ny41NyAwIDAxLjU3LS41NnoiIGZpbGw9IiMzN2MyYjEiLz48cGF0aCBkPSJNMi44MSA2Ljg5aDEyLjM3YS4yNy4yNyAwIDAxLjI2LjI3djEuNGEuMjcuMjcgMCAwMS0uMjYuMjdIMi44MWEuMjcuMjcgMCAwMS0uMjYtLjI3di0xLjRhLjI3LjI3IDAgMDEuMjYtLjI3eiIgZmlsbD0iI2ZmZiIvPjxwYXRoIGQ9Ik0yLjgyIDkuNjhoMTIuMzdhLjI3LjI3IDAgMDEuMjYuMjd2MS40MWEuMjcuMjcgMCAwMS0uMjYuMjdIMi44MmEuMjcuMjcgMCAwMS0uMjYtLjI3VjEwYS4yNy4yNyAwIDAxLjI2LS4zMnoiIGZpbGw9IiMzN2MyYjEiLz48cGF0aCBkPSJNMi44MiAxMi41aDEyLjM3YS4yNy4yNyAwIDAxLjI2LjI3djEuNDFhLjI3LjI3IDAgMDEtLjI2LjI3SDIuODJhLjI3LjI3IDAgMDEtLjI2LS4yN3YtMS40MWEuMjcuMjcgMCAwMS4yNi0uMjd6IiBmaWxsPSIjMjU4Mjc3Ii8+PC9zdmc+" alt="Cache">
+    <div class="name">asrcache***</div>
+    <div class="type">Cache Storage</div>
+    <div style="font-size:9px;color:#27ae60;margin-top:4px;">Staging</div>
+  </div>
+
+
+<div class="repl-arrow">
+    <span>Failover</span>
+    <span class="arrow-line"></span>
+    <span class="arrow-head">&#9654;</span>
+  </div>
+</div>
+
+<!-- ========== DR TARGET REGION (East US) ========== -->
+<div class="region-box target">
+  <div class="region-header">
+    <span class="region-badge dr">DR TARGET</span>
+    <h2>East US</h2>
+  </div>
+
+  <!-- VNet: vneteastus -->
+  <div class="vnet-section" style="border-color:#f5c6cb; background:#fff5f5;">
+    <div class="vnet-header">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOS44OCIgeTE9IjguNTkiIHgyPSIxMS41MiIgeTI9IjEwLjIzIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKC0uMDggLTI4NS40NjQgLTE0NTQuMDgpIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjODZkNjMzIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNWU5NjI0Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImIiIHgxPSI2LjE4IiB5MT0iOC41OSIgeDI9IjcuODEiIHkyPSIxMC4yMyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzg2ZDYzMyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzVlOTYyNCIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJjIiB4MT0iMi40OCIgeTE9IjguNTkiIHgyPSI0LjExIiB5Mj0iMTAuMjMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM4NmQ2MzMiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1ZTk2MjQiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSIxMi43NCIgY3k9IjguOTkiIHI9IjEuMTYiIGZpbGw9InVybCgjYSkiLz48Y2lyY2xlIGN4PSI5LjA0IiBjeT0iOSIgcj0iMS4xNiIgZmlsbD0idXJsKCNiKSIvPjxjaXJjbGUgY3g9IjUuMzQiIGN5PSI5IiByPSIxLjE2IiBmaWxsPSJ1cmwoI2MpIi8+PHBhdGggZD0iTTYuMTgyIDEzLjYzOGwtLjY2NC42NjVhLjMuMyAwIDAxLS40MjQgMEwuMTggOS40MDRhLjYuNiAwIDAxLS4wMDEtLjg0OGwuNjYzLS42NjYgNS4zNCA1LjMyNGEuMy4zIDAgMDEwIC40MjV6IiBmaWxsPSIjNTBlNmZmIi8+PHBhdGggZD0iTTUuNDE4IDMuNzA4bC42NjYuNjY0YS4zLjMgMCAwMTAgLjQyNEwuODM4IDEwLjA1N2wtLjY2Ni0uNjYzYS42LjYgMCAwMS0uMDAxLS44NDlMNC45OTQgMy43MWEuMy4zIDAgMDEuNDI0IDB6IiBmaWxsPSIjMTQ5MGRmIi8+PHBhdGggZD0iTTE3LjE1NyA3Ljg4bC42NjMuNjY2YS42LjYgMCAwMTAgLjg0OGwtNC45MTUgNC45YS4zLjMgMCAwMS0uNDI0IDBsLS42NjQtLjY2NmEuMy4zIDAgMDEwLS40MjRsNS4zNC01LjMyNHoiIGZpbGw9IiM1MGU2ZmYiLz48cGF0aCBkPSJNMTcuODE4IDkuMzg3bC0uNjY1LjY2NC01LjI0Ny01LjI2MWEuMy4zIDAgMDEwLS40MjVsLjY3NC0uNjdhLjMuMyAwIDAxLjQyNCAwbDQuODIzIDQuODM2YS42LjYgMCAwMS0uMDAyLjg0OXoiIGZpbGw9IiMxNDkwZGYiLz48L3N2Zz4=" alt="VNet">
+      <span style="color:#e74c3c;">vneteastus</span>
+      <span class="addr">10.0.0.0/16</span>
+    </div>
+
+    <!-- Subnet: default -->
+    <div class="subnet-box" style="border-color:#f5c6cb;">
+      <div class="subnet-label" style="background:#fde8e8;">default — 10.0.0.0/24</div>
+      <div class="cards-grid">
+        <!-- Ghost VM replica -->
+        <div class="card ghost">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOC44OCIgeTE9IjEyLjIxIiB4Mj0iOC44OCIgeTI9Ii4yMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzAwNzhkNCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjNWVhMGVmIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImIiIHgxPSI4Ljg4IiB5MT0iMTYuODQiIHgyPSI4Ljg4IiB5Mj0iMTIuMjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9Ii4xNSIgc3RvcC1jb2xvcj0iI2NjYyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzcwNzA3MCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHg9Ii0uMTIiIHk9Ii4yMSIgd2lkdGg9IjE4IiBoZWlnaHQ9IjEyIiByeD0iLjYiIGZpbGw9InVybCgjYSkiLz48cGF0aCBmaWxsPSIjNTBlNmZmIiBkPSJNMTEuODggNC40NnYzLjQ5bC0zIDEuNzZ2LTMuNWwzLTEuNzV6Ii8+PHBhdGggZmlsbD0iI2MzZjFmZiIgZD0iTTExLjg4IDQuNDZsLTMgMS43Ni0zLTEuNzYgMy0xLjc1IDMgMS43NXoiLz48cGF0aCBmaWxsPSIjOWNlYmZmIiBkPSJNOC44OCA2LjIydjMuNDlsLTMtMS43NlY0LjQ2bDMgMS43NnoiLz48cGF0aCBmaWxsPSIjYzNmMWZmIiBkPSJNNS44OCA3Ljk1bDMtMS43NHYzLjVsLTMtMS43NnoiLz48cGF0aCBmaWxsPSIjOWNlYmZmIiBkPSJNMTEuODggNy45NWwtMy0xLjc0djMuNWwzLTEuNzZ6Ii8+PHBhdGggZD0iTTEyLjQ5IDE1Ljg0Yy0xLjc4LS4yOC0xLjg1LTEuNTYtMS44NS0zLjYzSDcuMTFjMCAyLjA3LS4wNiAzLjM1LTEuODQgMy42M2ExIDEgMCAwMC0uODkgMWg5YTEgMSAwIDAwLS44OS0xeiIgZmlsbD0idXJsKCNiKSIvPjwvc3ZnPg==" alt="VM">
+          <div class="card-info">
+            <div class="name">vm-app01</div>
+            <div class="type">VM Replica</div>
+            <div class="detail">Standby · Failover Ready</div>
+          </div>
+          <div class="tooltip">DR Replica of vm-app01&#10;Status: Standby&#10;Activated on failover&#10;Size: Standard_D4as_v4</div>
+        </div>
+        <!-- Ghost NIC replica -->
+        <div class="card ghost">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOS4wMSIgeTE9IjE2LjUiIHgyPSI5LjAxIiB5Mj0iMS41IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjNWU5NjQxIi8+PHN0b3Agb2Zmc2V0PSIuMzQiIHN0b3AtY29sb3I9IiM2YmFhNDIiLz48c3RvcCBvZmZzZXQ9Ii42NyIgc3RvcC1jb2xvcj0iIzczYjc0MyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzc2YmI0MyIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0xNS44OSAyLjkxaDEuMjdhLjM0LjM0IDAgMDEuMzQuMzR2My41YS4zNC4zNCAwIDAxLS4zNC4zNGgtMS4yN1YyLjkxek0xNS44OSA5aDEuMjdhLjM0LjM0IDAgMDEuMzQuMzR2NS44NmEuMzQuMzQgMCAwMS0uMzQuMzRoLTEuMjdWOXoiIGZpbGw9IiNmZmNhMDAiLz48cmVjdCB4PSIyLjEzIiB5PSIxLjUiIHdpZHRoPSIxMy43NiIgaGVpZ2h0PSIxNSIgcng9Ii42OSIgZmlsbD0idXJsKCNhKSIvPjxwYXRoIGQ9Ik01LjkgMTIuOWgtLjcxYS4yLjIgMCAwMS0uMTktLjIxVjQuMzRhLjE5LjE5IDAgMDEuMTktLjJoMS45M2EuMTkuMTkgMCAwMS4xOS4yLjIuMiAwIDAxLS4xOS4yMUg1LjM4djcuOTNoLjUyYS4yLjIgMCAwMS4xOS4yMS4yMS4yMSAwIDAxLS4xOS4yMXoiIGZpbGw9IiNiNGVjMzYiLz48cGF0aCBkPSJNNiAxMy45Mkg0LjRhLjIuMiAwIDAxLS4xOS0uMjFMNC4wOCAzLjM4YS4yLjIgMCAwMS4wNi0uMTUuMTYuMTYgMCAwMS4xMy0uMDZoMi44NXYuNDFINC40N2wuMTIgOS45Mkg2ek0xMiAxM2gtMS41OWEuMTkuMTkgMCAwMS0uMTQtLjA3LjE4LjE4IDAgMDEtLjA2LS4xNFY3LjlhLjE5LjE5IDAgMDEuMTktLjJoLjkxVjUuNDVoLjM4djIuNDRhLjIuMiAwIDAxLS4xOC4yMWgtLjkxdjQuNDJIMTJ6IiBmaWxsPSIjYjRlYzM2Ii8+PHJlY3QgeD0iNy4wNyIgeT0iMi4yOSIgd2lkdGg9IjYuMTQiIGhlaWdodD0iMy4xMSIgcng9Ii4yNiIgZmlsbD0iIzM2NTYxNSIvPjxyZWN0IHg9IjUuODYiIHk9IjEyLjY5IiB3aWR0aD0iNC45IiBoZWlnaHQ9IjEuMDkiIHJ4PSIuMjYiIHRyYW5zZm9ybT0icm90YXRlKDkwIDguMzA1IDEzLjIzNSkiIGZpbGw9IiMzNjU2MTUiLz48cmVjdCB4PSIzLjk5IiB5PSIxMi43MSIgd2lkdGg9IjQuOSIgaGVpZ2h0PSIxLjA5IiByeD0iLjI2IiB0cmFuc2Zvcm09InJvdGF0ZSg5MCA2LjQ0IDEzLjI2KSIgZmlsbD0iIzM2NTYxNSIvPjxyZWN0IHg9IjkuOTgiIHk9IjEyLjcxIiB3aWR0aD0iNC45IiBoZWlnaHQ9IjEuMDkiIHJ4PSIuMjYiIHRyYW5zZm9ybT0icm90YXRlKDkwIDEyLjQyNSAxMy4yNTUpIiBmaWxsPSIjZjJmMmYyIi8+PGVsbGlwc2UgY3g9IjguMTEiIGN5PSI4LjA2IiByeD0iMS4wNCIgcnk9IjEuMTIiIGZpbGw9IiNmMmYyZjIiLz48cGF0aCBkPSJNMi4xMSAxMi4yNUguODRhLjM0LjM0IDAgMDEtLjM0LS4zVjYuMDlhLjM0LjM0IDAgMDEuMzQtLjM0aDEuMjd2Ni41eiIgZmlsbD0iIzNiM2IzYiIvPjwvc3ZnPg==" alt="NIC">
+          <div class="card-info">
+            <div class="name">vm-app01-dr-nic</div>
+            <div class="type">NIC Replica</div>
+            <div class="detail">DR Network Interface</div>
+          </div>
+          <div class="tooltip">DR Replica NIC&#10;Created on failover&#10;Mapped to vneteastus/default</div>
+        </div>
+        <!-- Ghost PIP replica -->
+        <div class="card ghost">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOSIgeTE9IjE1LjgzIiB4Mj0iOSIgeTI9IjUuNzkiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMzMmJlZGQiLz48c3RvcCBvZmZzZXQ9Ii4xOCIgc3RvcC1jb2xvcj0iIzMyY2FlYSIvPjxzdG9wIG9mZnNldD0iLjQxIiBzdG9wLWNvbG9yPSIjMzJkMmYyIi8+PHN0b3Agb2Zmc2V0PSIuNzgiIHN0b3AtY29sb3I9IiMzMmQ0ZjUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cGF0aCBkPSJNLjUgNS43OWgxN3Y5LjQ4YS41Ny41NyAwIDAxLS41Ny41N0gxLjA3YS41Ny41NyAwIDAxLS41Ny0uNTdWNS43OXoiIGZpbGw9InVybCgjYSkiLz48cGF0aCBkPSJNMS4wNyAyLjE3aDE1Ljg2YS41Ny41NyAwIDAxLjU3LjU3djMuMDVILjVWMi43M2EuNTcuNTcgMCAwMS41Ny0uNTZ6IiBmaWxsPSIjNzY3Njc2Ii8+PGNpcmNsZSBjeD0iMTIuODIiIGN5PSIxMC4xOSIgcj0iMS4zOCIgZmlsbD0iI2YyZjJmMiIvPjxjaXJjbGUgY3g9IjkuMDYiIGN5PSIxMC4xOSIgcj0iMS4zOCIgZmlsbD0iI2YyZjJmMiIvPjxjaXJjbGUgY3g9IjUuMTgiIGN5PSIxMC4xOSIgcj0iMS4zOCIgZmlsbD0iI2YyZjJmMiIvPjxyZWN0IHg9IjIuNzkiIHk9IjMuMjUiIHdpZHRoPSIxMi40MyIgaGVpZ2h0PSIxLjQ2IiByeD0iLjI4IiBmaWxsPSIjZjJmMmYyIi8+PC9zdmc+" alt="PIP">
+          <div class="card-info">
+            <div class="name">vm-app01-dr-ip</div>
+            <div class="type">PIP Replica</div>
+            <div class="detail">DR Public IP</div>
+          </div>
+          <div class="tooltip">DR Public IP&#10;Allocated on failover&#10;Type: Static</div>
+        </div>
+        <!-- Ghost Disk replica -->
+        <div class="card ghost">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iMTUuMzUiIHkxPSIxMy40MSIgeDI9IjE1LjM3IiB5Mj0iMTMuNDEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMwMDc4ZDQiLz48c3RvcCBvZmZzZXQ9Ii4xNCIgc3RvcC1jb2xvcj0iIzE3ODJkYSIvPjxzdG9wIG9mZnNldD0iLjM3IiBzdG9wLWNvbG9yPSIjMzY4ZmUzIi8+PHN0b3Agb2Zmc2V0PSIuNTkiIHN0b3AtY29sb3I9IiM0Yzk4ZWEiLz48c3RvcCBvZmZzZXQ9Ii44IiBzdG9wLWNvbG9yPSIjNTk5ZWVlIi8+PHN0b3Agb2Zmc2V0PSIuOTkiIHN0b3AtY29sb3I9IiM1ZWEwZWYiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0iYiIgeDE9IjUuNTEiIHkxPSI4MDIuNSIgeDI9IjEyLjk0IiB5Mj0iODEwLjU4IiBncmFkaWVudFRyYW5zZm9ybT0ibWF0cml4KDEgMCAwIDEuNTkgMCAtMTI3OC43NikiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMwMDc4ZDQiLz48c3RvcCBvZmZzZXQ9Ii4wMiIgc3RvcC1jb2xvcj0iIzBkN2VkOCIvPjxzdG9wIG9mZnNldD0iLjA4IiBzdG9wLWNvbG9yPSIjMmI4YWUwIi8+PHN0b3Agb2Zmc2V0PSIuMTUiIHN0b3AtY29sb3I9IiM0MTk0ZTciLz48c3RvcCBvZmZzZXQ9Ii4yMiIgc3RvcC1jb2xvcj0iIzUxOWJlYiIvPjxzdG9wIG9mZnNldD0iLjI5IiBzdG9wLWNvbG9yPSIjNWI5ZmVlIi8+PHN0b3Agb2Zmc2V0PSIuNCIgc3RvcC1jb2xvcj0iIzVlYTBlZiIvPjxzdG9wIG9mZnNldD0iLjU1IiBzdG9wLWNvbG9yPSIjNWI5ZmVlIi8+PHN0b3Agb2Zmc2V0PSIuNjgiIHN0b3AtY29sb3I9IiM1MDlhZWIiLz48c3RvcCBvZmZzZXQ9Ii44IiBzdG9wLWNvbG9yPSIjM2Y5MmU2Ii8+PHN0b3Agb2Zmc2V0PSIuOTEiIHN0b3AtY29sb3I9IiMyNjg4ZGYiLz48c3RvcCBvZmZzZXQ9Ii45OSIgc3RvcC1jb2xvcj0iIzEyN2ZkOSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxlbGxpcHNlIGN4PSI4Ljk2IiBjeT0iMTEuODIiIHJ4PSI3LjUiIHJ5PSIzLjA4IiBmaWxsPSIjNzZiYzJkIi8+PGVsbGlwc2UgY3g9IjkuMTUiIGN5PSIxMS43OSIgcng9IjIuNDkiIHJ5PSIuNjgiIGZpbGw9IiM1ZTk2MjQiLz48cGF0aCBkPSJNMTUuMzUgMTMuNHoiIGZpbGw9InVybCgjYSkiLz48ZWxsaXBzZSBjeD0iOC45NiIgY3k9IjQuOTkiIHJ4PSI3LjUiIHJ5PSIzLjA4IiBmaWxsPSJ1cmwoI2IpIi8+PGVsbGlwc2UgY3g9IjkuMTUiIGN5PSI0Ljk1IiByeD0iMi40OSIgcnk9Ii42OCIgZmlsbD0iIzAwNWJhMSIvPjxwYXRoIGQ9Ik05IDE0Ljg0YzQuMTUgMCA3LjUtMS4zOCA3LjUtMy4wOHYxLjgyYy0uMTQgMS42NS0zLjQ0IDMtNy41IDNTMS41IDE1LjIgMS41IDEzLjV2LTEuNzRjLS4wNCAxLjcgMy4zMiAzLjA4IDcuNSAzLjA4eiIgZmlsbD0iIzVlOTYyNCIvPjxwYXRoIGQ9Ik0xNS4zNSAxMy40eiIgZmlsbD0idXJsKCNhKSIvPjxwYXRoIGQ9Ik05IDhjNC4xNSAwIDcuNS0xLjM4IDcuNS0zLjA4djEuODJjLS4xNCAxLjY1LTMuNDQgMy03LjUgM1MxLjUgOC4zNiAxLjUgNi42NlY0LjkyQzEuNDYgNi42MiA0LjgyIDggOSA4eiIgZmlsbD0iIzAwNzhkNCIvPjwvc3ZnPg==" alt="Disk">
+          <div class="card-info">
+            <div class="name">vm-app01_OsDisk_1</div>
+            <div class="type">Replica Disk</div>
+            <div class="detail">Continuously replicated</div>
+          </div>
+          <div class="tooltip">DR Replica Disk&#10;Continuously replicated via ASR&#10;Size: 30 GB</div>
+        </div>
+        <!-- NSG -->
+        <div class="card">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iOS4wMSIgeTE9Ii43NSIgeDI9IjkuMDEiIHkyPSIxNy4yNSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzVlYTBlZiIvPjxzdG9wIG9mZnNldD0iLjE4IiBzdG9wLWNvbG9yPSIjNTU5Y2VjIi8+PHN0b3Agb2Zmc2V0PSIuNDciIHN0b3AtY29sb3I9IiMzYzkxZTUiLz48c3RvcCBvZmZzZXQ9Ii44NCIgc3RvcC1jb2xvcj0iIzEzODBkYSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzAwNzhkNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0xNi4zNiA4LjRjMCA0Ljg0LTUuODUgOC43NC03LjEyIDkuNTNhLjQ2LjQ2IDAgMDEtLjQ4IDBjLTEuMjctLjc5LTcuMTItNC42OS03LjEyLTkuNTNWMi41OGEuNDYuNDYgMCAwMS40NS0uNDZDNi42NCAyIDUuNTkgMCA5IDBzMi4zNiAyIDYuOTEgMi4xMmEuNDYuNDYgMCAwMS40NS40NnoiIGZpbGw9IiMwMDc4ZDQiLz48cGF0aCBkPSJNMTUuNzUgOC40NWMwIDQuNDQtNS4zNiA4LTYuNTMgOC43NGEuNDMuNDMgMCAwMS0uNDQgMGMtMS4xNy0uNzItNi41My00LjMtNi41My04Ljc0VjMuMTFhLjQyLjQyIDAgMDEuNDEtLjQyQzYuODMgMi41OCA1Ljg3Ljc1IDkgLjc1czIuMTcgMS44MyA2LjM0IDEuOTRhLjQyLjQyIDAgMDEuNDEuNDJ6IiBmaWxsPSIjNmJiOWYyIi8+PHBhdGggZD0iTTkgOVYuNzVjMy4xMyAwIDIuMTcgMS44MyA2LjM0IDEuOTRhLjQzLjQzIDAgMDEuNDEuNDN2NS4zNGE0Ljg5IDQuODkgMCAwMTAgLjU0em0wIDBIMi4yOGMuNCA0LjE4IDUuMzggNy41IDYuNSA4LjE5YS4zOS4zOSAwIDAwLjE4LjA2SDl6IiBmaWxsPSJ1cmwoI2EpIi8+PHBhdGggZD0iTTIuNjYgMi42OUM2LjgzIDIuNTggNS44Ny43NSA5IC43NVY5SDIuMjhhNC44OSA0Ljg5IDAgMDEwLS41NFYzLjEyYS40My40MyAwIDAxLjM4LS40M3pNMTUuNzIgOUg5djguMjVhLjM5LjM5IDAgMDAuMTgtLjA2YzEuMTYtLjY5IDYuMTQtNC4wMSA2LjU0LTguMTl6IiBmaWxsPSIjNTBlNmZmIi8+PC9zdmc+" alt="NSG">
+                  <div class="card" style="border-left:3px solid #8764B8;">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJwZSIgeDE9IjkiIHkxPSIxNy4yNSIgeDI9IjkiIHkyPSIuNzUiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMwMDc4ZDQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1ZWEwZWYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB4PSIuNzUiIHk9Ii43NSIgd2lkdGg9IjE2LjUiIGhlaWdodD0iMTYuNSIgcng9IjIuNSIgZmlsbD0idXJsKCNwZSkiLz48Y2lyY2xlIGN4PSI2IiBjeT0iOSIgcj0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEuMyIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iOSIgcj0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEuMyIvPjxyZWN0IHg9IjYiIHk9IjcuOCIgd2lkdGg9IjYiIGhlaWdodD0iMi40IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjkiIHI9IjEiIGZpbGw9IiM1MGU2ZmYiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjkiIHI9IjEiIGZpbGw9IiM1MGU2ZmYiLz48L3N2Zz4=" alt="PE">
+          <div class="card-info">
+            <div class="name">pe-eus01</div>
+            <div class="type">Private Endpoint</div>
+            <div class="detail">Cross-RG: rg-pgsql01</div>
+          </div>
+          <div class="tooltip">Private Endpoint: pe-eus01&#10;Source RG: rg-pgsql01&#10;Subnet: vneteastus/default&#10;Service: PostgreSQL</div>
+        </div>
+<div class="card-info">
+            <div class="name">vneteastus-nsg</div>
+            <div class="type">NSG (Subnet-level)</div>
+            <div class="detail">Subnet protection</div>
+          </div>
+          <div class="tooltip">NSG: vneteastus-default-nsg-eastus&#10;Scope: Subnet-level&#10;Existing resource in DR region</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end dr-layout -->
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:#0078d4;"></div>
+    <span>Primary Region (Active)</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:#e74c3c; border:2px dashed #e74c3c; box-sizing:border-box;"></div>
+    <span>DR Target Region (Standby)</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:#27ae60;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;">&#10003;</div>
+    <span>ASR Protected</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:#fff;border:2px dashed #e74c3c;opacity:0.5;"></div>
+    <span>DR Replica (Ghost)</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:linear-gradient(90deg,#0078d4,#e74c3c);"></div>
+    <span>Replication Flow</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:#e8f4fd;border:2px solid #0078d4;"></div>
+    <span>Event Grid Topic</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:#fff;border:2px solid #8764B8;"></div>
+    <span>Cross-RG Private Endpoint</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:linear-gradient(135deg,#ffd70a,#faa21d);"></div>
+    <span>Function App</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:linear-gradient(135deg,#a385e0,#5b4a9e);"></div>
+    <span>App Service Plan</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:#e8fde8;border:1px solid #27ae60;font-size:8px;color:#27ae60;display:flex;align-items:center;justify-content:center;">N</div>
+    <span>Newly Added</span>
+  </div>
+</div>
+
+<div style="text-align:center;margin-top:16px;font-size:10px;color:#999;">
+  All identifiers in this example are synthetic. · Generated by the configured architecture agent · Resource Group: rg-contoso-dr · Subscription: 00000000-0000-0000-0000-000000000000
+  <br>24 resources | 3 regions | Function App + Event Grid enabled | ASR vault recommended (not deployed) | Updated 2026-07-06
+</div>
+
+</div><!-- end main-container -->
+</body>
+</html>
