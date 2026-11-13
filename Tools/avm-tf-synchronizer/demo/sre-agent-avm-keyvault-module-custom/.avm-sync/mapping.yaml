@@ -1,0 +1,49 @@
+# Upstream (AVM v0.10.2) -> internal template mapping.
+files:
+  main.tf: resource.vault.tf
+  main.keys.tf: resource.keys.tf          # upstream modules/key inlined as resources
+  main.secrets.tf: resource.secrets.tf    # upstream modules/secret inlined as resources
+  main.private_endpoint.tf: resource.private_endpoint.tf
+  main.access_policies.tf: resource.access_policies.tf
+  variables.tf: variables.vault.tf
+  locals.tf: locals.tf
+  outputs.tf: outputs.tf
+  terraform.tf: terraform.tf
+  main.telemetry.tf: null                 # telemetry removed
+  modules/key: null                       # inlined into resource.keys.tf
+  modules/secret: null                    # inlined into resource.secrets.tf
+
+variables:
+  enable_telemetry:
+    internal: null          # removed with telemetry
+  tags:
+    internal: tags          # merged with local.mandatory_tags; default {} and non-nullable
+  purge_protection_enabled:
+    internal: purge_protection_enabled
+    default: false          # upstream default: true
+  network_acls:
+    internal: network_acls
+    default: null           # upstream default: {} (firewall with Deny)
+  legacy_access_policies_enabled:
+    internal: legacy_access_policies_enabled
+    default: true           # upstream default: false
+
+conventions:
+  tags:
+    local: local.tags
+    rule: merge(var.tags, local.mandatory_tags) applied to every taggable resource; mandatory tags win.
+    mandatory:
+      environment: var.environment   # dev | test | prod
+      owner: var.owner
+      cost_center: var.cost_center
+      managed_by: terraform
+      module: sre-agent-avm-keyvault-module-custom
+  naming:
+    variable: var.name
+    prefix: "kv-"
+    length: 3-24
+    allowed_characters: alphanumerics and hyphens
+    regex: "^kv-[a-zA-Z0-9-]{0,21}$"
+  files:
+    resources: resource.<area>.tf
+    variables: variables.<area>.tf (upstream -> variables.vault.tf, internal-only -> variables.custom.tf)

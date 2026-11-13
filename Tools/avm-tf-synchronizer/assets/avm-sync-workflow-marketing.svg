@@ -1,0 +1,285 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">AVM TF Synchronizer – one-page overview</title>
+  <desc id="d">Every 6 hours an Azure SRE Agent reads the security controls, the internal module and the AVM upstream. It assesses compliance and new AVM releases and opens at most one pull request per run that syncs AVM and enforces the controls. CI checks it, a human reviews and squash-merges it, release-please tags the release and teams pin the new version.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1530"/>
+      <stop offset="0.55" stop-color="#0f2350"/>
+      <stop offset="1" stop-color="#0a1a3a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3ba7ff"/>
+      <stop offset="1" stop-color="#7c5cff"/>
+    </linearGradient>
+    <linearGradient id="agent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f6fff"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10b981"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#3b82f6" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000814" flood-opacity="0.55"/>
+    </filter>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7fb6ff"/></marker>
+    <marker id="arr-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#fbbf24"/></marker>
+    <marker id="arr-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#22d3ee"/></marker>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+    <style>
+      .eyebrow { fill: #7fb6ff; font-size: 14px; font-weight: 600; letter-spacing: 3px; }
+      .h1 { fill: #ffffff; font-size: 46px; font-weight: 700; }
+      .lead { fill: #c7d3ea; font-size: 19px; }
+      .card { fill: #13224a; stroke: #2b4380; stroke-width: 1.2; }
+      .card-hi { fill: #152a5c; stroke: #3d5fb0; stroke-width: 1.4; }
+      .ttl { fill: #ffffff; font-size: 17px; font-weight: 600; }
+      .ttl-sm { fill: #ffffff; font-size: 14px; font-weight: 600; }
+      .sub { fill: #a9b8d6; font-size: 13px; }
+      .mono { fill: #cfe1ff; font-size: 12.5px; font-family: Consolas, "Cascadia Code", Menlo, monospace; }
+      .col { fill: #7fb6ff; font-size: 12px; font-weight: 700; letter-spacing: 2px; }
+      .flow { fill: none; stroke: #7fb6ff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      .read { fill: none; stroke: #7fb6ff; stroke-opacity: 0.7; stroke-width: 1.8; stroke-dasharray: 6 6; }
+      .icon { fill: none; stroke: #ffffff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .chip-t { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; }
+      .vp-t { fill: #ffffff; font-size: 17px; font-weight: 600; }
+      .vp-s { fill: #a9b8d6; font-size: 13.5px; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#grid)"/>
+  <circle cx="510" cy="430" r="260" fill="url(#glow)"/>
+  <rect x="0" y="0" width="1600" height="5" fill="url(#accent)"/>
+
+  <!-- ===== Header ===== -->
+  <text class="eyebrow" x="60" y="62">AZURE SRE AGENT  ·  TERRAFORM  ·  AZURE VERIFIED MODULES</text>
+  <text class="h1" x="60" y="116">AVM TF Synchronizer</text>
+  <text class="lead" x="60" y="152">Keeps your internal Terraform modules compliant and current with AVM: one reviewed pull request at a time.</text>
+
+  <!-- Column labels -->
+  <text class="col" x="60" y="206">INPUTS</text>
+  <text class="col" x="380" y="206">AGENT</text>
+  <text class="col" x="710" y="206">ONE RUN, ONE PR</text>
+  <text class="col" x="1140" y="206">DELIVERY</text>
+
+  <!-- ===== Column A: Inputs ===== -->
+  <g filter="url(#shadow)">
+    <rect class="card" x="60" y="224" width="260" height="112" rx="14"/>
+    <rect class="card" x="60" y="356" width="260" height="112" rx="14"/>
+    <rect class="card" x="60" y="488" width="260" height="112" rx="14"/>
+  </g>
+
+  <circle cx="102" cy="266" r="22" fill="#b91c1c" fill-opacity="0.85"/>
+  <path class="icon" transform="translate(102 266)" d="M0,-12 L10,-8 V0 C10,7 5,11 0,13 C-5,11 -10,7 -10,0 V-8 Z M-4,0 L-1,3 L5,-4"/>
+  <text class="ttl" x="136" y="262">Security controls</text>
+  <text class="sub" x="136" y="282">Read-only, plain language</text>
+  <text class="mono" x="80" y="318">SC-KV-001 … SC-KV-011</text>
+
+  <circle cx="102" cy="398" r="22" fill="#2563eb"/>
+  <path class="icon" transform="translate(102 398)" d="M0,-12 L11,-6 V6 L0,12 L-11,6 V-6 Z M-11,-6 L0,0 L11,-6 M0,0 V12"/>
+  <text class="ttl" x="136" y="394">Internal module</text>
+  <text class="sub" x="136" y="414">Your layout and rules</text>
+  <text class="mono" x="80" y="450">TEMPLATE.md · mapping.yaml</text>
+
+  <circle cx="102" cy="530" r="22" fill="#7c3aed"/>
+  <path class="icon" transform="translate(102 530)" d="M0,11 V-9 M-7,-2 L0,-9 L7,-2 M-11,12 H11"/>
+  <text class="ttl" x="136" y="526">AVM upstream</text>
+  <text class="sub" x="136" y="546">Public release tags</text>
+  <text class="mono" x="80" y="582">latest release + diff</text>
+
+  <path class="read" d="M320,280 C350,280 350,370 376,370" marker-end="url(#arr)"/>
+  <path class="read" d="M320,412 L376,412" marker-end="url(#arr)"/>
+  <path class="read" d="M320,544 C350,544 350,460 376,460" marker-end="url(#arr)"/>
+
+  <!-- ===== Column B: Agent ===== -->
+  <rect x="408" y="232" width="204" height="40" rx="20" fill="#0f1d40" stroke="#fbbf24" stroke-width="1.5"/>
+  <circle cx="436" cy="252" r="10" fill="none" stroke="#fbbf24" stroke-width="2"/>
+  <path d="M436,246 V252 L441,255" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+  <text x="456" y="257" fill="#fde68a" font-size="14" font-weight="600">Every 6 hours</text>
+  <path d="M510,272 V298" stroke="#fbbf24" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arr-amber)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="380" y="302" width="260" height="230" rx="18" fill="url(#agent)"/>
+  </g>
+  <rect x="380" y="302" width="260" height="230" rx="18" fill="none" stroke="#ffffff" stroke-opacity="0.25"/>
+  <g transform="translate(510 354)">
+    <path d="M0,-30 L26,-15 V15 L0,30 L-26,15 V-15 Z" fill="#ffffff" fill-opacity="0.14" stroke="#ffffff" stroke-opacity="0.6" stroke-width="1.5"/>
+    <path d="M0,-15 L4,-4 L15,0 L4,4 L0,15 L-4,4 L-15,0 L-4,-4 Z" fill="#ffffff"/>
+  </g>
+  <text x="510" y="416" fill="#ffffff" font-size="20" font-weight="700" text-anchor="middle">AVM TF Synchronizer</text>
+  <text x="510" y="438" fill="#dbe6ff" font-size="14" text-anchor="middle">Azure SRE Agent</text>
+  <rect x="404" y="460" width="212" height="50" rx="10" fill="#000000" fill-opacity="0.22"/>
+  <text x="510" y="481" fill="#ffffff" font-size="13" font-weight="600" text-anchor="middle">Security controls always win</text>
+  <text x="510" y="499" fill="#dbe6ff" font-size="12.5" text-anchor="middle">over AVM defaults</text>
+
+  <!-- Live Report pill under agent -->
+  <path d="M510,532 V556" stroke="#7fb6ff" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arr)"/>
+  <rect x="392" y="560" width="236" height="40" rx="20" fill="#0f1d40" stroke="#7fb6ff" stroke-width="1.5"/>
+  <g transform="translate(418 580)" fill="none" stroke="#7fb6ff" stroke-width="2" stroke-linecap="round">
+    <path d="M-8,7 V1 M-2,7 V-5 M4,7 V-1 M10,7 V-8"/>
+  </g>
+  <text x="440" y="585" fill="#cfe1ff" font-size="13.5" font-weight="600">Updates its Live Report</text>
+
+  <!-- agent -> assess -->
+  <path class="flow" d="M640,372 C676,372 676,308 706,308" marker-end="url(#arr)"/>
+
+  <!-- ===== Column C: One run, one PR ===== -->
+  <g filter="url(#shadow)">
+    <rect class="card-hi" x="710" y="224" width="370" height="168" rx="14"/>
+    <rect class="card-hi" x="710" y="432" width="370" height="168" rx="14"/>
+  </g>
+
+  <circle cx="746" cy="260" r="18" fill="#f59e0b"/>
+  <text x="746" y="266" fill="#0b1530" font-size="17" font-weight="800" text-anchor="middle">1</text>
+  <text class="ttl" x="776" y="256">Assess</text>
+  <text class="sub" x="776" y="276">Controls met on main? Newer AVM tag?</text>
+  <g transform="translate(730 296)">
+    <rect width="160" height="26" rx="13" fill="#ef4444" fill-opacity="0.18" stroke="#ef4444"/>
+    <text class="chip-t" x="80" y="17" fill="#fca5a5" text-anchor="middle">CONTROLS ON MAIN</text>
+    <rect x="170" width="136" height="26" rx="13" fill="#22d3ee" fill-opacity="0.16" stroke="#22d3ee"/>
+    <text class="chip-t" x="238" y="17" fill="#a5f3fc" text-anchor="middle">NEWER AVM TAG</text>
+  </g>
+  <rect x="730" y="338" width="330" height="36" rx="8" fill="#0b1530" stroke="#f59e0b" stroke-opacity="0.6"/>
+  <text x="746" y="361" fill="#fbbf24" font-size="13" font-weight="700">DECIDE</text>
+  <text class="mono" x="808" y="361">at most one PR per run</text>
+
+  <path class="flow" d="M746,394 V426" marker-end="url(#arr)"/>
+  <text x="764" y="415" fill="#93c5fd" font-size="12.5" font-style="italic">New AVM release → one combined PR</text>
+
+  <circle cx="746" cy="468" r="18" fill="#22d3ee"/>
+  <text x="746" y="474" fill="#0b1530" font-size="17" font-weight="800" text-anchor="middle">2</text>
+  <text class="ttl" x="776" y="464">Sync AVM + enforce controls</text>
+  <text class="sub" x="776" y="484">Port upstream, then lock every control</text>
+  <g transform="translate(730 494)">
+    <rect width="64" height="26" rx="13" fill="#22d3ee" fill-opacity="0.16" stroke="#22d3ee"/>
+    <text class="chip-t" x="32" y="17" fill="#a5f3fc" text-anchor="middle">PORT</text>
+    <rect x="72" width="186" height="26" rx="13" fill="#a78bfa" fill-opacity="0.16" stroke="#a78bfa"/>
+    <text class="chip-t" x="165" y="17" fill="#ddd6fe" text-anchor="middle">PORT WITH ADAPTATION</text>
+    <rect x="266" width="64" height="26" rx="13" fill="#94a3b8" fill-opacity="0.15" stroke="#94a3b8"/>
+    <text class="chip-t" x="298" y="17" fill="#cbd5e1" text-anchor="middle">SKIP</text>
+  </g>
+  <rect x="730" y="532" width="330" height="56" rx="8" fill="#0b1530" stroke="#22d3ee" stroke-opacity="0.6"/>
+  <text x="746" y="565" fill="#22d3ee" font-size="13" font-weight="700">PR</text>
+  <text class="mono" x="772" y="554">feat!: sync AVM v0.10.2 → v0.12.0</text>
+  <text class="mono" x="772" y="574">and enforce security controls</text>
+
+  <!-- remediation-only note -->
+  <rect x="710" y="616" width="370" height="54" rx="10" fill="#0f1d40" stroke="#3d5fb0" stroke-dasharray="5 5"/>
+  <text x="730" y="638" fill="#93c5fd" font-size="13" font-style="italic">No new AVM release? Remediation-only PR:</text>
+  <text class="mono" x="730" y="658" style="fill:#fca5a5">fix!: enforce security controls</text>
+
+  <!-- PR -> delivery -->
+  <path d="M1080,560 C1110,560 1110,412 1136,412" fill="none" stroke="#22d3ee" stroke-width="2.2" marker-end="url(#arr-cyan)"/>
+
+  <!-- ===== Column D: Delivery ===== -->
+  <rect x="1140" y="224" width="424" height="84" rx="12" fill="#0f1d40" stroke="#3d5fb0" stroke-dasharray="5 5"/>
+  <circle cx="1172" cy="266" r="14" fill="none" stroke="#7fb6ff" stroke-width="2"/>
+  <path d="M1162,276 L1182,256" stroke="#7fb6ff" stroke-width="2"/>
+  <text x="1200" y="258" fill="#ffffff" font-size="14" font-weight="600">The agent only opens pull requests</text>
+  <text x="1200" y="279" fill="#a9b8d6" font-size="13">No merge, no tags, no push to main,</text>
+  <text x="1200" y="297" fill="#a9b8d6" font-size="13">no Azure rights</text>
+
+  <g filter="url(#shadow)">
+    <rect class="card" x="1140" y="334" width="130" height="156" rx="14"/>
+    <rect class="card" x="1287" y="334" width="130" height="156" rx="14"/>
+    <rect class="card" x="1434" y="334" width="130" height="156" rx="14"/>
+  </g>
+
+  <circle cx="1205" cy="376" r="24" fill="#0ea5e9"/>
+  <path class="icon" transform="translate(1205 376)" d="M-10,0 L-3,7 L10,-7"/>
+  <text class="ttl-sm" x="1205" y="428" text-anchor="middle">CI checks</text>
+  <text class="sub" x="1205" y="450" text-anchor="middle">fmt · validate</text>
+  <text class="sub" x="1205" y="468" text-anchor="middle">test · tflint</text>
+
+  <path class="flow" d="M1270,412 L1283,412" marker-end="url(#arr)"/>
+
+  <circle cx="1352" cy="376" r="24" fill="#f59e0b"/>
+  <g class="icon" transform="translate(1352 376)">
+    <circle cx="0" cy="-5" r="5"/>
+    <path d="M-10,11 C-10,3 10,3 10,11"/>
+  </g>
+  <text class="ttl-sm" x="1352" y="428" text-anchor="middle">Human review</text>
+  <text class="sub" x="1352" y="450" text-anchor="middle">CODEOWNERS</text>
+  <text class="sub" x="1352" y="468" text-anchor="middle">squash-merge</text>
+
+  <path class="flow" d="M1417,412 L1430,412" marker-end="url(#arr)"/>
+
+  <circle cx="1499" cy="376" r="24" fill="url(#green)"/>
+  <g class="icon" transform="translate(1499 376)">
+    <path d="M-11,-11 H1 L11,-1 L-1,11 L-11,1 Z"/>
+    <circle cx="-5" cy="-5" r="1.6" fill="#ffffff"/>
+  </g>
+  <text class="ttl-sm" x="1499" y="428" text-anchor="middle">release-please</text>
+  <text class="sub" x="1499" y="450" text-anchor="middle">tag vX.Y.Z</text>
+  <text class="sub" x="1499" y="468" text-anchor="middle">+ changelog</text>
+
+  <path d="M1499,490 V522" fill="none" stroke="#34d399" stroke-width="2.2" marker-end="url(#arr-green)"/>
+  <g filter="url(#shadow)">
+    <rect x="1140" y="528" width="424" height="72" rx="14" fill="#0d3b33" stroke="#10b981" stroke-width="1.4"/>
+  </g>
+  <text x="1160" y="556" fill="#ffffff" font-size="16" font-weight="600">Teams pin a compliant release</text>
+  <text class="mono" x="1160" y="582" style="fill:#a7f3d0">source = "…/keyvault-module-custom?ref=v2.0.0"</text>
+
+  <!-- ===== Value props ===== -->
+  <rect x="60" y="690" width="1504" height="1" fill="#ffffff" fill-opacity="0.12"/>
+
+  <g transform="translate(60 714)">
+    <circle cx="24" cy="24" r="24" fill="#b91c1c" fill-opacity="0.85"/>
+    <path class="icon" transform="translate(24 24)" d="M0,-12 L10,-8 V0 C10,7 5,11 0,13 C-5,11 -10,7 -10,0 V-8 Z"/>
+    <text class="vp-t" x="64" y="20">Secure by default</text>
+    <text class="vp-s" x="64" y="44">Controls locked in mapping.yaml,</text>
+    <text class="vp-s" x="64" y="64">marked in code, asserted in tests</text>
+  </g>
+
+  <g transform="translate(442 714)">
+    <circle cx="24" cy="24" r="24" fill="#7c3aed"/>
+    <g class="icon" transform="translate(24 24)">
+      <path d="M-10,-2 A10,10 0 0 1 8,-6 M8,-12 V-6 H2"/>
+      <path d="M10,2 A10,10 0 0 1 -8,6 M-8,12 V6 H-2"/>
+    </g>
+    <text class="vp-t" x="64" y="20">Always current</text>
+    <text class="vp-s" x="64" y="44">New AVM releases ported into your</text>
+    <text class="vp-s" x="64" y="64">structure, no hand-merging</text>
+  </g>
+
+  <g transform="translate(824 714)">
+    <circle cx="24" cy="24" r="24" fill="#f59e0b"/>
+    <g class="icon" transform="translate(24 24)">
+      <circle cx="0" cy="-5" r="5"/>
+      <path d="M-10,11 C-10,3 10,3 10,11"/>
+    </g>
+    <text class="vp-t" x="64" y="20">People stay in control</text>
+    <text class="vp-s" x="64" y="44">Every change is a PR, reviewed</text>
+    <text class="vp-s" x="64" y="64">and merged by a human</text>
+  </g>
+
+  <g transform="translate(1206 714)">
+    <circle cx="24" cy="24" r="24" fill="url(#green)"/>
+    <g class="icon" transform="translate(24 24)">
+      <path d="M-11,-11 H1 L11,-1 L-1,11 L-11,1 Z"/>
+    </g>
+    <text class="vp-t" x="64" y="20">Predictable releases</text>
+    <text class="vp-s" x="64" y="44">Conventional commits drive semver</text>
+    <text class="vp-s" x="64" y="64">bumps and the changelog</text>
+  </g>
+
+  <!-- Live Report strip -->
+  <rect x="60" y="806" width="1504" height="36" rx="10" fill="#0f1d40" stroke="#2b4380"/>
+  <g transform="translate(86 824)" fill="none" stroke="#7fb6ff" stroke-width="2" stroke-linecap="round">
+    <path d="M-8,7 V1 M-2,7 V-5 M4,7 V-1 M10,7 V-8"/>
+  </g>
+  <text x="110" y="829" fill="#ffffff" font-size="14" font-weight="600">Live Report “AVM TF Synchronizer – Activity”</text>
+  <text x="510" y="829" fill="#a9b8d6" font-size="13.5">status tiles, agent PRs, locked controls and releases, updated on every run</text>
+
+  <!-- Footer -->
+  <text x="60" y="878" fill="#6b84b8" font-size="13">Demo scope: Key Vault (avm-res-keyvault-vault)  ·  Controls derived from Azure Policy compliance mappings</text>
+  <text x="1564" y="878" fill="#6b84b8" font-size="13" text-anchor="end">Read → Assess → Sync + Enforce → Review → Release</text>
+</svg>

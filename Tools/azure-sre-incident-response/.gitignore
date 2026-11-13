@@ -1,0 +1,15 @@
+app/node_modules/
+app/coverage/
+app/npm-debug.log*
+.env
+.env.*
+!.env.example
+*.local.json
+*.bicepparam
+infra/containerapp.json
+.la-creds.json
+*.credentials.json
+.state/
+.runs/
+local/
+test-results/

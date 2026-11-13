@@ -1,0 +1,142 @@
+name: PR format & validation
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  # Formats the agent's branches and pushes the fix. The push starts a new run of this
+  # workflow, so validation below is skipped in the run that pushed.
+  fmt-autofix:
+    name: terraform fmt autofix
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (startsWith(github.head_ref, 'remediation/') || startsWith(github.head_ref, 'avm-sync/'))
+    runs-on: ubuntu-latest
+    outputs:
+      pushed: ${{ steps.commit.outputs.pushed }}
+    steps:
+      # A GitHub App token is required: pushes made with GITHUB_TOKEN don't start new runs.
+      - uses: actions/create-github-app-token@v1
+        id: app
+        with:
+          app-id: ${{ vars.FMT_BOT_APP_ID }}
+          private-key: ${{ secrets.FMT_BOT_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ steps.app.outputs.token }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "^1.11" # node-semver: >=1.11.0 <2.0.0, matches required_version
+          terraform_wrapper: false
+
+      - name: terraform fmt
+        run: terraform fmt -recursive
+
+      - name: Commit formatting changes
+        id: commit
+        run: |
+          if git diff --quiet; then
+            echo "Already formatted"
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name  "tf-fmt-bot[bot]"
+          git config user.email "tf-fmt-bot[bot]@users.noreply.github.com"
+          git commit -am "style: terraform fmt"
+          git push
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+  terraform:
+    name: terraform fmt / validate / test
+    needs: fmt-autofix
+    # Skip only when fmt-autofix pushed a fix (the new commit gets its own run). Must still run when
+    # fmt-autofix is skipped or fails: a skipped required check counts as passed and would allow a merge.
+    if: ${{ !cancelled() && needs.fmt-autofix.outputs.pushed != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "^1.11" # node-semver: >=1.11.0 <2.0.0, matches required_version
+          terraform_wrapper: false
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive
+
+      - name: terraform init
+        run: terraform init -backend=false -input=false
+
+      - name: terraform validate
+        run: terraform validate
+
+      - name: terraform test
+        run: terraform test
+
+  tflint:
+    name: tflint
+    needs: fmt-autofix
+    if: ${{ !cancelled() && needs.fmt-autofix.outputs.pushed != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: terraform-linters/setup-tflint@v6
+
+      - name: tflint init
+        run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: tflint
+        run: tflint --format compact
+
+  sandbox-plan:
+    name: sandbox plan (examples/default)
+    if: vars.AZURE_CLIENT_ID != ''
+    needs:
+      - terraform
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+    defaults:
+      run:
+        working-directory: examples/default
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "^1.11" # node-semver: >=1.11.0 <2.0.0, matches required_version
+          terraform_wrapper: false
+
+      - name: terraform init
+        run: terraform init -backend=false -input=false
+
+      - name: terraform plan
+        run: terraform plan -input=false -lock=false -out=tfplan

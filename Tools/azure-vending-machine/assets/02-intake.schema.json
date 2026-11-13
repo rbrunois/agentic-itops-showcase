@@ -1,0 +1,140 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://platform.contoso.example/schemas/azure-subscription-intake/v1",
+  "title": "Azure Subscription Intake",
+  "description": "Fields collected from the requester. Derived fields are NOT listed here - see 03-derivation-rules.md. Keys prefixed x-prompt-fr / x-error-fr hold literal French bot output.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "appId",
+    "environment",
+    "costCenter",
+    "dataClassification",
+    "workzoneRepo",
+    "networkNeed",
+    "monthlyBudget",
+    "accessPersona",
+    "owner"
+  ],
+  "properties": {
+    "appId": {
+      "type": "string",
+      "pattern": "^APP[0-9]{5}$",
+      "description": "CMDB application code",
+      "x-prompt-en": "Which application is this for? Give me the CMDB code (e.g. APP01234).",
+      "x-prompt-fr": "Pour quelle application ? Donne-moi le code CMDB (ex. APP01234).",
+      "x-validation": "Look up the CMDB. If not found: do not invent, offer to contact the CMDB owner.",
+      "x-error-en": "Code {value} was not found in the CMDB. Please check the code or contact the application owner.",
+      "x-error-fr": "Le code {value} est introuvable dans la CMDB. Verifie le code ou contacte le proprietaire de l'application."
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["dev", "test", "uat", "prod"],
+      "description": "Target environment",
+      "x-prompt-en": "Which environment? dev, test, uat or prod.",
+      "x-prompt-fr": "Quel environnement ? dev, test, uat ou prod.",
+      "x-hint-en": "One subscription per environment. For several, we'll file one request per environment.",
+      "x-hint-fr": "Une souscription par environnement. Si tu en veux plusieurs, on fera une demande par environnement."
+    },
+    "costCenter": {
+      "type": "string",
+      "pattern": "^CC[0-9]{6}$",
+      "description": "Finance cost center",
+      "x-prompt-en": "Which cost center will be billed? (format CC123456)",
+      "x-prompt-fr": "Quel centre de cout sera facture ? (format CC123456)",
+      "x-validation": "Look up the Finance reference data. Must be active.",
+      "x-error-en": "Cost center {value} is inactive or unknown. Please confirm with your finance controller.",
+      "x-error-fr": "Le centre de cout {value} est inactif ou inconnu. Confirme avec ton controleur de gestion."
+    },
+    "dataClassification": {
+      "type": "string",
+      "enum": ["public", "internal", "confidential", "restricted"],
+      "description": "Data classification of the workload",
+      "x-prompt-en": "What is the classification of the data handled? public, internal, confidential or restricted.",
+      "x-prompt-fr": "Quelle est la classification des donnees traitees ? public, interne, confidentiel ou restreint.",
+      "x-hint-en": "Restricted triggers a mandatory security review and an isolated Management Group.",
+      "x-hint-fr": "Restreint declenche une revue securite obligatoire et un Management Group isole."
+    },
+    "workzoneRepo": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$",
+      "description": "Deployment repository, format owner/repo",
+      "x-prompt-en": "Which repository will deploy into this subscription? Format organisation/repo.",
+      "x-prompt-fr": "Quel depot deploiera dans cette souscription ? Format organisation/depot.",
+      "x-validation": "Repository must exist and the requester must hold an admin or maintainer role on it.",
+      "x-error-en": "I cannot find {value}, or you lack the required rights. Check the name or request access.",
+      "x-error-fr": "Je ne trouve pas {value}, ou tu n'y as pas les droits requis. Verifie le nom ou demande l'acces."
+    },
+    "networkNeed": {
+      "type": "string",
+      "enum": ["none", "isolated", "spoke-small", "spoke-medium", "spoke-large"],
+      "description": "Network requirement",
+      "x-prompt-en": "Network requirement? None (PaaS only), isolated (VNet, no peering), or a hub-connected spoke. For a spoke, tell me the approximate size: small (~250 IPs), medium (~500), large (~1000).",
+      "x-prompt-fr": "Besoin reseau ? Aucun (PaaS uniquement), isole (VNet sans peering), ou spoke connecte au hub. Pour un spoke, dis-moi la taille approximative : petit (~250 IP), moyen (~500), grand (~1000).",
+      "x-hint-en": "If unsure: most PaaS apps using Private Endpoints take spoke-small.",
+      "x-hint-fr": "Si tu ne sais pas : la plupart des applications PaaS avec Private Endpoints prennent spoke-small."
+    },
+    "monthlyBudget": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 500000,
+      "description": "Estimated monthly budget in CAD",
+      "x-prompt-en": "Estimated monthly budget, in Canadian dollars?",
+      "x-prompt-fr": "Budget mensuel estime, en dollars canadiens ?",
+      "x-hint-en": "This is an estimate used for cost alerts, not a hard cap. Alerts fire at 50, 80 and 100%.",
+      "x-hint-fr": "C'est une estimation pour les alertes de cout, pas un plafond dur. On alertera a 50, 80 et 100 %."
+    },
+    "accessPersona": {
+      "type": "string",
+      "enum": ["app-team-standard", "app-team-elevated", "data-team", "readonly-audit"],
+      "description": "Team access persona",
+      "x-prompt-en": "Which access persona for your team? standard (pipeline deployment), elevated (JIT portal access), data team, or read-only.",
+      "x-prompt-fr": "Quel persona d'acces pour ton equipe ? standard (deploiement via pipeline), eleve (acces JIT au portail), equipe donnees, ou lecture seule.",
+      "x-hint-en": "Standard covers 90% of cases. Elevated requires justification and a quarterly review.",
+      "x-hint-fr": "Standard couvre 90 % des cas. Eleve exige une justification et une revue trimestrielle."
+    },
+    "owner": {
+      "type": "object",
+      "description": "Pre-filled from the connected Teams identity - DO NOT ASK",
+      "required": ["upn", "displayName"],
+      "additionalProperties": false,
+      "properties": {
+        "upn": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "aadObjectId": { "type": "string" }
+      }
+    },
+    "justification": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Required only when dataClassification=restricted OR accessPersona=app-team-elevated",
+      "x-prompt-en": "This configuration requires a justification. In a few sentences, explain why it is needed.",
+      "x-prompt-fr": "Cette configuration exige une justification. Explique en quelques phrases pourquoi elle est necessaire."
+    },
+    "decommissionDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Optional. Required when environment is dev or test.",
+      "x-prompt-en": "Planned decommission date? Non-prod subscriptions are reviewed on that date.",
+      "x-prompt-fr": "Date de decommissionnement prevue ? Les souscriptions non-prod sont revues a cette date."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "anyOf": [
+          { "properties": { "dataClassification": { "const": "restricted" } }, "required": ["dataClassification"] },
+          { "properties": { "accessPersona": { "const": "app-team-elevated" } }, "required": ["accessPersona"] }
+        ]
+      },
+      "then": { "required": ["justification"] }
+    },
+    {
+      "if": {
+        "properties": { "environment": { "enum": ["dev", "test"] } },
+        "required": ["environment"]
+      },
+      "then": { "required": ["decommissionDate"] }
+    }
+  ]
+}

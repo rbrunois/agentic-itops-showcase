@@ -1,0 +1,71 @@
+{
+  // ============================================================================
+  //  SREAgent-IISappAzureVM  —  Lab configuration TEMPLATE
+  //  Copy this file to config/lab.config.jsonc (gitignored) and edit the copy:
+  //    Copy-Item config/lab.config.example.jsonc config/lab.config.jsonc
+  //  tenantId and subscriptionId are REQUIRED — Deploy-Lab.ps1 and
+  //  Teardown-Lab.ps1 refuse to run while they are still the all-zero
+  //  placeholder. Use a dedicated, disposable lab subscription.
+  // ============================================================================
+
+  // ---- Azure targeting ----
+  "tenantId":       "00000000-0000-0000-0000-000000000000",
+  "subscriptionId": "00000000-0000-0000-0000-000000000000",
+  "location":       "canadacentral",
+
+  // ---- Resource group naming ----
+  //  Final RG names = "{envPrefix}-{rgBaseName}"
+  //  Story requires: PRD-... and NPRD-... with identical suffix.
+  "rgBaseName":  "SREAgent-IISappAzureVM-01",
+  "sharedRgPrefix": "SHARED",
+  "prodRgPrefix":   "PRD",
+  "nonProdRgPrefix":"NPRD",
+
+  // ---- Tagging ----
+  "tags": {
+    "Project":     "SRE-Agent-IISTest",
+    "ManagedBy":   "LabAgent",
+    "Owner":       "",            // optional; defaults to the signed-in Azure CLI account
+    "CreatedDate": "auto",  // filled by Deploy-Lab.ps1 (UTC yyyy-MM-dd)
+    "ExpiryDate":  "auto"   // +30 days, filled by Deploy-Lab.ps1
+  },
+
+  // ---- Existing SRE Agent Log Analytics workspace to reuse ----
+  //  Set to "" to create a new workspace in SHARED RG instead.
+  "existingLawResourceId": "",
+
+  // ---- Networking (tight sizing — 192 addresses total across all 3 VNets) ----
+  //   Hub VNet /26 = 64 addr (matches Bastion subnet minimum)
+  //   Each spoke VNet /26 = 64 addr, 3 subnets of /28 (16 addr, 11 usable each)
+  //   Deploy-Lab.ps1 checks these against existing VNets in the subscription
+  //   and refuses to deploy on a conflict.
+  "hubVnetCidr":         "10.50.0.0/26",
+  "bastionSubnetCidr":   "10.50.0.0/26",
+  "prdVnetCidr":         "10.50.1.0/26",
+  "prdWebSubnetCidr":    "10.50.1.0/28",
+  "prdDbSubnetCidr":     "10.50.1.16/28",
+  "prdWksSubnetCidr":    "10.50.1.32/28",
+  "nprdVnetCidr":        "10.50.2.0/26",
+  "nprdWebSubnetCidr":   "10.50.2.0/28",
+  "nprdDbSubnetCidr":    "10.50.2.16/28",
+  "nprdWksSubnetCidr":   "10.50.2.32/28",
+
+  // ---- DNS zones (private) ----
+  "prdDnsZoneName":  "contoso.com",
+  "nprdDnsZoneName": "nprd.contoso.com",
+
+  // ---- Compute ----
+  "vmAdminUsername": "azureadmin",
+  "webVmSize":       "Standard_D2s_v5",
+  "dbVmSize":        "Standard_D4s_v5",
+  "wksVmSize":       "Standard_D2s_v5",
+
+  // ---- Auto-shutdown ----
+  "autoShutdownTime":     "2200",            // HHmm, 24h format
+  "autoShutdownTimeZone": "Eastern Standard Time",  // matches America/Toronto DST
+
+  // ---- Demo / app ----
+  "sqlAppLogin":         "hrapp",
+  "sqlAppDbName":        "ContosoHR",
+  "incidentActorAccount":"svc-oncall"
+}

@@ -1,0 +1,17 @@
+# Upstream content intentionally not carried into the internal module.
+exclusions:
+  - id: telemetry
+    upstream: [main.telemetry.tf, "terraform.tf: providers modtm, azapi, random", "variables.tf: enable_telemetry"]
+    reason: AVM telemetry (modtm) is not permitted internally. azapi and random were only used by telemetry and were removed with it.
+  - id: submodules
+    upstream: [modules/key, modules/secret]
+    reason: Internal template is a single flat root module. Key and secret resources (and their role assignments) are inlined in resource.keys.tf / resource.secrets.tf.
+  - id: upstream-examples
+    upstream: [examples/*]
+    reason: Replaced by a single internal examples/default.
+  - id: upstream-tests
+    upstream: [tests/*]
+    reason: Replaced by tests/basic.tftest.hcl (mock providers, template conventions).
+  - id: upstream-tooling
+    upstream: [avm, avm.bat, avm.ps1, Makefile, _header.md, _footer.md, AGENTS.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, SUPPORT.md]
+    reason: AVM repository tooling and docs are replaced by the internal CI (pr-format-and-validate.yml) and docs.

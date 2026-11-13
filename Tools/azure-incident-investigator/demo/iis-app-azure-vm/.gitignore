@@ -1,0 +1,8 @@
+secrets/
+config/lab.config.jsonc
+*.log
+*.bicep.json
+bicep/*.json
+bicep/modules/*.json
+.DS_Store
+Thumbs.db
