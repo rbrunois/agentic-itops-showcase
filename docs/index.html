@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentic ITOps Showcase · Azure SRE Agent does the work. Humans stay in control.</title>
+<meta name="description" content="IT automation use cases built on Azure SRE Agent across Azure, hybrid and multicloud: infrastructure as code, patching, architecture, lifecycle, monitoring and incident response, with every change approved by a human.">
+<meta property="og:title" content="Agentic ITOps Showcase">
+<meta property="og:description" content="Azure SRE Agent does the work. Humans stay in control.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rbrunois.github.io/agentic-itops-showcase/">
+<meta property="og:image" content="https://rbrunois.github.io/agentic-itops-showcase/assets/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<script>
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem('page-theme'); } catch (e) {}
+    var theme = saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/site.js" defer></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></symbol>
+  <symbol id="i-wait" viewBox="0 0 16 16"><circle cx="8" cy="8" r="1"/><circle cx="4" cy="8" r="1"/><circle cx="12" cy="8" r="1"/></symbol>
+  <symbol id="i-book" viewBox="0 0 16 16"><path d="M2.5 2.5h4a2 2 0 0 1 2 2v9a1.5 1.5 0 0 0-1.5-1.5h-4.5zM13.5 2.5h-4a1 1 0 0 0-1 1"/><path d="M13.5 2.5v9.5H9.5"/></symbol>
+  <symbol id="i-star" viewBox="0 0 16 16"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z"/></symbol>
+  <symbol id="i-pulse" viewBox="0 0 16 16"><path d="M1.5 8.5h3l1.5-4 3 8 1.6-4.5h3.9"/></symbol>
+  <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5l3.5 3.5"/></symbol>
+  <symbol id="i-file" viewBox="0 0 16 16"><path d="M4 1.5h5l3 3v10H4z"/><path d="M6.5 8h3.5M6.5 11h3.5"/></symbol>
+  <symbol id="i-person" viewBox="0 0 16 16"><circle cx="8" cy="5" r="2.8"/><path d="M2.5 14.5c.6-3 2.8-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3 3l1 1M12 12l1 1M3 13l1-1M12 4l1-1"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 16 16"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 16 16"><path d="M8 1.5l5.5 2v4c0 3.4-2.3 5.9-5.5 7-3.2-1.1-5.5-3.6-5.5-7v-4z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13.5 6A5.5 5.5 0 0 0 3.3 4.5M2.5 10a5.5 5.5 0 0 0 10.2 1.5"/><path d="M13.5 2v4h-4M2.5 14v-4h4"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 16 16"><path d="M1.5 8.6V2.5a1 1 0 0 1 1-1h6.1l5.9 5.9a1 1 0 0 1 0 1.4l-5.2 5.2a1 1 0 0 1-1.4 0z"/><circle cx="5" cy="5" r="1"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 16 16"><path d="M2 2v12h12"/><path d="M5 10l3-3 2 2 4-5"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 16 16"><path d="M4.5 13a3 3 0 0 1-.4-6 4.5 4.5 0 0 1 8.6 1.2A2.5 2.5 0 0 1 12 13z"/></symbol>
+  <symbol id="i-network" viewBox="0 0 16 16"><rect x="6" y="1.5" width="4" height="3.5" rx="1"/><rect x="1.5" y="11" width="4" height="3.5" rx="1"/><rect x="10.5" y="11" width="4" height="3.5" rx="1"/><path d="M8 5v3M3.5 11V8h9v3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.5 1.5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></symbol>
+  <symbol id="i-replay" viewBox="0 0 16 16"><path d="M2.5 8a5.5 5.5 0 1 0 1.7-4M2.5 2v3h3"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="assets/logo.svg" alt="" width="30" height="30"><span>Agentic ITOps Showcase</span></a>
+    <nav aria-label="Primary">
+      <a class="hide-sm" href="#how">How it works</a>
+      <a class="hide-sm" href="#guardrails">Guardrails</a>
+      <a class="hide-sm" href="#use-cases">Use cases</a>
+      <a class="hide-xs" href="https://github.com/rbrunois/agentic-itops-showcase">GitHub</a>
+      <button class="icon-btn" type="button" id="themeToggle" aria-label="Switch to light theme"><svg class="ico"><use href="#i-sun"/></svg></button>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" aria-labelledby="hero-h">
+    <div class="wrap">
+      <a class="announce" href="#use-cases"><b>Azure SRE Agent</b><span class="hide-xs"><span data-uc="all">9</span> use cases, from Terraform to incident response</span><span class="show-xs"><span data-uc="all">9</span> use cases</span> <span aria-hidden="true">→</span></a>
+      <h1 id="hero-h"><span class="grad">Azure SRE Agent</span> does the work.<br>Humans stay in control.</h1>
+      <p class="lede">A community collection of IT automation use cases built on <strong>Azure SRE Agent</strong> across Azure, hybrid and multicloud: module upkeep, patching, architecture docs, retirement planning, monitoring and incident response. SRE Agent cuts the manual work, shows its evidence, and hands every change to a human.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#use-cases">Explore the use cases</a>
+        <a class="btn" href="https://github.com/rbrunois/agentic-itops-showcase"><svg class="ico"><use href="#i-star"/></svg>Star on GitHub</a>
+      </div>
+
+      <div class="console" id="console" role="region" aria-label="Interactive example: Azure SRE Agent preparing four different operations changes for human approval">
+        <div class="c-bar">
+          <img src="assets/logo.svg" alt="" width="20" height="20">
+          <span class="crumb"><b>Azure SRE Agent</b><span> / contoso / runs</span></span>
+          <span class="spacer"></span>
+          <span class="state investigating" id="state" aria-live="polite">Awaiting approval</span>
+        </div>
+        <div class="c-body">
+          <aside class="c-side" aria-label="Agent runs (sample)">
+            <h3>Runs</h3>
+            <div id="runs" role="group" aria-label="Choose an SRE Agent run"></div>
+          </aside>
+
+          <div class="c-thread">
+            <div class="ask"><span class="avatar" aria-hidden="true">OP</span><div class="bubble"><span class="mention" id="agent-name">@sre-agent</span> <span id="ask"></span></div></div>
+            <ol class="tl" id="timeline"></ol>
+            <div class="proposal">
+              <header><span><b>Proposal</b> · <span id="p-title"></span></span><span class="tag prop">PROPOSAL</span></header>
+              <pre class="diff mono" id="diff"></pre>
+              <footer>
+                <button class="btn btn-primary btn-sm" type="button" id="approve">Approve</button>
+                <button class="btn btn-sm" type="button" id="reject">Reject</button>
+                <button class="btn btn-sm" type="button" id="replay" hidden><svg class="ico"><use href="#i-replay"/></svg>Replay</button>
+                <span class="note" id="note"></span>
+              </footer>
+            </div>
+          </div>
+
+          <aside class="c-evidence" aria-label="Evidence (sample)">
+            <h3>Evidence</h3>
+            <div class="stat"><span class="lbl"><span id="stat-label"></span><span class="mono" id="stat-src"></span></span><b id="stat-value"></b></div>
+            <ul class="ev" id="evidence"></ul>
+          </aside>
+        </div>
+      </div>
+      <p class="sr-only">This Azure SRE Agent workspace is a fictional illustration using Contoso sample data. Pick a run to see a different use case.</p>
+    </div>
+  </section>
+
+  <section class="strip" aria-label="Services used across the use cases">
+    <div class="wrap">
+      <p>Built on services operators already run</p>
+      <ul>
+        <li>Azure SRE Agent</li><li>Azure Monitor</li><li>Application Insights</li><li>Azure Arc</li><li>Defender for Cloud</li><li>Update Manager</li><li>Microsoft Fabric</li><li>Terraform</li><li>GitHub Copilot</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec" id="how" aria-labelledby="how-h">
+    <div class="wrap">
+      <p class="kicker">How it works</p>
+      <h2 id="how-h">One operating model for SRE Agent.</h2>
+      <p class="sec-lede">Whether Azure SRE Agent is syncing a module, patching a fleet or chasing a 5xx spike, it follows the same loop. SRE Agent takes on the repetitive work; change still goes through people and pipelines.</p>
+      <ol class="flow">
+        <li><span class="num"><svg class="ico"><use href="#i-pulse"/></svg></span><h3>Trigger</h3><p>A request, a schedule, a new release, a lifecycle notice or an alert starts the run.</p></li>
+        <li><span class="num"><svg class="ico"><use href="#i-search"/></svg></span><h3>Analyze</h3><p>SRE Agent discovers, compares and validates with least-privilege, read-only access.</p></li>
+        <li class="gate"><span class="num"><svg class="ico"><use href="#i-person"/></svg></span><h3>Approve</h3><p>A pull request, change or plan with labeled evidence waits for a human decision.</p></li>
+        <li><span class="num"><svg class="ico"><use href="#i-check"/></svg></span><h3>Apply</h3><p>Deterministic pipelines apply the approved change and verify the result.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="sec" id="guardrails" aria-labelledby="gr-h">
+    <div class="wrap">
+      <p class="kicker">Guardrails</p>
+      <h2 id="gr-h">Required checks on every use case.</h2>
+      <p class="sec-lede">These are the design principles from the repository, and each package documents how it meets them.</p>
+      <div class="checks">
+        <div class="checks-head"><span class="big-ok"><svg class="ico"><use href="#i-check"/></svg></span><div><b>All checks have passed</b><span>4 required guardrails · <span data-uc="all">9</span> of <span data-uc="all">9</span> use cases</span></div></div>
+        <ul>
+          <li><svg class="ico"><use href="#i-check"/></svg><span><b>read-only-by-default</b> <span class="d">: discovery and investigation use least-privilege, read-only access.</span></span><span class="req">Required</span></li>
+          <li><svg class="ico"><use href="#i-check"/></svg><span><b>evidence-first</b> <span class="d">: outputs separate observed facts, inferences, and proposals.</span></span><span class="req">Required</span></li>
+          <li><svg class="ico"><use href="#i-check"/></svg><span><b>humans-approve-changes</b> <span class="d">: SRE Agent prepares proposals; humans and deterministic pipelines apply them.</span></span><span class="req">Required</span></li>
+          <li><svg class="ico"><use href="#i-check"/></svg><span><b>synthetic-data-only</b> <span class="d">: examples never contain real customer data, credentials, or production identifiers.</span></span><span class="req">Required</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="use-cases" aria-labelledby="uc-h">
+    <div class="wrap">
+      <div class="uc-head">
+        <div>
+          <p class="kicker">Use cases</p>
+          <h2 id="uc-h">Pick a use case and run it.</h2>
+          <p class="sec-lede">Infrastructure as code, security, lifecycle, monitoring and incident response, with Azure SRE Agent at the core. Runnable demos deploy into a dedicated subscription; blueprints are designs and procedures to adapt.</p>
+        </div>
+        <div class="tabs" role="group" aria-label="Filter use cases">
+          <button type="button" data-filter="all" aria-pressed="true">All<span class="count" data-uc="all">9</span></button>
+          <button type="button" data-filter="run" aria-pressed="false">Runnable<span class="count" data-uc="run">5</span></button>
+          <button type="button" data-filter="blue" aria-pressed="false">Blueprint<span class="count" data-uc="blue">4</span></button>
+        </div>
+      </div>
+      <ul class="repos" id="repos">
+<!-- usecases:start -->
+        <li data-kind="run"><article class="repo">
+          <div class="name"><svg class="ico"><use href="#i-book"/></svg><a href="avm-tf-synchronizer/">avm-tf-synchronizer</a><span class="pill">Runnable</span></div>
+          <p>Keep internal Terraform modules compliant and in sync with every AVM release</p>
+          <div class="foot"><span class="agent">Azure SRE Agent</span><span class="mono">#01</span><span>Zahir Mosaib</span></div>
+        </article></li>
+        <li data-kind="blue"><article class="repo">
+          <div class="name"><svg class="ico"><use href="#i-book"/></svg><a href="architecture-writer/">architecture-writer</a><span class="pill">Blueprint</span></div>
+          <p>Turn read-only Azure evidence into current architecture docs and diagrams</p>
+          <div class="foot"><span class="agent">Azure SRE Agent</span><span class="mono">#02</span><span>Romain Brunois</span></div>
+        </article></li>
+        <li data-kind="blue"><article class="repo">
+          <div class="name"><svg class="ico"><use href="#i-book"/></svg><a href="azure-vending-machine/">azure-vending-machine</a><span class="pill">Blueprint</span></div>
+          <p>Request a governed Azure subscription in Teams, in French or English</p>
+          <div class="foot"><span class="agent alt">Copilot Studio agent</span><span class="mono">#03</span><span>Romain Brunois</span></div>
+        </article></li>
+        <li data-kind="blue"><article class="repo">
+          <div class="name"><svg class="ico"><use href="#i-book"/></svg><a href="azure-fleet-security-remediation/">azure-fleet-security-remediation</a><span class="pill">Blueprint</span></div>
+          <p>Find patch and security gaps across your Azure and Arc fleet, then fix with approval</p>
+          <div class="foot"><span class="agent">Azure SRE Agent</span><span class="mono">#04</span><span>Romain Brunois</span></div>
+        </article></li>
+        <li data-kind="run"><article class="repo">
+          <div class="name"><svg class="ico"><use href="#i-book"/></svg><a href="azure-incident-investigator/">azure-incident-investigator</a><span class="pill">Runnable</span></div>
+          <p>Get an evidence-backed root cause for Azure incidents without changing a thing</p>
+          <div class="foot"><span class="agent">Azure SRE Agent</span><span class="mono">#05</span><span>Patrick Cayer, Zahir Mosaib</span></div>
+        </article></li>
+        <li data-kind="run"><article class="repo">
+          <div class="name"><svg class="ico"><use href="#i-book"/></svg><a href="azure-sre-incident-response/">azure-sre-incident-response</a><span class="pill">Runnable</span></div>
+          <p>Rehearse a full Azure incident, from injected fault to approved, verified recovery</p>
+          <div class="foot"><span class="agent">Azure SRE Agent</span><span class="mono">#06</span><span>Julien Nephtali</span></div>
+        </article></li>
+        <li data-kind="blue"><article class="repo">
+          <div class="name"><svg class="ico"><use href="#i-book"/></svg><a href="azure-retirement-readiness/">azure-retirement-readiness</a><span class="pill">Blueprint</span></div>
+          <p>See every Azure retirement deadline coming, with a migration plan for each</p>
+          <div class="foot"><span class="agent">Azure SRE Agent</span><span class="mono">#07</span><span>Romain Brunois</span></div>
+        </article></li>
+        <li data-kind="run"><article class="repo">
+          <div class="name"><svg class="ico"><use href="#i-book"/></svg><a href="microsoft-fabric-monitoring/">microsoft-fabric-monitoring</a><span class="pill">Runnable</span></div>
+          <p>Watch every Fabric capacity and explain CU anomalies without changing a thing</p>
+          <div class="foot"><span class="agent">Azure SRE Agent</span><span class="mono">#08</span><span>Franck Mercier</span></div>
+        </article></li>
+        <li data-kind="run"><article class="repo">
+          <div class="name"><svg class="ico"><use href="#i-book"/></svg><a href="azure-sre-network-troubleshooting/">azure-sre-network-troubleshooting</a><span class="pill">Runnable</span></div>
+          <p>Tell a blocked network from a broken app, with evidence for every claim</p>
+          <div class="foot"><span class="agent">Azure SRE Agent</span><span class="mono">#09</span><span>Ifeoma Aniagolu</span></div>
+        </article></li>
+<!-- usecases:end -->
+      </ul>
+      <p class="empty" id="count" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <section class="cta-band" aria-labelledby="cta-h">
+      <h2 id="cta-h">Have an ops task SRE Agent could take on?</h2>
+      <p>Contribute a use case. It needs a README, a safety model and synthetic sample data.</p>
+      <div class="actions" style="margin:0">
+        <a class="btn btn-primary" href="https://github.com/rbrunois/agentic-itops-showcase/blob/main/CONTRIBUTING.md">Read the contributing guide</a>
+        <a class="btn" href="https://github.com/rbrunois/agentic-itops-showcase/issues">Open an issue</a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Community demonstration repository. It isn't an official Microsoft product, is provided as-is without support or warranty, and isn't intended for production use without your own security, compliance and operational review. All organizations, people and data in examples are fictional (Contoso).</p>
+    <p>MIT License. Microsoft, Azure, Microsoft Fabric, Power BI and GitHub are trademarks of their respective owners.</p>
+  </div>
+</footer>
+
+<script type="application/json" id="runs-data">
+[
+ {
+  "name": "AVM module sync",
+  "kind": "Terraform",
+  "sev": "s4",
+  "agent": "@sre-agent",
+  "sub": "avm-tf-synchronizer",
+  "ask": "check the latest Azure Verified Modules releases against our internal modules",
+  "steps": [
+   [
+    "Found 3 new AVM releases since the last sync",
+    "registry"
+   ],
+   [
+    "Compared `avm-res-storage` 0.4.2 → 0.5.1",
+    "2 breaking"
+   ],
+   [
+    "Validated against 12 Contoso security controls",
+    "1 gap"
+   ]
+  ],
+  "title": "open a review-only PR for the storage module",
+  "diff": [
+   [
+    "-",
+    "version = \"0.4.2\""
+   ],
+   [
+    "+",
+    "version = \"0.5.1\""
+   ],
+   [
+    "+",
+    "public_network_access_enabled = false"
+   ]
+  ],
+  "applied": [
+   [
+    "Pull request #214 opened for review",
+    "review-only"
+   ],
+   [
+    "Validation pipeline passed on the PR",
+    "CI"
+   ]
+  ],
+  "stat": [
+   "Module drift",
+   "AVM",
+   "3 releases"
+  ],
+  "evidence": [
+   [
+    "fact",
+    "avm-res-storage 0.5.1 renames network_rules inputs."
+   ],
+   [
+    "fact",
+    "Control SC-07 requires public access disabled."
+   ],
+   [
+    "inf",
+    "The internal module needs one new default to stay compliant."
+   ]
+  ]
+ },
+ {
+  "name": "Retirement readiness",
+  "kind": "Lifecycle",
+  "sev": "s3",
+  "agent": "@sre-agent",
+  "sub": "azure-retirement-readiness",
+  "ask": "which of our resources are affected by upcoming Azure retirements?",
+  "steps": [
+   [
+    "Inventoried 1,240 resources across 6 subscriptions",
+    "read-only"
+   ],
+   [
+    "Matched lifecycle docs with Service Health notices",
+    "2 sources"
+   ],
+   [
+    "18 resources affected, 5 due within 90 days",
+    "prioritized"
+   ]
+  ],
+  "title": "notify owners and file migration work items",
+  "diff": [
+   [
+    "+",
+    "notify: 5 owners · due in < 90 days"
+   ],
+   [
+    "+",
+    "work_items: 18 · ordered by deadline"
+   ],
+   [
+    "+",
+    "dashboard_refresh: weekly"
+   ]
+  ],
+  "applied": [
+   [
+    "Owner notifications sent through the approved channel",
+    "run #23"
+   ],
+   [
+    "Weekly dashboard refresh scheduled",
+    "verified"
+   ]
+  ],
+  "stat": [
+   "Affected resources",
+   "Service Health",
+   "18"
+  ],
+  "evidence": [
+   [
+    "fact",
+    "5 resources use a feature retiring in under 90 days."
+   ],
+   [
+    "fact",
+    "Every affected subscription has a direct owner."
+   ],
+   [
+    "inf",
+    "Migrating the 2 App Service plans together avoids a second change window."
+   ]
+  ]
+ },
+ {
+  "name": "Patch remediation",
+  "kind": "Arc",
+  "sev": "s3",
+  "agent": "@sre-agent",
+  "sub": "azure-fleet-security-remediation",
+  "ask": "which servers across Azure, on-premises and AWS are missing critical patches?",
+  "steps": [
+   [
+    "Inventoried 214 machines through Azure Arc",
+    "read-only"
+   ],
+   [
+    "Matched Defender findings with Update Manager",
+    "2 sources"
+   ],
+   [
+    "12 servers missing critical updates",
+    "verified in guest"
+   ]
+  ],
+  "title": "schedule a maintenance window for 12 servers",
+  "diff": [
+   [
+    "+",
+    "schedule: sat 02:00 UTC"
+   ],
+   [
+    "+",
+    "scope: 12 machines · critical only"
+   ],
+   [
+    "+",
+    "reboot: if-required"
+   ]
+  ],
+  "applied": [
+   [
+    "Maintenance configuration applied by pipeline",
+    "run #57"
+   ],
+   [
+    "Post-patch compliance verified: 12 of 12",
+    "resolved"
+   ]
+  ],
+  "stat": [
+   "Non-compliant",
+   "Defender",
+   "12 / 214"
+  ],
+  "evidence": [
+   [
+    "fact",
+    "12 machines report critical updates pending for more than 14 days."
+   ],
+   [
+    "fact",
+    "3 of them run on AWS through Azure Arc."
+   ],
+   [
+    "inf",
+    "A weekend window avoids the batch jobs on 4 of the servers."
+   ]
+  ]
+ },
+ {
+  "name": "HTTP 5xx on contoso-web",
+  "kind": "Sev 2",
+  "sev": "s2",
+  "agent": "@sre-agent",
+  "sub": "azure-incident-investigator",
+  "ask": "why is contoso-web returning 5xx since 14:02?",
+  "steps": [
+   [
+    "Discovered 14 resources in `rg-contoso-web`",
+    "read-only"
+   ],
+   [
+    "Correlated failed requests with deployment `#482`",
+    "3 sources"
+   ],
+   [
+    "Root cause: `DB_CONN` missing in the new slot",
+    "high"
+   ]
+  ],
+  "title": "swap back to the last known good slot",
+  "diff": [
+   [
+    "-",
+    "production → slot: release-482"
+   ],
+   [
+    "+",
+    "production → slot: release-481"
+   ]
+  ],
+  "applied": [
+   [
+    "Pipeline swapped production back to release-481",
+    "run #91"
+   ],
+   [
+    "Health verified: 5xx back to 0.2%",
+    "resolved"
+   ]
+  ],
+  "stat": [
+   "Failed requests",
+   "App Insights",
+   "31%"
+  ],
+  "evidence": [
+   [
+    "fact",
+    "5xx rate rose from 0.2% to 31% at 14:02."
+   ],
+   [
+    "fact",
+    "The slot swap for release-482 finished at 14:01."
+   ],
+   [
+    "inf",
+    "The new slot cannot reach the database without DB_CONN."
+   ]
+  ]
+ }
+]
+</script>
+<script src="assets/console.js" defer></script>
+<script>
+  (function () {
+    var buttons = document.querySelectorAll('[data-filter]');
+    var cards = document.querySelectorAll('#repos > li');
+    var count = document.getElementById('count');
+    buttons.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var f = b.getAttribute('data-filter'), shown = 0;
+        buttons.forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+        cards.forEach(function (c) { var on = f === 'all' || c.getAttribute('data-kind') === f; c.hidden = !on; if (on) shown++; });
+        count.textContent = f === 'all' ? '' : 'Showing ' + shown + ' of ' + cards.length + ' use cases.';
+      });
+    });
+  })();
+</script>
+</body>
+</html>

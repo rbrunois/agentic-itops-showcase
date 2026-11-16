@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="960" viewBox="0 0 1440 960" role="img" aria-labelledby="title description">
+  <title id="title">Contoso Azure SRE network investigation lab</title>
+  <desc id="description">Two peered virtual networks contain client and IIS workload VMs with subnet NSGs. Flow logs target the VNets and feed Storage, Traffic Analytics and Log Analytics. AMA and DCRs independently collect Windows events. Azure SRE Agent queries the workspace with KQL and reads configuration. Optional additive Connection Monitor probes the workload from the client.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#125a9e"/></marker>
+    <style>
+      text { font-family: Segoe UI, Arial, sans-serif; fill: #142c45; font-size: 19px; }
+      .heading { font-size: 30px; font-weight: 700; }
+      .label { font-size: 21px; font-weight: 600; }
+      .small { font-size: 17px; }
+      .box { fill: #edf6ff; stroke: #125a9e; stroke-width: 2; rx: 12; }
+      .optional { fill: #f7f2ff; stroke: #7952a8; stroke-width: 2; stroke-dasharray: 8 5; rx: 12; }
+      .line { fill: none; stroke: #125a9e; stroke-width: 2.5; marker-end: url(#arrow); }
+      .dashed { stroke-dasharray: 7 5; }
+    </style>
+  </defs>
+  <rect width="1440" height="960" fill="#fff"/>
+  <text x="35" y="48" class="heading">Azure SRE Network Troubleshooting</text>
+  <text x="35" y="80">Synthetic Contoso lab | Independent evidence | Human-approved changes</text>
+  <rect x="35" y="115" width="470" height="230" class="box"/>
+  <text x="55" y="150" class="label">Client VNet: 10.10.0.0/16</text>
+  <rect x="55" y="170" width="430" height="150" class="box"/>
+  <text x="75" y="205">Client subnet: 10.10.1.0/24 + NSG</text>
+  <text x="75" y="245">Client VM: synthetic TCP / HTTP requests</text>
+  <text x="75" y="280">AMA + Windows event source</text>
+  <rect x="935" y="115" width="470" height="230" class="box"/>
+  <text x="955" y="150" class="label">Workload VNet: 10.20.0.0/16</text>
+  <rect x="955" y="170" width="430" height="150" class="box"/>
+  <text x="975" y="205">Workload subnet: 10.20.1.0/24 + NSG</text>
+  <text x="975" y="245">Windows IIS VM: private TCP/80</text>
+  <text x="975" y="280">AMA + independent IIS health markers</text>
+  <path d="M505 225 H935" class="line"/>
+  <text x="565" y="195" class="label">Bidirectional peering</text>
+  <text x="565" y="255">New private TCP/80 requests</text>
+  <path d="M270 345 V395 H520 V430" class="line"/>
+  <path d="M1170 345 V395 H520" class="line"/>
+  <text x="550" y="385" class="small">Flow logging targets BOTH VNets, not NSGs/subnets</text>
+  <rect x="365" y="430" width="310" height="85" class="box"/>
+  <text x="385" y="465" class="label">Network Watcher</text>
+  <text x="385" y="495">Virtual Network Flow Logs</text>
+  <path d="M675 473 H740" class="line"/>
+  <rect x="740" y="430" width="210" height="85" class="box"/>
+  <text x="760" y="465" class="label">Storage</text>
+  <text x="760" y="495">Raw flow records</text>
+  <path d="M950 473 H1015" class="line"/>
+  <rect x="1015" y="430" width="390" height="85" class="box"/>
+  <text x="1035" y="465" class="label">Traffic Analytics</text>
+  <text x="1035" y="495">Enriches / aggregates flow evidence</text>
+  <path d="M1210 515 V585 H1080 V630" class="line"/>
+  <rect x="35" y="430" width="285" height="140" class="box"/>
+  <text x="55" y="465" class="label">AMA + Windows DCR</text>
+  <text x="55" y="500">Custom Windows events</text>
+  <text x="55" y="535">SRE-Network-Demo</text>
+  <path d="M95 320 V400 H175 V430" class="line dashed"/>
+  <path d="M1365 320 V365 H20 V500 H35" class="line dashed"/>
+  <path d="M175 570 V660 H740" class="line"/>
+  <text x="200" y="635">Independent application evidence</text>
+  <rect x="740" y="630" width="665" height="115" class="box"/>
+  <text x="760" y="665" class="label">Log Analytics workspace</text>
+  <text x="760" y="700">NTANetAnalytics (flows) + Event (AMA / DCR health)</text>
+  <text x="760" y="730" class="small">Schema discovery, samples, exact endpoints and UTC windows</text>
+  <rect x="35" y="790" width="545" height="130" class="box"/>
+  <text x="55" y="825" class="label">Azure SRE Agent (separate setup)</text>
+  <text x="55" y="860">Read-only configuration reads + KQL queries</text>
+  <text x="55" y="895">No Run Command, NSG edits, or remediation</text>
+  <path d="M580 825 H660 V710 H740" class="line"/>
+  <text x="590" y="780" class="small">Queries evidence</text>
+  <rect x="740" y="790" width="665" height="130" class="optional"/>
+  <text x="760" y="825" class="label">Optional / additive Connection Monitor</text>
+  <text x="760" y="860">Client source extension probes existing IIS TCP/80</text>
+  <text x="760" y="895">Separate deployment + approval; TCP is not HTTP health</text>
+  <path d="M1320 790 V745" class="line dashed"/>
+  <text x="35" y="950" class="small">Observed Fact - Configuration Fact - Inference - Recommendation | Operator approval required for every change</text>
+</svg>
