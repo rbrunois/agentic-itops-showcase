@@ -202,6 +202,13 @@ h2 { font-size: clamp(1.9rem, 4vw, 2.8rem); letter-spacing: -.025em; line-height
 .repo .foot { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1rem; color: var(--muted); font-size: .8rem; }
 .agent { font-weight: 600; color: var(--link); }
 .agent.alt { color: var(--muted); }
+.repo .owners { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: .4rem; padding-top: .55rem; border-top: 1px solid var(--border-muted); }
+.repo .owner { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: .45rem; padding: .2rem .7rem .2rem .25rem; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--violet) 45%, var(--border)); background: color-mix(in srgb, var(--violet) 12%, var(--bg)); color: var(--fg); text-decoration: none; transition: border-color .15s, background .15s; }
+.repo .owner:hover { border-color: var(--link); background: color-mix(in srgb, var(--link) 16%, var(--bg)); }
+.repo .owner:hover b { text-decoration: underline; text-underline-offset: 2px; }
+.repo .owner:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+.repo .owner .av { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; font-size: .62rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, #4493f8, #a371f7); box-shadow: 0 0 0 2px var(--bg); }
+.repo .owner b { font-weight: 600; font-size: .82rem; white-space: nowrap; }
 .lang { display: inline-flex; align-items: center; gap: .35rem; }
 .lang i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
 .repo[hidden] { display: none; }
