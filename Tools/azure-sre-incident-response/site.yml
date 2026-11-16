@@ -1,0 +1,76 @@
+# Marketing copy for this use case's page on the project site. See scripts/site/site-template.yml.
+
+tagline: Rehearse a full Azure incident, from injected fault to approved, verified recovery
+
+problem: >-
+  Teams rarely get to practice incident response end to end before a real
+  outage. Without a safe rehearsal, crash-loop diagnosis, rollback decisions
+  and approval boundaries are learned under pressure, on production.
+
+benefits:
+  - icon: pulse
+    title: A realistic, scoped failure
+    text: A runnable Container Apps demo injects one crash-looping revision into a dedicated demo app.
+  - icon: search
+    title: Evidence-backed investigation
+    text: Azure SRE Agent correlates revisions, traffic, logs and metrics read-only and proposes a rollback.
+  - icon: person
+    title: Every step is a human decision
+    text: Provisioning, fault injection, rollback and teardown are separate, explicitly approved steps.
+  - icon: refresh
+    title: Verified recovery
+    text: Recovery restores the captured baseline traffic and retires only the injected revision.
+
+flow:
+  trigger: An operator approves simulated downtime and injects a failing revision
+  analyze: The agent correlates revisions, traffic, logs and metrics read-only
+  approve: The operator reviews the proposed rollback and approves recovery
+  apply: The operator's script restores baseline traffic and verifies health
+
+demo:
+  handle: "@sre-agent"
+  ask: investigate the contoso-orders demo incident read-only and propose a recovery
+  steps:
+    - ["Listed revisions and traffic for `contoso-orders`", "2 revisions"]
+    - ["Read console logs for `contoso-orders--fault-3f9a1c2b7d4e`", "exit code 1"]
+    - ["Identified the captured healthy baseline revision", "/healthz 200"]
+  proposal:
+    title: roll back to the captured baseline, pending operator approval
+    lines:
+      - ["-", "contoso-orders--fault-3f9a1c2b7d4e: 100% traffic"]
+      - ["+", "contoso-orders--git-8c41e2a: 100% traffic"]
+  applied:
+    - ["Operator approved and ran `demo-fix.ps1` with the saved state", "human"]
+    - ["`/healthz` returned 200; injected revision deactivated", "verified"]
+  stat:
+    label: Revisions retired
+    source: incident state
+    value: 1 / 1
+  evidence:
+    - type: fact
+      text: The fault revision receives 100% traffic and its process exits repeatedly.
+    - type: fact
+      text: Baseline `contoso-orders--git-8c41e2a` passed `/healthz` before the fault.
+    - type: inference
+      text: Restoring the captured baseline traffic should recover the endpoint.
+
+safety:
+  readonly:
+    - The agent investigates with Reader and Log Analytics Reader only
+    - No unattended remediation is configured for this scenario
+  human:
+    - The operator approves provisioning, simulated downtime and rollback separately
+    - Scripts require explicit scope and support `-WhatIf` and confirmation
+    - Ingress exposure is an explicit choice made at provisioning
+    - Teardown is a separate, explicit destructive decision
+
+audience:
+  - SRE and operations teams rehearsing incident response
+  - Teams evaluating Azure SRE Agent on a safe workload
+needs:
+  - A dedicated demo resource group in an operator-selected subscription
+  - Azure CLI, Bicep and PowerShell 7
+  - Azure SRE Agent onboarded separately with read-only access
+  - An operator authorized to approve downtime and recovery
+
+services: [Azure SRE Agent, Azure Container Apps, Application Insights, Log Analytics, Azure Monitor, Azure Container Registry]

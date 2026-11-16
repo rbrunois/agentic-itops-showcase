@@ -1,0 +1,81 @@
+# Marketing copy for this use case's page on the project site. See scripts/site/site-template.yml.
+
+tagline: Turn read-only Azure evidence into current architecture docs and diagrams
+
+image: assets/architecture-writer-workflow.svg
+image_alt: Workflow from read-only Azure discovery to a reviewed architecture pull request
+
+problem: >-
+  Architecture diagrams are drawn by hand and drift as soon as the workload
+  changes. Reviews against the Well-Architected Framework come late, and
+  assumptions often end up presented as deployed reality.
+
+benefits:
+  - icon: search
+    title: Evidence, not guesses
+    text: Every resource and relationship is labeled observed, inferred or proposed, with confidence and rationale.
+  - icon: file
+    title: One complete package
+    text: A report, an editable diagram, validation findings and a WAF review, all built from the same model.
+  - icon: refresh
+    title: Drift made visible
+    text: Fresh read-only discovery is compared with the approved baseline and proposed as a reviewed update.
+  - icon: person
+    title: People stay in control
+    text: GitHub sync and any IaC draft need explicit approval. The agent never mutates Azure or merges.
+
+flow:
+  trigger: An on-demand request or a scheduled drift check for a defined scope
+  analyze: Discovers Azure read-only, models boundaries and flows, validates the result
+  approve: An owner approves the artifacts before a draft pull request is opened
+  apply: A human merges the pull request, which becomes the next baseline
+
+demo:
+  handle: "@sre-agent"
+  ask: document the Contoso payments workload in `rg-contoso-payments-prod`
+  steps:
+    - ["Discovered resources read-only in two regions", "12 resources"]
+    - ["Labeled the API-to-database flow as inferred", "medium"]
+    - ["Validated the diagram against the inventory", "1 open item"]
+  proposal:
+    title: open a draft pull request with the refreshed architecture package
+    lines:
+      - ["+", "docs/architecture/contoso-payments/architecture.md"]
+      - ["+", "docs/architecture/contoso-payments/diagram.svg"]
+      - ["+", "docs/architecture/contoso-payments/validation-report.md"]
+  applied:
+    - ["Architecture owner merged the pull request", "human"]
+    - ["Accepted inventory recorded as the new baseline", "baseline"]
+  stat:
+    label: Resources on the diagram
+    source: validation-report.md
+    value: 12 / 12
+  evidence:
+    - type: fact
+      text: "`app-prod-001` uses subnet `snet-app` in `vnet-prod-hub`."
+    - type: fact
+      text: Resources run in Canada Central and Canada East.
+    - type: inference
+      text: The API calls the database through a private endpoint; telemetry was not available to confirm it.
+
+safety:
+  readonly:
+    - Uses least-privilege, read-only Azure and repository access
+    - Never mutates Azure, runs remediation or deploys Terraform or Bicep
+    - Never fabricates resources, flows, redundancy or recovery claims
+  human:
+    - Explicit approval before drafting IaC or syncing to GitHub
+    - A human reviews and merges every pull request
+    - The agent never pushes to a protected branch
+
+audience:
+  - Cloud architects
+  - Platform engineers
+  - SRE teams that need current architecture documentation
+needs:
+  - A defined scope, audience and purpose
+  - Read-only Azure inventory access, such as Azure Resource Graph
+  - A diagram capability for SVG, Mermaid or draw.io
+  - An approved GitHub repository and branch policy
+
+services: [Azure SRE Agent, Azure Resource Graph, Azure Well-Architected Framework, GitHub]

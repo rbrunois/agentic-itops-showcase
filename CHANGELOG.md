@@ -13,10 +13,11 @@ use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Analyze → Approve → Apply operating model, the guardrails, and a filterable
   use case catalogue. Includes the logo, light and dark README banners, and a
   social preview image.
-- Use case pages: each use case has a marketing page on the project site
-  (problem, benefits, how it works, an interactive sample run, safety and fit),
-  linked from the landing page catalogue. The site is static HTML in `docs/`,
-  published by GitHub Pages from `main`.
+- Generated use case pages: each use case's marketing page on the project site
+  is now built by `scripts/site/build.mjs` from a new `Tools/<use-case>/site.yml`,
+  instead of being edited by hand. The landing page catalogue is rebuilt from
+  the root README tables, and the **Publish site** workflow builds and deploys
+  the site to GitHub Pages from `main`.
 - Dedicated Azure SRE Agent instructions
   (`sre-agent-assets/sre-agent-instructions.md`) for Architecture Writer, Fleet
   Security & Patch Remediation, Retirement Readiness, and SRE Incident Response,

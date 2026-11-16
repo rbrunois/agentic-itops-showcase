@@ -1,0 +1,95 @@
+# Marketing copy for this use case's page on the project site.
+#
+# Copy this file to Tools/<use-case>/site.yml and fill it in. The page is a short
+# product page: it explains why the use case matters and links to README.md for
+# setup. Keep every claim grounded in the README, use synthetic data only
+# (Contoso, Fabrikam), and never promise unattended changes.
+#
+# Without a site.yml the use case still gets a basic page built from the root
+# README catalogue, and the build prints a warning.
+#
+# `backticks` render as inline code in demo steps and evidence.
+
+# One-line promise for the hero. Max 90 characters, no trailing period.
+tagline: Keep internal Terraform modules compliant with every AVM release
+
+# Optional illustration shown in the hero, relative to this folder.
+# Prefer a wide diagram or marketing visual that already exists in the use case.
+image: assets/example.svg
+image_alt: Workflow from an AVM release to a reviewed pull request
+
+# The manual pain this removes. Two or three sentences.
+problem: >-
+  Platform teams fork Azure Verified Modules to add internal controls, then fall
+  behind upstream. Porting each release by hand is slow, and every port risks
+  dropping a control.
+
+# Three or four outcomes. icon: shield, refresh, person, tag, search, pulse,
+# file, check, chart, cloud, network, clock, lock or book.
+benefits:
+  - icon: refresh
+    title: Always current
+    text: New AVM releases are ported into your module structure, without hand merging.
+  - icon: shield
+    title: Secure by default
+    text: Your security controls are enforced on the result in the same pull request.
+  - icon: person
+    title: People stay in control
+    text: Every change is a pull request that CI validates and a human reviews and merges.
+
+# This use case's version of the operating model. Max 90 characters each.
+flow:
+  trigger: A new AVM release, or a scheduled run every six hours
+  analyze: Diffs upstream against your module and checks every control
+  approve: One review-only pull request waits for a maintainer
+  apply: The maintainer merges; release automation tags a new version
+
+# One sample run shown in the interactive console. Fictional Contoso data.
+demo:
+  handle: "@sre-agent"           # how the operator addresses the agent
+  ask: check the latest Azure Verified Modules release against our Key Vault module
+  steps:                         # exactly three: [what the agent did, short meta]
+    - ["Found AVM `v0.12.0` for `avm-res-keyvault-vault`", "registry"]
+    - ["Compared it with the internal module on `main`", "4 changes"]
+    - ["Validated 11 Contoso security controls", "1 gap"]
+  proposal:
+    title: open a pull request that syncs AVM and enforces controls
+    lines:                       # one to four ["+" or "-", text]
+      - ["-", "avm_version = \"0.10.2\""]
+      - ["+", "avm_version = \"0.12.0\""]
+      - ["+", "public_network_access_enabled = false"]
+  applied:                       # exactly two: what happens after a human approves
+    - ["Maintainer merged pull request #42", "human"]
+    - ["Release automation tagged `v2.0.0`", "CI"]
+  stat:
+    label: Controls enforced
+    source: mapping.yaml
+    value: 11 / 11
+  evidence:                      # exactly three; type is fact or inference
+    - type: fact
+      text: AVM v0.12.0 adds two inputs to the network ACL block.
+    - type: fact
+      text: Control SC-KV-04 requires public network access disabled.
+    - type: inference
+      text: The new default would re-enable public access without the control.
+
+# What stays read-only, and what needs a person or a pipeline. Two to four each.
+safety:
+  readonly:
+    - Reads AVM releases and your security controls
+    - Never merges, tags or pushes to main
+  human:
+    - A maintainer reviews and merges each pull request
+    - CI must pass before merge
+
+# Who it is for, and the main prerequisites. Two to five short items each.
+audience:
+  - Platform teams that publish internal Terraform modules
+  - Security teams that own module controls
+needs:
+  - An Azure SRE Agent with GitHub access to the module repository
+  - A module forked from an Azure Verified Module
+  - Security controls written as a mapping file
+
+# Products shown as chips. Use official names.
+services: [Azure SRE Agent, Azure Verified Modules, Terraform, GitHub Actions]

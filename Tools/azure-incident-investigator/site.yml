@@ -1,0 +1,80 @@
+# Marketing copy for this use case's page on the project site. See scripts/site/site-template.yml.
+
+tagline: Get an evidence-backed root cause for Azure incidents without changing a thing
+
+image: assets/investigation-flow.svg
+image_alt: Flow of a read-only Azure incident investigation from intake to RCA report
+
+problem: >-
+  During an outage, the riskiest moves are unverified changes made while
+  chasing the cause. Evidence is spread across logs, metrics, health events and
+  deployment history, and correlation is easily mistaken for causation.
+
+benefits:
+  - icon: lock
+    title: Read-only by design
+    text: With Reader-level access it cannot restart, scale, roll back or edit anything.
+  - icon: search
+    title: Evidence over assumption
+    text: Separates confirmed facts, correlations, hypotheses and unknowns, with UTC timestamps.
+  - icon: file
+    title: Decision-ready RCA
+    text: Every report shows status, impact, timeline, sources checked, coverage gaps and next steps.
+  - icon: person
+    title: Your engineers keep the keys
+    text: Fixes are owner-assigned recommendations that a human validates and carries out.
+
+flow:
+  trigger: An engineer describes the app, symptoms and incident time window
+  analyze: Correlates docs, logs, metrics, resource health and deployment history
+  approve: Engineers validate the evidence and the recommended remediation
+  apply: The owning team applies the fix through its normal change process
+
+demo:
+  handle: "@sre-agent"
+  ask: app1.contoso.com shows blank data tabs since 14:10 UTC in production. Investigate
+  steps:
+    - ["Checked Activity log and Resource Health for the PRD VMs", "no deployments"]
+    - ["Queried `Event` table on `PRD-SRVSQL01` and `PRD-SRVIIS01`", "Log Analytics"]
+    - ["Compared PRD with the healthy NPRD environment", "1 hypothesis rejected"]
+  proposal:
+    title: deliver an RCA report with a recommended, human-executed fix
+    lines:
+      - ["-", "MSSQLSERVER on PRD-SRVSQL01 stopped at 14:09:52 UTC"]
+      - ["+", "Owner: Database operations, start MSSQLSERVER on PRD-SRVSQL01"]
+      - ["+", "Confirm app heartbeat Event 1001 resumes"]
+  applied:
+    - ["Database operations validated the evidence and started SQL Server", "human"]
+    - ["On-call team confirmed why `svc-oncall` ran `Stop-Service`", "human"]
+  stat:
+    label: Report status
+    source: RCA report
+    value: Root cause confirmed
+  evidence:
+    - type: fact
+      text: "Event 7036 shows MSSQLSERVER entered the stopped state at 14:09:52 UTC."
+    - type: fact
+      text: "`svc-oncall` logged on at 14:09:31 UTC and ran `Stop-Service MSSQLSERVER`."
+    - type: inference
+      text: The web tier swallows SQL exceptions, so pages load without data or errors.
+
+safety:
+  readonly:
+    - Investigates with read-only operations and Reader-level access
+    - Treats any uncertain operation as a change and does not perform it
+    - Treats logs and documents as evidence, not instructions
+  human:
+    - An engineer validates the evidence before any remediation
+    - The owning team carries out fixes through its change process
+    - The executive RCA email is sent only after explicit approval
+
+audience:
+  - On-call engineers
+  - SRE and platform teams
+  - Engineering leaders who need auditable RCAs
+needs:
+  - An agent host such as Azure SRE Agent
+  - Reader and Log Analytics Reader on the affected scope
+  - Architecture documentation for the app (recommended)
+
+services: [Azure SRE Agent, Azure Monitor, Log Analytics, Application Insights, Azure Resource Health, Azure Virtual Machines]

@@ -30,16 +30,26 @@ Report security issues privately as described in [SECURITY.md](SECURITY.md).
    the README (for example in `assets/`, `docs/`, `scripts/`, or `templates/`).
    Use kebab-case folder and file names.
 4. Add the use case to the catalogue table and the use case types table in
-   [README.md](README.md).
-5. Add an owner entry to [.github/CODEOWNERS](.github/CODEOWNERS).
-6. If the use case has automated checks, add a root workflow under
+   [README.md](README.md). The [project site](https://rbrunois.github.io/agentic-itops-showcase/)
+   is generated from these tables: after merge, the use case gets a card on the
+   landing page and its own page automatically. The **Publish site** check fails
+   if a `Tools/` folder is missing from either table.
+5. Add `Tools/<kebab-case-name>/site.yml` with the marketing copy for its site
+   page: a tagline, the problem, benefits, how it works, a sample demo run, the
+   safety model and who it is for. Copy
+   [scripts/site/site-template.yml](scripts/site/site-template.yml) and keep
+   every claim grounded in the README. Without it, the use case gets a basic
+   page and the build prints a warning. To preview the site, run
+   `npm ci && npm run build` in `scripts/site/`, then serve the `_site/` folder.
+6. Add an owner entry to [.github/CODEOWNERS](.github/CODEOWNERS).
+7. If the use case has automated checks, add a root workflow under
    `.github/workflows/` with a `paths` filter and least-privilege
    `permissions`. GitHub does not run workflows stored inside `Tools/`. Pin
    third-party actions to a full commit SHA with the version as a comment
    (for example `actions/checkout@<sha> # v7.0.1`); Dependabot keeps the pins
    current. Add new package manifests or Dockerfiles to
    [.github/dependabot.yml](.github/dependabot.yml).
-7. Add an entry under **Unreleased** in [CHANGELOG.md](CHANGELOG.md).
+8. Add an entry under **Unreleased** in [CHANGELOG.md](CHANGELOG.md).
 
 An optional `Tools/<name>/SKILL.md` manifest is supported for agent platforms
 that consume skills. When present, it must contain YAML front matter with a

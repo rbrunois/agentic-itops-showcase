@@ -40,3 +40,6 @@ crash.log
 *.log
 dist/
 build/
+
+# Generated site
+_site/

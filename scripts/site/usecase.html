@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{titleText}} · Agentic ITOps Showcase</title>
+<meta name="description" content="{{descriptionText}}">
+<meta property="og:title" content="{{titleText}} · Agentic ITOps Showcase">
+<meta property="og:description" content="{{descriptionText}}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="{{pageUrl}}">
+<meta property="og:image" content="{{siteUrl}}assets/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<script>
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem('page-theme'); } catch (e) {}
+    var theme = saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js" defer></script>
+</head>
+<body>
+{{iconSprite}}
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../assets/logo.svg" alt="" width="30" height="30"><span>Agentic ITOps Showcase</span></a>
+    <nav aria-label="Primary">
+      <a class="hide-sm" href="../#use-cases">All use cases</a>
+      <a class="hide-sm" href="{{readmeUrl}}">Guide</a>
+      <a class="hide-xs" href="{{repoUrl}}">GitHub</a>
+      <button class="icon-btn" type="button" id="themeToggle" aria-label="Switch to light theme"><svg class="ico"><use href="#i-sun"/></svg></button>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+{{body}}
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Community demonstration repository. It isn't an official Microsoft product, is provided as-is without support or warranty, and isn't intended for production use without your own security, compliance and operational review. All organizations, people and data in examples are fictional (Contoso).</p>
+    <p>MIT License. Microsoft, Azure, Microsoft Fabric, Power BI and GitHub are trademarks of their respective owners.</p>
+  </div>
+</footer>
+</body>
+</html>

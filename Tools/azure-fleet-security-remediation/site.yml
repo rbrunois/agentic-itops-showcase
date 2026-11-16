@@ -1,0 +1,82 @@
+# Marketing copy for this use case's page on the project site. See scripts/site/site-template.yml.
+
+tagline: Find patch and security gaps across your Azure and Arc fleet, then fix with approval
+
+image: assets/azure-fleet-remediation-architecture.png
+image_alt: Azure SRE Agent reads fleet evidence across Azure, on-premises, AWS and Google Cloud through Azure Arc
+
+problem: >-
+  Patch and security evidence for Azure VMs and Arc-enabled servers is spread
+  across Resource Graph, Defender for Cloud and Update Manager. Broad, repeated
+  scans are costly, missing results look like healthy machines, and a
+  successful control-plane request is easily mistaken for a patched guest.
+
+benefits:
+  - icon: network
+    title: One view of a multicloud fleet
+    text: Azure, on-premises, AWS and Google Cloud machines are assessed together through Azure Arc.
+  - icon: search
+    title: Targeted, lower-cost diagnosis
+    text: Grouped fleet queries run once; deeper log and agent checks run only on exceptions.
+  - icon: check
+    title: Verified in the guest
+    text: Patching counts as done only when fresh guest installation results confirm it.
+  - icon: person
+    title: Owners approve every change
+    text: Each proposed action lists risk, impact, verification and a safe-stop path for approval.
+
+flow:
+  trigger: A monthly fleet review, a readiness check or a failed patch job
+  analyze: Inventories VMs and Arc machines, then checks patch, Defender and coverage
+  approve: The service owner reviews a remediation plan, action by action
+  apply: Azure Update Manager patches approved targets; guest results are verified
+
+demo:
+  handle: "@sre-agent"
+  ask: assess patch coverage for all VMs and Arc servers in Contoso production
+  steps:
+    - ["Inventoried 18 Azure VMs and 4 Arc machines with Resource Graph", "22 records"]
+    - ["Checked patch assessments, Update Manager and Defender for Servers", "3 gaps"]
+    - ["Investigated the failed patch on `vm-app-02`", "VM Agent"]
+  proposal:
+    title: propose targeted remediation for owner approval
+    lines:
+      - ["+", "Repair VM Agent communication on vm-app-02, then reassess"]
+      - ["+", "Reconnect arc-db-02 and refresh patch evidence"]
+      - ["+", "Assign 3 unassessed workloads to the approved maintenance policy"]
+  applied:
+    - ["Service owner approved the vm-app-02 repair and reassessment", "human"]
+    - ["Fresh `patchInstallationResults` confirmed the guest update", "verified"]
+  stat:
+    label: Workloads with current patch assessment
+    source: Azure Update Manager
+    value: 15 / 18
+  evidence:
+    - type: fact
+      text: "`vm-app-02` guest patch operation failed; VM Agent status is unavailable."
+    - type: fact
+      text: Three workloads returned no patch assessment, and `arc-db-02` is disconnected.
+    - type: inference
+      text: Missing results are coverage gaps, not healthy machines, until onboarding is validated.
+
+safety:
+  readonly:
+    - Discovery, assessment, reporting and proposals are read-only by default
+    - Never targets a subscription, wildcard or unresolved identity for a change
+    - Stops for owner review when evidence conflicts or is stale
+  human:
+    - Patch, reboot, VM Agent repair and Update Manager changes need explicit approval
+    - Defender changes and role assignments need explicit approval
+    - Live patching runs through the operator's own change process
+
+audience:
+  - Cloud operations and SRE teams
+  - Security and patch-management owners
+  - Infrastructure teams managing servers through Azure Arc
+needs:
+  - Read-only access to Resource Graph, Defender for Cloud, Update Manager and Activity Log
+  - A defined approval owner for patching and reboots
+  - A maintenance policy for update classes and reboot behavior
+  - Azure SRE Agent loaded with the agent instructions
+
+services: [Azure SRE Agent, Azure Arc, Azure Update Manager, Microsoft Defender for Cloud, Azure Resource Graph, Azure Monitor]

@@ -1,0 +1,80 @@
+# Marketing copy for this use case's page on the project site. See scripts/site/site-template.yml.
+
+tagline: See every Azure retirement deadline coming, with a migration plan for each
+
+image: assets/azure-retirement-readiness-dashboard.png
+image_alt: Illustrative Azure Retirement Readiness dashboard with a prioritized retirement queue
+
+problem: >-
+  Retirement notices, runtime end-of-support dates and service transitions are
+  scattered across inventory, lifecycle documentation, Service Health and
+  ownership records. Teams miss them until a deadline becomes an incident.
+
+benefits:
+  - icon: clock
+    title: Deadlines before they bite
+    text: Confirmed retirement and end-of-support dates are ranked in one queue, each tied to a resource and a Microsoft Learn source.
+  - icon: search
+    title: Evidence, not guesses
+    text: Verified facts are kept apart from items that need code validation, and gaps in Service Health coverage are called out.
+  - icon: person
+    title: Ready to communicate
+    text: A Subscription Context column lists the subscription and its direct Owners so the right people hear about each deadline.
+  - icon: lock
+    title: Read-only for Azure
+    text: The workflow never migrates, restarts, deletes or scales resources. Every migration stays a human decision.
+
+flow:
+  trigger: An on-demand request, or a weekly refresh you explicitly asked for
+  analyze: Inventories the subscription and checks lifecycle dates and Service Health
+  approve: Service owners review the prioritized queue and phased migration plan
+  apply: Teams run each migration with validation, canary deployment and rollback
+
+demo:
+  handle: "@sre-agent"
+  ask: which services in the Contoso subscription should we migrate before their retirement date?
+  steps:
+    - ["Inventoried the subscription with Azure Resource Graph", "126 resources"]
+    - ["Verified lifecycle dates against Microsoft Learn", "1 deadline"]
+    - ["Checked Service Health alert coverage", "1 gap"]
+  proposal:
+    title: refresh the retirement dashboard with a P0 migration item
+    lines:
+      - ["+", "P0 `orders-api`: .NET 8 isolated to .NET 10 isolated by Nov 10, 2026"]
+      - ["+", "Validate 1 Bing Custom Search and 3 Bot Service resources"]
+      - ["+", "Gap: no Service Health Activity Log alert configured"]
+  applied:
+    - ["Platform lead approved a weekly Monday refresh", "human"]
+    - ["Dashboard updated in place, no duplicate created", "Live Report"]
+  stat:
+    label: Days to next deadline
+    source: Azure Functions supported languages
+    value: "46"
+  evidence:
+    - type: fact
+      text: Azure Functions support for .NET 8 ends November 10, 2026.
+    - type: fact
+      text: "`orders-api` runs on the .NET 8 isolated worker model."
+    - type: inference
+      text: No exportable health events is a coverage gap, not proof that no notices exist.
+
+safety:
+  readonly:
+    - Never migrates, restarts, deletes, scales or changes Azure resources
+    - Shows direct subscription-scope Owners only and labels that limit
+    - Labels uncertain lifecycle findings for validation
+  human:
+    - Scheduled refreshes run only after an explicit request
+    - Migrations and their rollout remain a human decision
+
+audience:
+  - Platform and cloud governance teams
+  - Application and service owners
+  - Operations teams running read-only assessments
+needs:
+  - Read access to the target Azure subscription
+  - Azure Resource Graph access
+  - Microsoft Entra ID directory read, to resolve Owners
+  - Azure SRE Agent or a similar read-only assistant
+
+services: [Azure SRE Agent, Azure Resource Graph, Azure Service Health, Azure Resource Health, Microsoft Entra ID]

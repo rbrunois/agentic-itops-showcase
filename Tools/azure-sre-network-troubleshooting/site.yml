@@ -1,0 +1,79 @@
+# Marketing copy for this use case's page on the project site. See scripts/site/site-template.yml.
+
+tagline: Tell a blocked network from a broken app, with evidence for every claim
+
+image: assets/architecture-overview.svg
+image_alt: Two peered Contoso lab VNets with flow and Windows event telemetry queried by Azure SRE Agent
+
+problem: >-
+  When a connection fails, failed requests alone do not say whether an NSG
+  denied the traffic or the application is down. Engineers end up guessing,
+  or changing rules before the evidence is in.
+
+benefits:
+  - icon: network
+    title: Network or application
+    text: Correlates VNet flow logs, NSG rules and independent health events to separate policy denial from a stopped service.
+  - icon: search
+    title: Every claim labeled
+    text: Findings are marked as observed fact, configuration fact, inference or recommendation, with citations and gaps.
+  - icon: lock
+    title: Read-only investigation
+    text: The agent never changes NSGs, runs VM Run Command, restarts services or remediates.
+  - icon: person
+    title: Operators stay in charge
+    text: Fault injection, restoration and cleanup are separate operator scripts, each approved by a human.
+
+flow:
+  trigger: A connectivity complaint with endpoints, port and an exact UTC window
+  analyze: Queries flows, NSG rules and health events, then labels each finding
+  approve: A human reviews the recommendation and approves the restoration step
+  apply: An operator runs the scoped restore script, then verifies fresh traffic
+
+demo:
+  handle: "@sre-agent"
+  ask: why can't 10.10.1.4 reach 10.20.1.4 on TCP/80 between 10:00 and 10:05 UTC?
+  steps:
+    - ["Queried `NTANetAnalytics` for matching flows", "denied"]
+    - ["Read the destination subnet NSG rules", "deny at 100"]
+    - ["Checked `SRE-Network-Demo` health events in `Event`", "running"]
+  proposal:
+    title: recommend removing only the demo deny rule
+    lines:
+      - ["-", "Deny-Client-To-Web-Demo  inbound TCP/80  priority 100"]
+  applied:
+    - ["Operator approved and ran `restore-network.ps1`", "human"]
+    - ["Fresh good traffic succeeded in a new UTC window", "operator"]
+  stat:
+    label: Changes made by the agent
+    source: investigation report
+    value: "0"
+  evidence:
+    - type: fact
+      text: Matching flow evidence is denied; destination health says running.
+    - type: fact
+      text: The demo inbound deny is priority 100, above the allow at 200.
+    - type: inference
+      text: A network-policy denial likely explains these fresh failures.
+
+safety:
+  readonly:
+    - Discovery and investigation are read-only
+    - The agent gets only Reader and Log Analytics Reader on the demo scope
+    - All scripts default to no Azure execution
+  human:
+    - Provisioning, traffic and Run Command each need separate approval
+    - Fault injection and restoration are separately approved operator actions
+    - Cleanup needs exact resource review and typed confirmation
+
+audience:
+  - Cloud and network engineers
+  - SREs rehearsing evidence-based investigation
+  - Platform teams with a non-production Azure scope
+needs:
+  - A dedicated non-production Azure subscription and approved costs
+  - Windows with PowerShell 7 and the Bicep CLI
+  - An existing regional Network Watcher
+  - A separately onboarded Azure SRE Agent
+
+services: [Azure SRE Agent, Azure Virtual Network, Azure Network Watcher, Traffic Analytics, Log Analytics, Azure Monitor Agent]

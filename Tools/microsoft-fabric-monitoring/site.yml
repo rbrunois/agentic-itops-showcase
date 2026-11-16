@@ -1,0 +1,80 @@
+# Marketing copy for this use case's page on the project site. See scripts/site/site-template.yml.
+
+tagline: Watch every Fabric capacity and explain CU anomalies without changing a thing
+
+image: docs/assets/live-report-overview.png
+image_alt: Bilingual Live Report overview of Fabric capacities, workspaces, items and CU consumption
+
+problem: >-
+  Fabric administrators need tenant-wide inventory and CU trends, but native
+  retention windows are short and the data is spread across admin APIs and the
+  Capacity Metrics app. Explaining an anomaly means stitching it together by hand.
+
+benefits:
+  - icon: chart
+    title: One view of the tenant
+    text: Capacities, workspaces, items and CU consumption in a bilingual Live Report and optional Power BI reports.
+  - icon: clock
+    title: History past native retention
+    text: A daily pipeline keeps at least 60 days of history in a Lakehouse, beyond the 14 days in Capacity Metrics.
+  - icon: search
+    title: Anomalies explained
+    text: The agent states impact, evidence, likely cause and confidence, and separates observations from hypotheses.
+  - icon: lock
+    title: Read-only by default
+    text: Write actions are disabled. Each one needs explicit opt-in, a matching approval and an audit record.
+
+flow:
+  trigger: A question to the agent, a scheduled routine or the daily collection
+  analyze: Reads admin inventory and CU metrics, then compares them with history
+  approve: Any opted-in action waits for an approval matching the exact plan
+  apply: The action runs once after revalidation and is written to the audit table
+
+demo:
+  handle: "@fabricsre"
+  ask: why did CU spike on the Contoso production capacity yesterday?
+  steps:
+    - ["Listed capacities from the admin inventory", "3 capacities"]
+    - ["Queried CU for `cap-contoso-prod` with `get_cu_metrics`", "P95 94%"]
+    - ["Compared with 60 days of Lakehouse history", "1 anomaly"]
+  proposal:
+    title: recommend rescheduling the new refreshes outside peak hours
+    lines:
+      - ["-", "refresh window: 09:00-11:00 UTC (3 new daily refreshes)"]
+      - ["+", "refresh window: 02:00-04:00 UTC, reviewed by the workspace owner"]
+  applied:
+    - ["Workspace owner accepted the recommendation", "human"]
+    - ["Owner moved the refreshes; next-day CU peak checked", "read-only"]
+  stat:
+    label: Write actions enabled by default
+    source: client.parameters.yaml
+    value: "0"
+  evidence:
+    - type: fact
+      text: CU on `cap-contoso-prod` peaked at 94% between 09:00 and 11:00 UTC.
+    - type: fact
+      text: Three daily refreshes were added to one workspace two days ago.
+    - type: inference
+      text: New daily refreshes in one workspace likely drove the peak; confidence medium.
+
+safety:
+  readonly:
+    - The Fabric Admin MCP server exposes only read tools behind an API key
+    - The read identity gets only read-only admin APIs
+    - "`approvals.allowedActions` is empty in the example configuration"
+  human:
+    - Each action needs a plan with impact and rollback, and an approval ID that matches it
+    - Approvals expire, and any change to the plan invalidates them
+    - Every approved action is written to `agent_action_audit`
+
+audience:
+  - Fabric administrators
+  - Platform and SRE engineers
+  - Power BI report owners
+needs:
+  - An Azure SRE Agent connected to a Fabric MCP server
+  - Read access to the Fabric resources to observe
+  - Fabric admin consent for read-only admin APIs, for Basic and Advanced
+  - An existing Fabric F or P capacity, for Advanced
+
+services: [Azure SRE Agent, Microsoft Fabric, Power BI, Azure Container Apps, Azure Container Registry]

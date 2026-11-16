@@ -1,0 +1,80 @@
+# Marketing copy for this use case's page on the project site. See scripts/site/site-template.yml.
+
+tagline: Keep internal Terraform modules compliant and in sync with every AVM release
+
+image: assets/avm-sync-workflow-marketing.svg
+image_alt: Workflow from a new AVM release to one reviewed pull request
+
+problem: >-
+  Platform teams fork Azure Verified Modules to add their own structure and
+  security settings, then fall behind upstream. Porting each release by hand is
+  slow, and it's easy to undo a security setting by accident.
+
+benefits:
+  - icon: refresh
+    title: Always current
+    text: New AVM releases are ported into your module structure, with a port, adapt or skip decision per change.
+  - icon: shield
+    title: Controls always win
+    text: Every applicable security control is enforced on the result, in the same pull request as the upgrade.
+  - icon: person
+    title: People stay in control
+    text: At most one pull request per run. CI validates it, and a human reviews and squash-merges it.
+  - icon: tag
+    title: Clean releases
+    text: release-please reads the merged PR title and creates the tag and changelog. The agent never does.
+
+flow:
+  trigger: A scheduled run every six hours, or an on-demand prompt
+  analyze: Checks every control, then diffs the latest AVM release against the module
+  approve: One pull request waits for CI and a maintainer's review
+  apply: The maintainer squash-merges; release-please creates the new version tag
+
+demo:
+  handle: "@sre-agent"
+  ask: run COMPLIANCE, DETECTION, DECIDE and LIVE REPORT for our Key Vault module
+  steps:
+    - ["Checked 11 Contoso Key Vault controls on `main`", "9 apply"]
+    - ["Found AVM `v0.12.0` for `avm-res-keyvault-vault`", "last synced v0.10.2"]
+    - ["Ported upstream changes with `mapping.yaml`", "SYNC"]
+  proposal:
+    title: "feat!: sync AVM v0.10.2 → v0.12.0 and enforce security controls"
+    lines:
+      - ["-", "last_synced_tag: v0.10.2"]
+      - ["+", "last_synced_tag: v0.12.0"]
+      - ["+", "public_network_access_enabled = false"]
+  applied:
+    - ["Maintainer squash-merged the pull request", "human"]
+    - ["release-please created tag `v2.0.0`", "CI"]
+  stat:
+    label: Applicable controls compliant
+    source: mapping.yaml
+    value: 9 / 9
+  evidence:
+    - type: fact
+      text: Control SC-KV-004 requires public network access disabled or the Key Vault firewall enabled.
+    - type: fact
+      text: SC-KV-006 and SC-KV-010 cover Managed HSM, so they don't apply to this module.
+    - type: inference
+      text: Locking the value in `mapping.yaml` stops a future AVM default from weakening it.
+
+safety:
+  readonly:
+    - Reads AVM releases and your security controls repository
+    - Writes branches and pull requests only, with no Azure rights
+    - Never merges, tags, releases or pushes to main
+  human:
+    - A maintainer reviews and squash-merges every pull request
+    - CI checks must pass before merge
+    - release-please creates tags and the changelog
+
+audience:
+  - Platform teams that publish internal Terraform modules
+  - Security teams that own module controls
+needs:
+  - An Azure SRE Agent with GitHub access to the module repository
+  - A module forked from an Azure Verified Module
+  - Security controls in a controls repository
+  - "`.avm-sync/` manifest, mapping and exclusions files"
+
+services: [Azure SRE Agent, Azure Verified Modules, Terraform, GitHub, GitHub Actions]

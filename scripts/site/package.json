@@ -1,0 +1,13 @@
+{
+  "name": "agentic-itops-site",
+  "private": true,
+  "description": "Builds the GitHub Pages site: the landing page plus one page per use case under Tools/.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "marked": "18.2.0",
+    "yaml": "2.9.1"
+  }
+}

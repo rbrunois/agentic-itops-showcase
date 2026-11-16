@@ -1,0 +1,81 @@
+# Marketing copy for this use case's page on the project site. See scripts/site/site-template.yml.
+
+tagline: Request a governed Azure subscription in Teams, in French or English
+
+image: assets/09-workflow-design.svg
+image_alt: Workflow from Teams intake through ServiceNow approval and a reviewed pull request to deployment
+
+problem: >-
+  Subscription requests arrive as long forms and email threads, with missing
+  or invalid cost centres, owners and network sizes. Platform teams spend days
+  chasing details and translating them into landing-zone configuration.
+
+benefits:
+  - icon: check
+    title: Validated at intake
+    text: Every field is checked against CMDB, Finance, repository and platform data. The agent never invents a value.
+  - icon: cloud
+    title: Configuration derived for you
+    text: Management group, network size, budget and tags come from platform standards, not from the requester.
+  - icon: lock
+    title: No Azure write access
+    text: The agent only files a ServiceNow request. A reviewed pull request and a pipeline make the change.
+  - icon: person
+    title: Approval at every gate
+    text: The requester confirms a summary card, ServiceNow approval is required, and a human merges the PR.
+
+flow:
+  trigger: A requester asks the Copilot Studio agent in Microsoft Teams
+  analyze: Validates each field and derives configuration from platform standards
+  approve: The requester confirms, then approvers sign off in ServiceNow
+  apply: A human merges the azure.yml pull request; a pipeline runs sub-vending
+
+demo:
+  handle: "@vending-agent"
+  ask: I need a prod subscription for APP01234, cost centre CC123456, internal data
+  steps:
+    - ["Validated `APP01234` and `CC123456`", "CMDB, Finance"]
+    - ["Derived `mg-landingzones-corp` and a `spoke-small` network", "rules"]
+    - ["Requester confirmed the summary card", "RITM0012345"]
+  proposal:
+    title: "[vending] APP01234 prod — RITM0012345"
+    lines:
+      - ["+", "requestId: RITM0012345"]
+      - ["+", "appId: APP01234"]
+      - ["+", "# Module: br/public:avm/ptn/lz/sub-vending:0.4.0"]
+  applied:
+    - ["Platform engineer merged the `azure.yml` pull request", "human"]
+    - ["Pipeline deployed `sub-app01234-prod` with IPAM CIDR", "pipeline"]
+  stat:
+    label: Monthly budget alerts
+    source: azure.yml
+    value: 50 / 80 / 100 %
+  evidence:
+    - type: fact
+      text: ServiceNow record RITM0012345 was re-read and its state is Approved.
+    - type: fact
+      text: Internal prod workloads map to `mg-landingzones-corp`.
+    - type: inference
+      text: A /24 spoke leaves room for App Services with private endpoints.
+
+safety:
+  readonly:
+    - The conversational agent holds no Azure write permission
+    - It never invents identifiers, cost centres, owners, CIDRs or approval state
+    - IPAM, not the agent, allocates the exact address range
+  human:
+    - The requester confirms the summary card before a ticket is filed
+    - ServiceNow approval is required before any pull request is created
+    - A human reviews and merges the azure.yml pull request
+
+audience:
+  - Azure platform and landing-zone teams
+  - Power Platform and Copilot Studio makers
+  - ServiceNow and DevOps engineers
+needs:
+  - A Power Platform environment and a Copilot Studio licence
+  - A ServiceNow instance and dedicated service account
+  - A GitHub or Azure DevOps repository with a review workflow
+  - An existing landing-zone management group hierarchy
+
+services: [Microsoft Copilot Studio, Microsoft Teams, Power Automate, ServiceNow, Azure Verified Modules, GitHub]

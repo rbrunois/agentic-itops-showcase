@@ -9,7 +9,9 @@ updates:
         patterns: ["*"]
 
   - package-ecosystem: npm
-    directory: /Tools/azure-sre-incident-response/app
+    directories:
+      - /Tools/azure-sre-incident-response/app
+      - /scripts/site
     schedule:
       interval: monthly
     open-pull-requests-limit: 5
