@@ -8,6 +8,14 @@ use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Azure VM Lifecycle Transition (`Tools/azure-vm-lifecycle-transition`): Azure
+  SRE Agent custom agents, skills, hooks, a tool access policy, and a weekly
+  scheduled task that find VMs and scale sets on End of Life VM size series,
+  propose a target family for each with evidence, check quota, zone
+  availability, and Azure Policy, and report drift. Includes Resource Graph and
+  Log Analytics queries, public lifecycle dates, a disposition record schema, a
+  pilot runbook for approval-gated resizes, a billable demo lab with scoring
+  scripts and lab results, offline tests, and a validation workflow.
 - Repository branding and a GitHub Pages landing page (`docs/`): an interactive
   Azure SRE Agent workspace example across four use cases, the Trigger →
   Analyze → Approve → Apply operating model, the guardrails, and a filterable

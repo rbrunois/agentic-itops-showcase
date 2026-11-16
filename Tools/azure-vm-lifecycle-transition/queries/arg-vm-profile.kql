@@ -1,0 +1,87 @@
+// Azure Resource Graph: readiness profile for VMs that need a new home.
+//
+// Adapted from the inventory query in Microsoft Learn "Assess readiness for the v6
+// and v7 VM series" (sizes-v6-v7-modernization-assess). Additions: marketplace plan
+// (appliance gate), ownership tags, and an optional filter on resource IDs from
+// arg-affected-vms.kql. Read-only.
+//
+// hyperVGeneration, osVersion and powerState come from the extended instance view.
+// When instanceViewCaptured is 'No', treat those fields as unknown instead of
+// guessing. A deallocated VM still reports hyperVGeneration and power state, but
+// osVersion and osDiskType can be empty: report empty values as unknown.
+Resources
+| where type =~ 'microsoft.compute/virtualmachines'
+// Optional: limit to the VMs returned by arg-affected-vms.kql.
+// | where id in~ ('<resourceId1>', '<resourceId2>')
+| extend p = properties
+| extend
+    availabilityZone    = tostring(zones[0]),
+    availabilitySetId   = tostring(p.availabilitySet.id),
+    vmssId              = tostring(p.virtualMachineScaleSet.id),
+    ppgId               = tostring(p.proximityPlacementGroup.id)
+| extend
+    membershipModel = case(isnotempty(vmssId), 'VMSS Flex', isnotempty(availabilitySetId), 'Availability Set', 'Standalone'),
+    zonePlacement   = iff(isnotempty(availabilityZone), 'Zonal', 'Regional')
+| extend
+    vmSize               = tostring(p.hardwareProfile.vmSize),
+    hyperVGeneration     = tostring(p.extended.instanceView.hyperVGeneration),
+    vmState              = tostring(p.extended.instanceView.powerState.displayStatus)
+| extend instanceViewCaptured = iff(isempty(hyperVGeneration) and isempty(vmState), 'No', 'Yes')
+| extend
+    osType               = tostring(p.storageProfile.osDisk.osType),
+    osVersion            = tostring(p.extended.instanceView.osVersion),
+    isMarketplaceVm      = isnotempty(plan),
+    planPublisher        = tostring(plan.publisher),
+    planProduct          = tostring(plan.product),
+    imagePublisher       = tostring(p.storageProfile.imageReference.publisher),
+    imageOffer           = tostring(p.storageProfile.imageReference.offer),
+    imageSku             = tostring(p.storageProfile.imageReference.sku),
+    imageVersion         = tostring(p.storageProfile.imageReference.exactVersion)
+| extend
+    diskControllerType   = tostring(p.storageProfile.diskControllerType),
+    osDiskType           = tostring(p.storageProfile.osDisk.managedDisk.storageAccountType),
+    ephemeralOsDisk      = iff(tostring(p.storageProfile.osDisk.diffDiskSettings.option) =~ 'Local', 'Yes', 'No'),
+    dataDiskCount        = array_length(p.storageProfile.dataDisks),
+    nicCount             = array_length(p.networkProfile.networkInterfaces),
+    licenseType          = tostring(p.licenseType),
+    securityType         = tostring(p.securityProfile.securityType),
+    secureBootEnabled    = tostring(p.securityProfile.uefiSettings.secureBootEnabled),
+    vTpmEnabled          = tostring(p.securityProfile.uefiSettings.vTpmEnabled),
+    adeOsDiskEnabled     = tostring(p.storageProfile.osDisk.encryptionSettings.enabled),
+    hibernationEnabled   = tostring(p.additionalCapabilities.hibernationEnabled),
+    ultraSsdEnabled      = tostring(p.additionalCapabilities.ultraSSDEnabled)
+// Tag names are case-sensitive in Resource Graph, and policies that inherit tags
+// often write them in title case. Add the names your tagging standard uses; the
+// full tags column is kept for anything else.
+| extend
+    owner                = coalesce(tostring(tags['owner']), tostring(tags['Owner']), tostring(tags['OWNER'])),
+    application          = coalesce(tostring(tags['application']), tostring(tags['Application']), tostring(tags['APPLICATION'])),
+    environment          = coalesce(tostring(tags['environment']), tostring(tags['Environment']), tostring(tags['ENVIRONMENT'])),
+    criticality          = coalesce(tostring(tags['criticality']), tostring(tags['Criticality']), tostring(tags['CRITICALITY'])),
+    role                 = coalesce(tostring(tags['role']), tostring(tags['Role']), tostring(tags['ROLE'])),
+    drRegion             = coalesce(tostring(tags['dr-region']), tostring(tags['DR-Region']), tostring(tags['drRegion']))
+| extend joinKey = tolower(id)
+| join kind=leftouter (
+    Resources
+    | where type =~ 'microsoft.network/networkinterfaces'
+    | extend vmId = tolower(tostring(properties.virtualMachine.id))
+    | where isnotempty(vmId)
+    | summarize
+        anyAccelNet = countif(tobool(properties.enableAcceleratedNetworking) == true),
+        anyIpForwarding = countif(tobool(properties.enableIPForwarding) == true)
+      by vmId
+) on $left.joinKey == $right.vmId
+| extend
+    acceleratedNetworking = iff(coalesce(anyAccelNet, 0) > 0, 'Yes', 'No'),
+    ipForwarding          = iff(coalesce(anyIpForwarding, 0) > 0, 'Yes', 'No')
+| project id, name, subscriptionId, resourceGroup, location,
+          membershipModel, zonePlacement, availabilityZone, availabilitySetId, vmssId, ppgId,
+          vmSize, hyperVGeneration, vmState, instanceViewCaptured,
+          osType, osVersion, isMarketplaceVm, planPublisher, planProduct,
+          imagePublisher, imageOffer, imageSku, imageVersion,
+          diskControllerType, osDiskType, ephemeralOsDisk, dataDiskCount,
+          nicCount, acceleratedNetworking, ipForwarding,
+          licenseType, securityType, secureBootEnabled, vTpmEnabled, adeOsDiskEnabled,
+          hibernationEnabled, ultraSsdEnabled,
+          owner, application, environment, criticality, role, drRegion, tags
+| order by subscriptionId asc, resourceGroup asc, name asc

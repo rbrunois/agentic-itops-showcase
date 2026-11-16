@@ -1,0 +1,34 @@
+# Weekly read-only drift scan for the VM lifecycle transition.
+#
+# demo/scripts/Publish-AgentConfig.ps1 creates it through the data-plane API with
+# the handling agent and Review mode below. To create it in the portal instead, use
+# Automation > Create > Scheduled task and set:
+#   Response subagent: vm-lifecycle-coordinator
+#   Agent autonomy level: Review (the portal default is Autonomous)
+#   Message grouping for updates: Use same chat thread
+# The cron schedule is in UTC: Mondays at 12:00 UTC.
+metadata:
+  name: vm-lifecycle-weekly-drift-scan
+spec:
+  description: Weekly read-only scan of VMs on End of Life VM series, their readiness, and landing risks
+  schedule: 0 12 * * 1
+  handlingAgent: vm-lifecycle-coordinator
+  prompt: |
+    Run the weekly VM lifecycle drift scan for subscription
+    00000000-0000-0000-0000-000000000000. Stay read-only.
+
+    1. Refresh the affected inventory with the arg-retiring-series skill.
+    2. Compare it with last week's report in this thread: new, removed, and
+       resized VMs; new owners; changed priorities.
+    3. Re-check quota headroom and SKU availability for the target families in
+       open disposition records.
+    4. List reserved instances that expire within 90 days, if reservation data
+       is readable; otherwise record it as a data gap. Don't request elevated
+       access.
+    5. Report progress on pilot and wave items.
+
+    Use the weekly-drift-report template, with its sections in the same order.
+    Include data gaps, and say that quota doesn't reserve capacity. Don't change
+    any Azure resource and don't submit or buy anything.
+  enabled: true
+  mode: Review

@@ -1,0 +1,110 @@
+{
+  "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-contoso-erp-prod/providers/Microsoft.Compute/virtualMachines/vm-contoso-erp-app01",
+  "name": "vm-contoso-erp-app01",
+  "resourceType": "virtualMachine",
+  "subscriptionId": "00000000-0000-0000-0000-000000000000",
+  "resourceGroup": "rg-contoso-erp-prod",
+  "location": "canadacentral",
+  "zones": ["1"],
+  "instances": 1,
+  "currentSize": "Standard_DS3_v2",
+  "lifecycle": {
+    "series": "Dsv2",
+    "stage": "End of Life",
+    "retirementDate": "2028-05-01",
+    "capacityRestricted": true,
+    "source": "https://learn.microsoft.com/azure/virtual-machines/sizes/lifecycle/retirements-and-capacity-restrictions#general-purpose-retired-sizes"
+  },
+  "workloadClass": {
+    "value": "E-customer-managed",
+    "basis": "tags",
+    "confirmedBy": null
+  },
+  "readiness": {
+    "hyperVGeneration": "V1",
+    "securityType": "Standard",
+    "diskControllerType": "SCSI",
+    "nvmeReady": "unknown",
+    "manaReady": "unknown",
+    "sourceHasTempDisk": true,
+    "tempDiskDependency": "unknown",
+    "acceleratedNetworking": true,
+    "nicCount": 1,
+    "dataDiskCount": 2,
+    "linuxDiskEncryption": null,
+    "hardGate": "none"
+  },
+  "utilization30d": {
+    "cpuP95": 23.4,
+    "memUsedP95": 58.2,
+    "diskIopsP95": 310,
+    "netMbpsP95": 12.1,
+    "coverageDays": 30,
+    "source": "metrics-30d-utilization.kql (VM insights)"
+  },
+  "disposition": "resize-to-v5",
+  "targetDirection": {
+    "family": "Ddsv5",
+    "sizeClassHint": "4-vCPU Ddsv5 class",
+    "fallbackFamily": "Dadsv5",
+    "isFinal": false
+  },
+  "landing": {
+    "region": "canadacentral",
+    "quotaFamily": "standardDDSv5Family",
+    "quotaLimitVcpu": 100,
+    "quotaUsedVcpu": 64,
+    "quotaHeadroomVcpu": 36,
+    "regionalHeadroomVcpu": 120,
+    "skuAvailableInRegion": true,
+    "zoneRestrictions": [],
+    "policyCheck": "allowed",
+    "policyBlockedBy": null,
+    "capacityReservationAdvised": false,
+    "drCheck": "not-applicable",
+    "quotaStatement": "Quota authorizes consumption; it doesn't reserve capacity.",
+    "checkedAt": "2026-11-11T14:00:00Z"
+  },
+  "commercial": {
+    "reservationCoverage": "unknown",
+    "reservationExpiry": null,
+    "savingsPlanCoverage": "unknown",
+    "licenseNote": "Confirm Azure Hybrid Benefit status with the license owner."
+  },
+  "confidence": "medium",
+  "evidence": [
+    {
+      "source": "arg-affected-vms.kql",
+      "observedAt": "2026-11-11T13:55:00Z",
+      "detail": "Standard_DS3_v2 matched series Dsv2, capacity growth restricted."
+    },
+    {
+      "source": "arg-vm-profile.kql",
+      "observedAt": "2026-11-11T13:56:00Z",
+      "detail": "Generation V1, SCSI, Accelerated Networking on 1 NIC, 2 data disks, tags application=erp and environment=prod."
+    },
+    {
+      "source": "metrics-30d-utilization.kql",
+      "observedAt": "2026-11-11T13:58:00Z",
+      "detail": "30 days of VM insights data."
+    },
+    {
+      "source": "az vm list-usage --location canadacentral",
+      "observedAt": "2026-11-11T14:00:00Z",
+      "detail": "standardDDSv5Family uses 64 of 100 vCPUs."
+    },
+    {
+      "source": "az vm list-skus --location canadacentral --size Standard_D4ds_v5 --all",
+      "observedAt": "2026-11-11T14:00:00Z",
+      "detail": "Offered in zones 1, 2, and 3 with no subscription restriction."
+    }
+  ],
+  "remainingValidations": [
+    "Confirm the workload class with the application owner.",
+    "Confirm whether the application uses the temporary disk; if it doesn't, Dsv5 is also an option.",
+    "Benchmark the application on the candidate size.",
+    "Confirm Azure Hybrid Benefit and reservation coverage before the change."
+  ],
+  "owner": null,
+  "lastEvaluated": "2026-11-11T14:00:00Z"
+}

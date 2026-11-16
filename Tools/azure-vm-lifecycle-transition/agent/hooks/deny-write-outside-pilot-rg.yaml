@@ -1,0 +1,59 @@
+# Agent-level hook: block Azure CLI writes outside the pilot resource group.
+#
+# Create it in Build + setup > Extensions > Hooks, or with
+# demo/scripts/Publish-AgentConfig.ps1. The format follows microsoft/sre-agent
+# sreagent-templates (config/hooks). Verified in the lab (November 2026): the
+# agent runs agent-level PreToolUse hooks, and this hook blocked a deallocate
+# outside the pilot resource group.
+# Primary control: the agent identity only gets Virtual Machine Contributor on the
+# pilot resource group (Phase 3). This hook is a second line of defense, for
+# example against on-behalf-of elevation with an approver's broader rights.
+# The script never returns an explicit allow, because a user-defined hook allow
+# overrides global deny policies. Replace rg-contoso-vmlt-pilot before use.
+# Shell tools aren't assigned to the transition agents; if you enable them, keep
+# writes out of them with tool access policies rather than this hook.
+metadata:
+  name: deny-write-outside-pilot-rg
+spec:
+  eventType: PreToolUse
+  hook:
+    type: command
+    matcher: RunAzCliWriteCommands
+    timeout: 30
+    failMode: block
+    script: |
+      #!/usr/bin/env python3
+      import json
+      import re
+      import sys
+
+      PILOT_RESOURCE_GROUPS = {"rg-contoso-vmlt-pilot"}
+
+
+      def flatten(value):
+          if isinstance(value, dict):
+              return " ".join(flatten(item) for item in value.values())
+          if isinstance(value, list):
+              return " ".join(flatten(item) for item in value)
+          return str(value)
+
+
+      context = json.load(sys.stdin)
+      text = flatten(context.get("tool_input", {}))
+      groups = {
+          name.lower()
+          for name in re.findall(r"(?:^|\s)(?:--resource-group|-g)(?:\s+|=)[\"']?([^\s\"']+)", text)
+      }
+      groups.update(name.lower() for name in re.findall(r"/resourceGroups/([^/\s\"']+)", text, re.IGNORECASE))
+      allowed = {name.lower() for name in PILOT_RESOURCE_GROUPS}
+
+      if not groups:
+          reason = "Write blocked: name the target resource group explicitly; only the pilot resource group is in scope."
+      elif not groups <= allowed:
+          reason = "Write blocked: outside the pilot resource group: " + ", ".join(sorted(groups - allowed))
+      else:
+          sys.exit(0)
+
+      print(json.dumps({"decision": "block", "reason": reason}))
+  permissionDecision: deny
+  enabled: true

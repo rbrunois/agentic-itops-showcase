@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VM lifecycle transition disposition record",
+  "description": "One record per VM or scale set on an End of Life or retired VM series. Produced by the vm-lifecycle-coordinator custom agent and reviewed by people. Targets are family-level proposals, never final sizes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "resourceId",
+    "name",
+    "resourceType",
+    "subscriptionId",
+    "location",
+    "currentSize",
+    "lifecycle",
+    "workloadClass",
+    "readiness",
+    "disposition",
+    "targetDirection",
+    "landing",
+    "confidence",
+    "evidence",
+    "remainingValidations",
+    "lastEvaluated"
+  ],
+  "properties": {
+    "resourceId": { "type": "string" },
+    "name": { "type": "string" },
+    "resourceType": { "enum": ["virtualMachine", "virtualMachineScaleSet"] },
+    "subscriptionId": { "type": "string" },
+    "resourceGroup": { "type": "string" },
+    "location": { "type": "string" },
+    "zones": { "type": "array", "items": { "type": "string" } },
+    "instances": { "type": "integer" },
+    "currentSize": { "type": "string" },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["series", "stage", "retirementDate", "capacityRestricted", "source"],
+      "properties": {
+        "series": { "type": "string", "description": "Series key from knowledge/lifecycle-dates-authoritative.md." },
+        "stage": { "enum": ["End of Life", "Retired"] },
+        "retirementDate": { "type": "string", "format": "date" },
+        "capacityRestricted": { "type": "boolean" },
+        "source": { "type": "string", "format": "uri" }
+      }
+    },
+    "workloadClass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "basis"],
+      "properties": {
+        "value": {
+          "enum": [
+            "A-compute-pool",
+            "B-image-based-host",
+            "C-service-managed",
+            "D-cluster-recreation",
+            "E-customer-managed",
+            "F-stateful-clustered",
+            "G-certified-appliance",
+            "domain-controller",
+            "unknown"
+          ]
+        },
+        "basis": { "enum": ["owner-confirmed", "cmdb", "tags", "extensions", "naming-hypothesis", "unknown"] },
+        "confirmedBy": { "type": ["string", "null"] }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hyperVGeneration",
+        "diskControllerType",
+        "nvmeReady",
+        "manaReady",
+        "sourceHasTempDisk",
+        "tempDiskDependency",
+        "acceleratedNetworking",
+        "hardGate"
+      ],
+      "properties": {
+        "hyperVGeneration": { "enum": ["V1", "V2", "unknown"] },
+        "securityType": { "enum": ["Standard", "TrustedLaunch", "ConfidentialVM", "unknown"] },
+        "diskControllerType": { "enum": ["SCSI", "NVMe", "unknown"] },
+        "nvmeReady": { "$ref": "#/$defs/triState" },
+        "manaReady": { "$ref": "#/$defs/triState" },
+        "sourceHasTempDisk": { "type": ["boolean", "null"] },
+        "tempDiskDependency": { "$ref": "#/$defs/triState" },
+        "acceleratedNetworking": { "type": ["boolean", "null"] },
+        "nicCount": { "type": ["integer", "null"] },
+        "dataDiskCount": { "type": ["integer", "null"] },
+        "linuxDiskEncryption": { "type": ["boolean", "null"] },
+        "hardGate": { "enum": ["none", "sap-certification", "isv-appliance", "unknown"] }
+      }
+    },
+    "utilization30d": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cpuP95": { "type": ["number", "null"] },
+        "memUsedP95": { "type": ["number", "null"] },
+        "diskIopsP95": { "type": ["number", "null"] },
+        "netMbpsP95": { "type": ["number", "null"] },
+        "coverageDays": { "type": ["integer", "null"] },
+        "source": { "type": "string" }
+      }
+    },
+    "disposition": {
+      "enum": [
+        "resize-to-v5",
+        "rebuild-or-redeploy-v6-v7",
+        "replace-pool-or-image",
+        "service-managed-change",
+        "recreate-cluster",
+        "vendor-gated",
+        "re-platform-candidate",
+        "decommission-candidate",
+        "no-action-not-in-scope",
+        "needs-data"
+      ]
+    },
+    "targetDirection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family", "isFinal"],
+      "properties": {
+        "family": { "type": ["string", "null"] },
+        "sizeClassHint": { "type": ["string", "null"] },
+        "fallbackFamily": { "type": ["string", "null"] },
+        "isFinal": { "const": false }
+      }
+    },
+    "landing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quotaStatement", "checkedAt"],
+      "properties": {
+        "region": { "type": "string" },
+        "quotaFamily": { "type": ["string", "null"] },
+        "quotaLimitVcpu": { "type": ["integer", "null"] },
+        "quotaUsedVcpu": { "type": ["integer", "null"] },
+        "quotaHeadroomVcpu": { "type": ["integer", "null"] },
+        "regionalHeadroomVcpu": { "type": ["integer", "null"] },
+        "skuAvailableInRegion": { "type": ["boolean", "null"] },
+        "zoneRestrictions": { "type": "array", "items": { "type": "string" } },
+        "policyCheck": { "enum": ["allowed", "blocked", "unknown"] },
+        "policyBlockedBy": { "type": ["string", "null"] },
+        "capacityReservationAdvised": { "type": ["boolean", "null"] },
+        "drCheck": { "enum": ["pass", "fail", "not-applicable", "unknown"] },
+        "quotaStatement": { "const": "Quota authorizes consumption; it doesn't reserve capacity." },
+        "checkedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "commercial": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reservationCoverage": { "$ref": "#/$defs/triState" },
+        "reservationExpiry": { "type": ["string", "null"], "format": "date" },
+        "savingsPlanCoverage": { "$ref": "#/$defs/triState" },
+        "licenseNote": { "type": ["string", "null"] }
+      }
+    },
+    "confidence": { "enum": ["high", "medium", "low"] },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "observedAt"],
+        "properties": {
+          "source": { "type": "string" },
+          "observedAt": { "type": "string", "format": "date-time" },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "remainingValidations": { "type": "array", "items": { "type": "string" } },
+    "owner": { "type": ["string", "null"] },
+    "lastEvaluated": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "triState": { "enum": ["yes", "no", "unknown"] }
+  }
+}

@@ -1,0 +1,51 @@
+name: Validate VM lifecycle transition
+
+on:
+  push:
+    paths:
+      - "Tools/azure-vm-lifecycle-transition/**"
+      - ".github/workflows/validate-vm-lifecycle-transition.yml"
+  pull_request:
+    paths:
+      - "Tools/azure-vm-lifecycle-transition/**"
+      - ".github/workflows/validate-vm-lifecycle-transition.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Queries, dates, hooks, templates, and lab files
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Run package tests
+        run: python -m unittest discover -s Tools/azure-vm-lifecycle-transition/tests -v
+
+      - name: Parse lab scripts without Azure
+        shell: pwsh
+        run: |
+          $failed = $false
+          foreach ($script in Get-ChildItem Tools/azure-vm-lifecycle-transition/demo/scripts -Filter *.ps1) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($script.FullName, [ref]$null, [ref]$errors) | Out-Null
+            foreach ($item in $errors) { Write-Host "::error file=$($script.FullName)::$($item.Message)"; $failed = $true }
+          }
+          if ($failed) { exit 1 }
+
+      - name: Build lab Bicep without deployment
+        run: |
+          for template in main agent; do
+            az bicep build \
+              --file "Tools/azure-vm-lifecycle-transition/demo/infra/$template.bicep" \
+              --outfile "$RUNNER_TEMP/vmlt-$template.json"
+          done

@@ -1,0 +1,29 @@
+#cloud-config
+# Synthetic CPU load for the VM lifecycle lab: about 85% on every vCPU, so the
+# utilization baseline shows a busy VM. Uses only coreutils; installs nothing.
+write_files:
+  - path: /usr/local/bin/lab-cpu-load.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      # Busy for 0.85 s, then idle for 0.15 s, on each vCPU.
+      for _ in $(seq "$(nproc)"); do
+        ( while true; do timeout 0.85 bash -c 'while :; do :; done'; sleep 0.15; done ) &
+      done
+      wait
+  - path: /etc/systemd/system/lab-cpu-load.service
+    content: |
+      [Unit]
+      Description=VM lifecycle lab synthetic CPU load
+      After=network.target
+
+      [Service]
+      ExecStart=/usr/local/bin/lab-cpu-load.sh
+      Nice=10
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+runcmd:
+  - systemctl daemon-reload
+  - systemctl enable --now lab-cpu-load.service

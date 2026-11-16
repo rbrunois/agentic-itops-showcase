@@ -1,0 +1,55 @@
+# Agent-level hook: block purchases, capacity reservations, and quota submissions.
+#
+# Create it in Build + setup > Extensions > Hooks, or with
+# demo/scripts/Publish-AgentConfig.ps1. The format follows microsoft/sre-agent
+# sreagent-templates (config/hooks). Agent-level PreToolUse hooks and the block
+# decision were verified in the lab (November 2026).
+# Primary controls: the global "deny" tool access policies
+# (agent/tool-access-policy.json) and no reservation, quota, or billing write
+# roles for the agent identity. This hook also covers shell and Python tools.
+# The script never returns an explicit allow.
+metadata:
+  name: block-purchase-or-quota-submit
+spec:
+  eventType: PreToolUse
+  hook:
+    type: command
+    matcher: RunAzCliWriteCommands|RunShellCommand|RunInTerminal|ExecutePythonCode
+    timeout: 30
+    failMode: block
+    script: |
+      #!/usr/bin/env python3
+      import json
+      import re
+      import sys
+
+
+      def flatten(value):
+          if isinstance(value, dict):
+              return " ".join(flatten(item) for item in value.values())
+          if isinstance(value, list):
+              return " ".join(flatten(item) for item in value)
+          return str(value)
+
+
+      BLOCKED = [
+          (r"\baz\s+reservations\b", "Reservation purchases and changes belong to the customer."),
+          (r"\baz\s+billing-benefits\b", "Savings plan purchases belong to the customer."),
+          (r"\baz\s+capacity\s+reservation\b", "The agent advises on capacity reservations; the customer creates them."),
+          (r"\baz\s+quota\s+(?:create|update)\b", "The agent drafts quota requests; the customer submits them."),
+          (r"\baz\s+support\s+tickets\s+create\b", "The agent drafts support and quota tickets; the customer submits them."),
+          (
+              r"microsoft\.capacity/reservationorders|microsoft\.billingbenefits/|/capacityreservationgroups|"
+              r"microsoft\.quota/|microsoft\.support/supporttickets",
+              "Direct API calls that buy, reserve, or request quota are out of scope.",
+          ),
+      ]
+
+      context = json.load(sys.stdin)
+      text = flatten(context.get("tool_input", {}))
+      for pattern, reason in BLOCKED:
+          if re.search(pattern, text, re.IGNORECASE):
+              print(json.dumps({"decision": "block", "reason": "Blocked: " + reason}))
+              break
+  permissionDecision: deny
+  enabled: true

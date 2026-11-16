@@ -1,0 +1,146 @@
+{
+  "description": "VM lifecycle lab design. Bicep deploys these VMs, and Deploy-Lab.ps1 builds the answer key from the same entries. Every VM uses vmSize, the End of Life size that Test-LabFeasibility.ps1 found deployable.",
+  "vmSize": "Standard_D2s_v3",
+  "expectedForEveryVm": {
+    "lifecycleSeries": "Dsv3",
+    "retirementDate": "2029-11-15",
+    "capacityRestricted": true,
+    "priority": "P3 - retires later",
+    "notes": "In the reference subscription, the allowed-size policy also denies every v5 target, so landing checks should report a governance block."
+  },
+  "vms": [
+    {
+      "name": "vm-contoso-web01",
+      "resourceGroup": "estate",
+      "generation": "V1",
+      "trustedLaunch": false,
+      "acceleratedNetworking": false,
+      "ipForwarding": false,
+      "cpuLoad": false,
+      "deallocate": false,
+      "tags": { "application": "web", "workload": "web-server", "owner": "web-team@contoso.example", "criticality": "medium" },
+      "expected": {
+        "workloadClass": [ "E-customer-managed", "unknown" ],
+        "disposition": [ "resize-to-v5" ],
+        "hardGate": "none",
+        "checks": "Generation 1 and Accelerated Networking off: a v5 resize needs Accelerated Networking enabled first on Intel D-family v5; v6 or v7 needs a Generation 2 rebuild."
+      }
+    },
+    {
+      "name": "vm-contoso-app01",
+      "resourceGroup": "estate",
+      "generation": "V2",
+      "trustedLaunch": true,
+      "acceleratedNetworking": true,
+      "ipForwarding": false,
+      "cpuLoad": true,
+      "deallocate": false,
+      "tags": { "application": "erp", "workload": "app-server", "owner": "erp-team@contoso.example", "criticality": "high" },
+      "expected": {
+        "workloadClass": [ "E-customer-managed", "unknown" ],
+        "disposition": [ "resize-to-v5" ],
+        "hardGate": "none",
+        "checks": "Runs about 85% CPU: the proposal should consider a larger size class, with low or medium confidence while utilization coverage is short."
+      }
+    },
+    {
+      "name": "vm-contoso-sql01",
+      "resourceGroup": "estate",
+      "generation": "V2",
+      "trustedLaunch": true,
+      "acceleratedNetworking": true,
+      "ipForwarding": false,
+      "cpuLoad": false,
+      "deallocate": false,
+      "tags": { "application": "erp", "role": "database", "owner": "dba-team@contoso.example", "criticality": "high", "dr-region": "canadaeast" },
+      "expected": {
+        "workloadClass": [ "F-stateful-clustered" ],
+        "disposition": [ "resize-to-v5" ],
+        "hardGate": "none",
+        "checks": "Stateful database: needs a disaster recovery footprint check in canadaeast."
+      }
+    },
+    {
+      "name": "vm-contoso-fw01",
+      "resourceGroup": "estate",
+      "generation": "V2",
+      "trustedLaunch": false,
+      "acceleratedNetworking": true,
+      "ipForwarding": true,
+      "cpuLoad": false,
+      "deallocate": false,
+      "tags": { "application": "network", "role": "nva", "owner": "netops@contoso.example", "criticality": "high" },
+      "expected": {
+        "workloadClass": [ "G-certified-appliance" ],
+        "disposition": [ "vendor-gated" ],
+        "hardGate": "isv-appliance",
+        "checks": "IP forwarding and an appliance role: vendor certification gates any move; no automation."
+      }
+    },
+    {
+      "name": "vm-contoso-dc01",
+      "resourceGroup": "estate",
+      "generation": "V2",
+      "trustedLaunch": false,
+      "acceleratedNetworking": true,
+      "ipForwarding": false,
+      "cpuLoad": false,
+      "deallocate": false,
+      "tags": { "application": "identity", "role": "domain-controller", "owner": "identity-team@contoso.example", "criticality": "high" },
+      "expected": {
+        "workloadClass": [ "domain-controller" ],
+        "disposition": [ "rebuild-or-redeploy-v6-v7", "needs-data" ],
+        "hardGate": "none",
+        "checks": "Domain controller: build new, replicate, then demote. Never an in-place resize."
+      }
+    },
+    {
+      "name": "vm-contoso-batch07",
+      "resourceGroup": "estate",
+      "generation": "V2",
+      "trustedLaunch": false,
+      "acceleratedNetworking": true,
+      "ipForwarding": false,
+      "cpuLoad": false,
+      "deallocate": true,
+      "tags": { "application": "batch" },
+      "expected": {
+        "workloadClass": [ "unknown" ],
+        "disposition": [ "needs-data" ],
+        "hardGate": "none",
+        "checks": "Deallocated, no owner tag, and only minutes of stale utilization data from before deallocation: report the unknowns instead of guessing."
+      }
+    },
+    {
+      "name": "vm-contoso-pilot01",
+      "resourceGroup": "pilot",
+      "generation": "V2",
+      "trustedLaunch": true,
+      "acceleratedNetworking": true,
+      "ipForwarding": false,
+      "cpuLoad": false,
+      "deallocate": false,
+      "tags": { "application": "intranet", "workload": "web-server", "owner": "platform-team@contoso.example", "criticality": "low" },
+      "expected": {
+        "workloadClass": [ "E-customer-managed", "unknown" ],
+        "disposition": [ "resize-to-v5" ],
+        "hardGate": "none",
+        "checks": "Phase 3 pilot: the resize to v5 is blocked by the allowed-size policy until an exemption exists."
+      }
+    }
+  ],
+  "scaleSets": [
+    {
+      "name": "vmss-contoso-web",
+      "resourceGroup": "estate",
+      "capacity": 2,
+      "tags": { "application": "web", "workload": "stateless-pool", "owner": "web-team@contoso.example", "criticality": "medium" },
+      "expected": {
+        "workloadClass": [ "A-compute-pool" ],
+        "disposition": [ "replace-pool-or-image" ],
+        "hardGate": "none",
+        "checks": "Uniform scale set with 2 instances: replace the pool through a new model or image."
+      }
+    }
+  ]
+}

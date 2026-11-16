@@ -1,0 +1,8 @@
+# Lab state and outputs contain real resource IDs and an SSH key. The scripts
+# write them to ~/.vmlt-lab; these patterns catch copies placed here by mistake.
+.local/
+answer-key.json
+agent.json
+*.parameters.json
+lab_rsa*
+results/
