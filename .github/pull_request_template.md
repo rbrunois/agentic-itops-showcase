@@ -18,6 +18,7 @@
 - [ ] Examples use synthetic data only (Contoso or Fabrikam); no real customer names, people, emails, tenant or subscription IDs, hostnames, or secrets.
 - [ ] The use case README covers purpose, audience, prerequisites, procedure, safety and approvals, expected output, limitations, and cleanup where relevant.
 - [ ] Write actions remain behind explicit human approval; discovery stays read-only.
+- [ ] This PR changes agent instructions or permissions (prompts, instruction files, tools, RBAC scopes, or approval steps). If checked, describe the change under **Security impact** and check for hidden text such as HTML comments or zero-width characters.
 - [ ] The root README catalogue is updated if needed.
 - [ ] `CHANGELOG.md` has an entry under **Unreleased** for user-visible changes.
 - [ ] Local validation was run (links, JSON/YAML, scripts or tests for the changed use case).

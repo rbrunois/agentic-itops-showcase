@@ -8,3 +8,11 @@
 /.github/workflows/validate-sre-incident-response.yml         @jnephtali-msft @rbrunois
 /.github/workflows/validate-sre-network-troubleshooting.yml   @rbrunois
 /.github/workflows/validate-microsoft-fabric-monitoring.yml   @franmer2 @rbrunois
+
+# Security-sensitive paths: keep at the end (last match wins)
+/.github/                    @rbrunois
+/SECURITY.md                 @rbrunois
+**/sre-agent-assets/         @rbrunois
+**/AGENTS.md                 @rbrunois
+*agent-instructions.md       @rbrunois
+*-prompt.md                  @rbrunois
