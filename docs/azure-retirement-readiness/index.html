@@ -72,7 +72,34 @@
         <a class="btn" href="https://github.com/rbrunois/agentic-itops-showcase/tree/main/Tools/azure-retirement-readiness">View on GitHub</a>
       </div>
       <ul class="chips" aria-label="Services"><li>Azure SRE Agent</li><li>Azure Resource Graph</li><li>Azure Service Health</li><li>Azure Resource Health</li><li>Microsoft Entra ID</li></ul>
-      <figure class="uc-visual"><img src="../files/Tools/azure-retirement-readiness/assets/azure-retirement-readiness-dashboard.png" alt="Illustrative Azure Retirement Readiness dashboard with a prioritized retirement queue" loading="lazy"></figure>
+      <div class="viz" role="img" aria-label="Azure Retirement Readiness: within one authorized subscription, Azure SRE Agent builds a read-only inventory with Resource Graph, checks Service Health coverage, verifies lifecycle dates against Microsoft documentation and resolves direct subscription owners, then publishes a dashboard with a prioritized retirement queue and migration plan. Service owners decide and run each migration. A weekly refresh runs only when explicitly requested.">
+  <div class="d-head"><p class="lbl" style="margin:0">Azure SRE Agent · Lifecycle · Read-only</p><h3>Every deadline found, sourced and owned.</h3><p>Read-only discovery, verified dates and a migration plan people act on.</p></div>
+  <div class="g5">
+    <div class="col"><p class="lbl">Scope</p>
+      <div class="node dashed"><span class="tile warn"><svg class="ico"><use href="#i-lock"/></svg></span><div><b>One subscription</b><span>authorized ID, name and audience</span></div></div>
+      <div class="agent"><img src="../assets/logo.svg" alt=""><b>Azure SRE Agent</b><small>read-only discovery</small><span class="pill2 ok"><svg class="ico"><use href="#i-lock"/></svg>no Azure changes</span></div>
+    </div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Inventory</p>
+      <div class="node "><span class="tile "><svg class="ico"><use href="#i-search"/></svg></span><div><b>Resource Graph</b><span>all resources in scope</span></div></div>
+      <div class="node "><span class="tile "><svg class="ico"><use href="#i-tag"/></svg></span><div><b>Retirement-sensitive types</b><span>App Service, Functions, Logic Apps, Bot Service, SQL, PostgreSQL, classic providers…</span></div></div>
+    </div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Evidence</p>
+      <div class="node "><span class="tile "><svg class="ico"><use href="#i-pulse"/></svg></span><div><b>Service Health coverage</b><span>health events and Activity Log alerts; empty means a gap, not "no notices"</span></div></div>
+      <div class="node "><span class="tile v"><svg class="ico"><use href="#i-book"/></svg></span><div><b>Lifecycle dates</b><span>verified against Microsoft documentation, with the source</span></div></div>
+      <div class="node "><span class="tile "><svg class="ico"><use href="#i-person"/></svg></span><div><b>Direct owners</b><span>subscription-scope RBAC Owners, labeled as direct only</span></div></div>
+    </div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Dashboard</p>
+      <div class="node "><span class="tile v"><svg class="ico"><use href="#i-chart"/></svg></span><div><b>Executive readiness metrics</b><span>plus evidence sources and coverage gaps</span></div></div>
+      <div class="step"><h4>Retirement Queue</h4><div class="pills"><span class="pill2" style="color:var(--danger)">confirmed action</span><span class="pill2 warn">needs validation</span><span class="pill2 ok">no action</span></div><p>With a Subscription Context column for who to contact.</p></div>
+      <div class="node "><span class="tile v"><svg class="ico"><use href="#i-file"/></svg></span><div><b>Migration plan</b><span>phases and follow-up controls</span></div></div>
+    </div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Humans decide</p>
+      <div class="node gate"><span class="tile warn"><svg class="ico"><use href="#i-person"/></svg></span><div><b>Service owners</b><span>review the queue and the phased plan</span></div></div>
+      <div class="node release"><span class="tile ok"><svg class="ico"><use href="#i-check"/></svg></span><div><b>Migrations</b><span>run by teams with validation, canary and rollback</span></div></div>
+    </div>
+  </div>
+  <div class="loop"><span class="tile"><svg class="ico"><use href="#i-clock"/></svg></span><div><b>Weekly refresh, only on request</b>A scheduled refresh is created only after an explicit request. It stays read-only, scoped to the subscription and idempotent, and updates the existing dashboard instead of creating duplicates.</div></div>
+</div>
     </div>
   </section>
 

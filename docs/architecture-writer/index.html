@@ -72,7 +72,37 @@
         <a class="btn" href="https://github.com/rbrunois/agentic-itops-showcase/tree/main/Tools/architecture-writer">View on GitHub</a>
       </div>
       <ul class="chips" aria-label="Services"><li>Azure SRE Agent</li><li>Azure Resource Graph</li><li>Azure Well-Architected Framework</li><li>GitHub</li></ul>
-      <figure class="uc-visual"><img src="../files/Tools/architecture-writer/assets/architecture-writer-workflow.svg" alt="Workflow from read-only Azure discovery to a reviewed architecture pull request" loading="lazy"></figure>
+      <div class="viz" role="img" aria-label="Architecture Writer: Azure evidence flows read-only to Azure SRE Agent, which separates observed, inferred and proposed relationships, produces diagrams, documentation, a consistency and WAF review and an optional IaC draft, syncs them to a GitHub branch and pull request, and owners approve, revise or reject. Approved baselines drive future drift checks.">
+  <div class="d-head"><p class="lbl" style="margin:0">Azure SRE Agent · Architecture · GitHub</p><h3>From evidence to an approved baseline.</h3><p>Read-only discovery, explicit confidence, approval-gated proposals and reviewable GitHub sync.</p></div>
+  <div class="g5">
+    <div class="col"><p class="lbl">Azure</p>
+      <div class="node "><span class="tile "><svg class="ico"><use href="#i-search"/></svg></span><div><b>Inventory</b><span>resources, regions, groups, networks</span></div></div>
+      <div class="node "><span class="tile "><svg class="ico"><use href="#i-pulse"/></svg></span><div><b>Telemetry evidence</b><span>health, dependencies, DNS and change data</span></div></div>
+      <div class="node dashed"><span class="tile warn"><svg class="ico"><use href="#i-lock"/></svg></span><div><b>Read-only boundary</b><span>least privilege, scoped queries, no Azure mutation</span></div></div>
+    </div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Agent</p>
+      <div class="agent"><img src="../assets/logo.svg" alt=""><b>Azure SRE Agent</b><small>read-only discovery</small><span class="pill2 ok"><svg class="ico"><use href="#i-lock"/></svg>evidence + provenance</span></div>
+      <div class="step"><h4>Relationship model</h4><div class="pills"><span class="pill2 ok">observed</span><span class="pill2 info">inferred + confidence</span><span class="pill2 v">proposed</span></div><p>Unknowns stay visible. No invented links, flows, resiliency or success.</p></div>
+    </div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Automation tasks</p>
+      <div class="node "><span class="tile v"><svg class="ico"><use href="#i-file"/></svg></span><div><b>Diagram + documentation</b><span>SVG / Mermaid / draw.io · inventory, boundaries, flows</span></div></div>
+      <div class="node "><span class="tile v"><svg class="ico"><use href="#i-check"/></svg></span><div><b>Consistency + WAF review</b><span>coverage, contradictions, unknowns, recommendations</span></div></div>
+      <div class="node dashed"><span class="tile v"><svg class="ico"><use href="#i-file"/></svg></span><div><b>Optional IaC draft</b><span>Terraform or Bicep proposal · approval gated, never applied</span></div></div>
+      <div class="node "><span class="tile "><svg class="ico"><use href="#i-clock"/></svg></span><div><b>Drift check</b><span>scheduled or on demand</span></div></div>
+    </div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">GitHub sync</p>
+      <div class="node "><span class="tile "><svg class="ico"><use href="#i-refresh"/></svg></span><div><b>Branch</b><span>sanitized artifacts and drift</span></div></div>
+      <div class="node "><span class="tile "><svg class="ico"><use href="#i-file"/></svg></span><div><b>Pull request</b><span>checks, owners, unknowns, review gates</span></div></div>
+      <div class="node dashed"><span class="tile warn"><svg class="ico"><use href="#i-lock"/></svg></span><div><b>No auto-merge</b><span>no direct push</span></div></div>
+    </div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Human review</p>
+      <div class="node gate"><span class="tile warn"><svg class="ico"><use href="#i-person"/></svg></span><div><b>Owners</b><span>cloud · network · security + app</span></div></div>
+      <div class="step gate"><h4>Decision</h4><div class="pills"><span class="pill2 ok">approve</span><span class="pill2 warn">revise</span><span class="pill2" style="color:var(--danger)">reject</span></div></div>
+      <div class="node release"><span class="tile ok"><svg class="ico"><use href="#i-check"/></svg></span><div><b>Baseline</b><span>approved state</span></div></div>
+    </div>
+  </div>
+  <div class="loop"><span class="tile"><svg class="ico"><use href="#i-refresh"/></svg></span><div><b>Feedback and drift loop</b>An approved schedule or on-demand task compares fresh read-only evidence with the GitHub baseline. Azure drift, evidence drift, documentation drift and proposed state stay distinct, and every update returns through human review.</div></div>
+</div>
     </div>
   </section>
 
