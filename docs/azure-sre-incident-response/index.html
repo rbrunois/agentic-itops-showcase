@@ -72,6 +72,36 @@
         <a class="btn" href="https://github.com/rbrunois/agentic-itops-showcase/tree/main/Tools/azure-sre-incident-response">View on GitHub</a>
       </div>
       <ul class="chips" aria-label="Services"><li>Azure SRE Agent</li><li>Azure Container Apps</li><li>Application Insights</li><li>Log Analytics</li><li>Azure Monitor</li><li>Azure Container Registry</li></ul>
+      <div class="viz" role="img" aria-label="Azure SRE Incident Response rehearsal: an operator provisions a demo app on Azure Container Apps with a healthy baseline, approves and injects a failing revision, Azure SRE Agent investigates read-only and proposes a rollback, the operator approves recovery, and a script restores the baseline traffic and verifies health. Teardown is a separate decision.">
+  <div class="d-head"><p class="lbl" style="margin:0">Azure SRE Agent · Azure Container Apps · Incident rehearsal</p><h3>Break it on purpose, recover it with approval.</h3><p>A safe, end-to-end incident with a human decision at every step.</p></div>
+  <div class="g5">
+    <div class="col"><p class="lbl">Prepare</p>
+      <div class="node "><span class="tile "><svg class="ico"><use href="#i-cloud"/></svg></span><div><b>Provision the demo</b><span>preview with <code>-WhatIf</code>, then a tagged resource group</span></div></div>
+      <div class="node "><span class="tile ok"><svg class="ico"><use href="#i-check"/></svg></span><div><b>Healthy baseline</b><span>verified revision, <code>/healthz</code> returns 200</span></div></div>
+    </div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Inject</p>
+      <div class="node gate"><span class="tile warn"><svg class="ico"><use href="#i-person"/></svg></span><div><b>Approve downtime</b><span>the operator confirms the simulated outage</span></div></div>
+      <div class="node "><span class="tile warn"><svg class="ico"><use href="#i-pulse"/></svg></span><div><b>Failing revision</b><span>one crash-looping revision receives traffic</span></div></div>
+    </div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Investigate</p>
+      <div class="agent"><img src="../assets/logo.svg" alt=""><b>Azure SRE Agent</b><small>revisions · traffic · logs · metrics</small><span class="pill2 ok"><svg class="ico"><use href="#i-lock"/></svg>Reader + Log Analytics Reader</span></div>
+      <div class="node "><span class="tile v"><svg class="ico"><use href="#i-book"/></svg></span><div><b>Curated knowledge</b><span>runbook and agent instructions</span></div></div>
+    </div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Approve</p>
+      <div class="step gate"><h4>Proposed rollback</h4><p>Restore the captured baseline revision.</p><div class="pills"><span class="pill2 warn">operator decision</span></div></div>
+    </div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Recover</p>
+      <div class="node "><span class="tile ok"><svg class="ico"><use href="#i-refresh"/></svg></span><div><b>Restore baseline traffic</b><span>the operator script retires only the injected revision</span></div></div>
+      <div class="node release"><span class="tile ok"><svg class="ico"><use href="#i-check"/></svg></span><div><b>Verify</b><span>endpoint, traffic, revision health and alert state</span></div></div>
+    </div>
+  </div>
+  <div class="quad" style="padding:0 1.5rem 1.4rem">
+    <div class="node "><span class="tile "><svg class="ico"><use href="#i-cloud"/></svg></span><div><b>Container Apps environment</b><span>demo app on its own revisions</span></div></div>
+    <div class="node "><span class="tile v"><svg class="ico"><use href="#i-chart"/></svg></span><div><b>Application Insights + Log Analytics</b><span>telemetry the agent reads</span></div></div>
+    <div class="node "><span class="tile "><svg class="ico"><use href="#i-pulse"/></svg></span><div><b>Two metric alerts</b><span>action group has no receivers unless you add one</span></div></div>
+    <div class="node dashed"><span class="tile warn"><svg class="ico"><use href="#i-lock"/></svg></span><div><b>Teardown</b><span>a separate, explicit destructive decision</span></div></div>
+  </div>
+</div>
       
     </div>
   </section>

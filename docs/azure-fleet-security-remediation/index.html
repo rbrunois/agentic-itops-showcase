@@ -72,7 +72,28 @@
         <a class="btn" href="https://github.com/rbrunois/agentic-itops-showcase/tree/main/Tools/azure-fleet-security-remediation">View on GitHub</a>
       </div>
       <ul class="chips" aria-label="Services"><li>Azure SRE Agent</li><li>Azure Arc</li><li>Azure Update Manager</li><li>Microsoft Defender for Cloud</li><li>Azure Resource Graph</li><li>Azure Monitor</li></ul>
-      <figure class="uc-visual"><img src="../files/Tools/azure-fleet-security-remediation/assets/azure-fleet-remediation-architecture.png" alt="Azure SRE Agent reads fleet evidence across Azure, on-premises, AWS and Google Cloud through Azure Arc" loading="lazy"></figure>
+      <div class="viz" role="img" aria-label="Azure Fleet Security and Patch Remediation: Azure SRE Agent queries and correlates evidence read-only through the Azure management plane (Resource Graph, Defender for Cloud, Azure Monitor and Activity Log, Update Manager, and Azure Arc). A service owner explicitly approves targets; Update Manager runs approved guest patch operations on Arc-connected machines across Azure, on-premises, AWS and Google Cloud. Evidence is published to a signal board and a remediation ledger.">
+  <div class="d-head"><p class="lbl" style="margin:0">Azure SRE Agent · Azure Arc · Hybrid and multicloud</p><h3>One fleet, one evidence trail, approved patching.</h3><p>Read-only evidence, Arc federation and guest-verified remediation.</p></div>
+  <div class="fl-top">
+    <div class="col"><p class="lbl">Agent</p><div class="agent"><img src="../assets/logo.svg" alt=""><b>Azure SRE Agent</b><small>correlates inventory, security, patch, agent and activity evidence</small><span class="pill2 ok"><svg class="ico"><use href="#i-lock"/></svg>read-only by default</span></div></div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Azure management plane</p>
+      <div class="plane"><h4>Centralized evidence, policy and orchestration</h4>
+        <div class="quad"><div class="node "><span class="tile "><svg class="ico"><use href="#i-search"/></svg></span><b>Resource Graph</b><span>inventory and scope</span></div><div class="node "><span class="tile "><svg class="ico"><use href="#i-shield"/></svg></span><b>Defender for Cloud</b><span>security posture</span></div><div class="node "><span class="tile "><svg class="ico"><use href="#i-pulse"/></svg></span><b>Monitor + Activity Log</b><span>operation evidence</span></div><div class="node "><span class="tile v"><svg class="ico"><use href="#i-refresh"/></svg></span><b>Update Manager</b><span>approved patching</span></div></div>
+        <div class="node "><span class="tile ok"><svg class="ico"><use href="#i-network"/></svg></span><div><b>Azure Arc · hybrid control plane</b><span>connected-machine inventory, guest telemetry, extension status and policy context</span></div></div>
+      </div>
+    </div><span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">People and outputs</p>
+      <div class="node gate"><span class="tile warn"><svg class="ico"><use href="#i-person"/></svg></span><div><b>Service owner</b><span>reviews scope, impact, maintenance window and reboot policy</span><span class="vtag" style="margin-top:.35rem">Explicit approval</span></div></div>
+      <div class="node release"><span class="tile ok"><svg class="ico"><use href="#i-chart"/></svg></span><div><b>Evidence outputs</b><span>Fleet Security Signal Board · Fleet Remediation Ledger</span></div></div>
+    </div>
+  </div>
+  <div class="down" aria-hidden="true"></div>
+  <div class="estate">
+    <div class="top"><h4>Arc-connected hybrid estate</h4><span><span class="pill2 v">production</span> <span class="pill2 info">pre-production</span> <span class="pill2 ok">development</span></span></div>
+    <div class="quad"><div class="node "><span class="tile "><svg class="ico"><use href="#i-cloud"/></svg></span><b>Azure</b><span>virtual machines and VMSS</span><span class="vtag ok">Arc-enabled</span></div><div class="node "><span class="tile "><svg class="ico"><use href="#i-network"/></svg></span><b>On premises</b><span>physical and VMware servers</span><span class="vtag ok">Arc-enabled</span></div><div class="node "><span class="tile "><svg class="ico"><use href="#i-cloud"/></svg></span><b>AWS</b><span>EC2 instances</span><span class="vtag ok">Arc-enabled</span></div><div class="node "><span class="tile "><svg class="ico"><use href="#i-cloud"/></svg></span><b>Google Cloud</b><span>Compute Engine instances</span><span class="vtag ok">Arc-enabled</span></div></div>
+    <span style="font-size:.78rem;color:var(--muted)">Policies, maintenance windows and approvals stay explicit per cloud and environment.</span>
+  </div>
+</div>
     </div>
   </section>
 

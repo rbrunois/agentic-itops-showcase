@@ -72,7 +72,31 @@
         <a class="btn" href="https://github.com/rbrunois/agentic-itops-showcase/tree/main/Tools/azure-sre-network-troubleshooting">View on GitHub</a>
       </div>
       <ul class="chips" aria-label="Services"><li>Azure SRE Agent</li><li>Azure Virtual Network</li><li>Azure Network Watcher</li><li>Traffic Analytics</li><li>Log Analytics</li><li>Azure Monitor Agent</li></ul>
-      <figure class="uc-visual"><img src="../files/Tools/azure-sre-network-troubleshooting/assets/architecture-overview.svg" alt="Two peered Contoso lab VNets with flow and Windows event telemetry queried by Azure SRE Agent" loading="lazy"></figure>
+      <div class="viz" role="img" aria-label="Azure SRE Network Troubleshooting: a client VNet and a workload VNet are peered. Flow logs on both VNets go to storage and Traffic Analytics; independent Windows health events go through AMA and a DCR. Both land in a Log Analytics workspace that Azure SRE Agent queries read-only. An optional Connection Monitor is a separate, approved deployment.">
+  <div class="d-head"><p class="lbl" style="margin:0">Azure SRE Agent · Networking · Synthetic Contoso lab</p><h3>Network denial or broken app? Prove it.</h3><p>Independent evidence for every claim; every change needs an operator.</p></div>
+  <div class="vnets">
+    <div class="vnet"><h4>Client VNet <code>10.10.0.0/16</code></h4><div class="node "><span class="tile "><svg class="ico"><use href="#i-network"/></svg></span><div><b>Client subnet + NSG</b><span>10.10.1.0/24</span></div></div><div class="node "><span class="tile "><svg class="ico"><use href="#i-cloud"/></svg></span><div><b>Client VM</b><span>synthetic TCP / HTTP requests</span></div></div></div>
+    <div class="peer"><span class="pill2 info">bidirectional peering</span><span class="bar"></span><span>new private TCP/80 requests →</span></div>
+    <div class="vnet"><h4>Workload VNet <code>10.20.0.0/16</code></h4><div class="node "><span class="tile "><svg class="ico"><use href="#i-network"/></svg></span><div><b>Workload subnet + NSG</b><span>10.20.1.0/24</span></div></div><div class="node "><span class="tile "><svg class="ico"><use href="#i-cloud"/></svg></span><div><b>Windows IIS VM</b><span>private TCP/80 + health markers</span></div></div></div>
+  </div>
+  <p class="banner">Flow logging targets both VNets, not NSGs or subnets</p>
+  <div class="lanes2">
+    <div class="col" style="display:grid;gap:.5rem;align-content:start"><p class="lbl">Application evidence</p>
+      <div class="node "><span class="tile ok"><svg class="ico"><use href="#i-pulse"/></svg></span><div><b>AMA + Windows DCR</b><span>custom events <code>SRE-Network-Demo</code></span></div></div>
+    </div>
+    <div style="display:grid;gap:.5rem;align-content:start"><p class="lbl">Network evidence</p>
+      <div class="chain"><div class="node "><span class="tile "><svg class="ico"><use href="#i-search"/></svg></span><div><b>Network Watcher</b><span>VNet flow logs</span></div></div><span class="arrow" aria-hidden="true"></span><div class="node "><span class="tile "><svg class="ico"><use href="#i-file"/></svg></span><div><b>Storage</b><span>raw flow records</span></div></div><span class="arrow" aria-hidden="true"></span><div class="node "><span class="tile v"><svg class="ico"><use href="#i-chart"/></svg></span><div><b>Traffic Analytics</b><span>enriches and aggregates</span></div></div></div>
+    </div>
+  </div>
+  <div class="down" aria-hidden="true"></div>
+  <div class="hub"><div class="node "><span class="tile v"><svg class="ico"><use href="#i-chart"/></svg></span><div><b>Log Analytics workspace</b><span><code>NTANetAnalytics</code> (flows) + <code>Event</code> (health) · exact endpoints and UTC windows</span></div></div></div>
+  <div class="down" aria-hidden="true"></div>
+  <div class="lanes2 even" style="padding-bottom:1.4rem">
+    <div class="agent" style="grid-template-columns:auto 1fr;justify-items:start;text-align:left;align-items:center;column-gap:.8rem"><img src="../assets/logo.svg" alt="" style="grid-row:span 3"><b>Azure SRE Agent</b><small>read-only config reads + KQL queries</small><span class="pill2 ok"><svg class="ico"><use href="#i-lock"/></svg>no Run Command, NSG edits or remediation</span></div>
+    <div class="node dashed"><span class="tile warn"><svg class="ico"><use href="#i-network"/></svg></span><div><b>Optional Connection Monitor</b><span>additive; separate deployment and approval. TCP is not HTTP health.</span></div></div>
+  </div>
+  <div class="d-foot"><span><span class="pill2 ok">observed fact</span> <span class="pill2 info">configuration fact</span> <span class="pill2 v">inference</span> <span class="pill2 warn">recommendation</span></span><span>Operator approval required for every change</span></div>
+</div>
     </div>
   </section>
 
@@ -184,7 +208,7 @@
         <a class="btn" href="https://github.com/rbrunois/agentic-itops-showcase/tree/main/Tools/azure-sre-network-troubleshooting">Browse the files</a>
       </div>
     </section>
-    <nav class="pager" aria-label="Other use cases"><a class="prev" href="../microsoft-fabric-monitoring/"><small>← Previous</small>Microsoft Fabric monitoring</a></nav>
+    <nav class="pager" aria-label="Other use cases"><a class="prev" href="../microsoft-fabric-monitoring/"><small>← Previous</small>Microsoft Fabric monitoring</a><a class="next" href="../azure-vm-lifecycle-transition/"><small>Next →</small>Azure VM Lifecycle Transition</a></nav>
   </div>
 </main>
 

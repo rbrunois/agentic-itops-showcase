@@ -72,7 +72,40 @@
         <a class="btn" href="https://github.com/rbrunois/agentic-itops-showcase/tree/main/Tools/avm-tf-synchronizer">View on GitHub</a>
       </div>
       <ul class="chips" aria-label="Services"><li>Azure SRE Agent</li><li>Azure Verified Modules</li><li>Terraform</li><li>GitHub</li><li>GitHub Actions</li></ul>
-      <figure class="uc-visual"><img src="../files/Tools/avm-tf-synchronizer/assets/avm-sync-workflow-marketing.svg" alt="Workflow from a new AVM release to one reviewed pull request" loading="lazy"></figure>
+      <div class="viz" role="img" aria-label="AVM TF Synchronizer architecture. Inputs: security controls, the internal module and AVM upstream releases. Azure SRE Agent runs every 6 hours, assesses controls and AVM tags, then syncs AVM and enforces controls in one pull request. Delivery: CI checks, human review and release-please; teams pin the compliant release. The agent only opens pull requests.">
+  <div class="d-head"><p class="lbl" style="margin:0">Azure SRE Agent · Terraform · Azure Verified Modules</p><h3>One reviewed pull request at a time.</h3><p>Keeps your internal Terraform modules compliant and current with AVM.</p></div>
+  <div class="d-grid">
+    <div class="col"><p class="lbl">Inputs</p>
+      <div class="node"><span class="tile "><svg class="ico"><use href="#i-shield"/></svg></span><div><b>Security controls</b><span>read-only, plain language<br><code>SC-KV-001 … SC-KV-011</code></span></div></div>
+      <div class="node"><span class="tile "><svg class="ico"><use href="#i-file"/></svg></span><div><b>Internal module</b><span>your layout and rules<br><code>TEMPLATE.md · mapping.yaml</code></span></div></div>
+      <div class="node"><span class="tile "><svg class="ico"><use href="#i-tag"/></svg></span><div><b>AVM upstream</b><span>public release tags<br><code>latest release + diff</code></span></div></div>
+    </div>
+    <span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Agent</p>
+      <span class="trigger"><svg class="ico"><use href="#i-clock"/></svg>Every 6 hours</span>
+      <div class="agent"><img src="../assets/logo.svg" alt=""><b>AVM TF Synchronizer</b><small>Azure SRE Agent</small><span class="pill2 v">Security controls always win over AVM defaults</span></div>
+      <div class="node dashed"><span class="tile"><svg class="ico"><use href="#i-chart"/></svg></span><div><b>Live Report</b><span>updated on every run</span></div></div>
+    </div>
+    <span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">One run, one PR</p>
+      <div class="step"><h4><span class="n">1</span>Assess</h4><p>Controls met on main? Newer AVM tag?</p><div class="pills"><span class="pill2 info">controls on main</span><span class="pill2 info">newer AVM tag</span></div><pre>DECIDE  at most one PR per run</pre></div>
+      <div class="step"><h4><span class="n v">2</span>Sync AVM + enforce controls</h4><p>Port upstream, then lock every control.</p><div class="pills"><span class="pill2 v">port</span><span class="pill2 v">port with adaptation</span><span class="pill2 v">skip</span></div><pre>PR  feat!: sync AVM v0.10.2 → v0.12.0
+    and enforce security controls</pre></div>
+      <div class="step dashed"><p>No new AVM release? A remediation-only PR:</p><pre>fix!: enforce security controls</pre></div>
+    </div>
+    <span class="arrow" aria-hidden="true"></span>
+    <div class="col"><p class="lbl">Delivery</p>
+      <div class="node dashed"><span class="tile warn"><svg class="ico"><use href="#i-lock"/></svg></span><div><b>The agent only opens pull requests</b><span>no merge, no tags, no push to main, no Azure rights</span></div></div>
+      <div class="trio">
+        <div class="node"><span class="tile ok"><svg class="ico"><use href="#i-check"/></svg></span><b>CI checks</b><span>fmt · validate · test · tflint</span></div>
+        <div class="node gate"><span class="tile warn"><svg class="ico"><use href="#i-person"/></svg></span><b>Human review</b><span>CODEOWNERS, squash-merge</span></div>
+        <div class="node"><span class="tile v"><svg class="ico"><use href="#i-tag"/></svg></span><b>release-please</b><span>tag vX.Y.Z + changelog</span></div>
+      </div>
+      <div class="node release"><span class="tile ok"><svg class="ico"><use href="#i-check"/></svg></span><div><b>Teams pin a compliant release</b><span><code>source = "…/keyvault-module-custom?ref=v2.0.0"</code></span></div></div>
+    </div>
+  </div>
+  <div class="d-foot"><span>Demo scope: Key Vault (<code>avm-res-keyvault-vault</code>) · controls derived from Azure Policy compliance mappings</span><span>Read → Assess → Sync + Enforce → Review → Release</span></div>
+</div>
     </div>
   </section>
 

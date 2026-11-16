@@ -72,7 +72,25 @@
         <a class="btn" href="https://github.com/rbrunois/agentic-itops-showcase/tree/main/Tools/azure-incident-investigator">View on GitHub</a>
       </div>
       <ul class="chips" aria-label="Services"><li>Azure SRE Agent</li><li>Azure Monitor</li><li>Log Analytics</li><li>Application Insights</li><li>Azure Resource Health</li><li>Azure Virtual Machines</li></ul>
-      <figure class="uc-visual"><img src="../files/Tools/azure-incident-investigator/assets/investigation-flow.svg" alt="Flow of a read-only Azure incident investigation from intake to RCA report" loading="lazy"></figure>
+      <div class="viz" role="img" aria-label="Azure Incident Investigator: an incident is reported, a short intake asks 3 to 5 questions, the agent gathers fresh evidence and correlates symptoms to causes. If the root cause is confirmed it writes an RCA with remediation steps; if not, the best-supported hypothesis and the next discriminating check. An RCA report is offered only on approval.">
+  <div class="d-head"><p class="lbl" style="margin:0">Azure SRE Agent · Incident investigation · Read-only</p><h3>Evidence first, then a root cause.</h3><p>Strictly read-only: the agent investigates and explains, people remediate.</p></div>
+  <div class="row r4">
+    <div class="node "><span class="tile "><svg class="ico"><use href="#i-pulse"/></svg></span><div><b>Incident reported</b><span>an alert or a user report</span></div></div><span class="arrow" aria-hidden="true"></span>
+    <div class="node "><span class="tile "><svg class="ico"><use href="#i-search"/></svg></span><div><b>Short intake</b><span>3–5 targeted questions</span></div></div><span class="arrow" aria-hidden="true"></span>
+    <div class="node "><span class="tile "><svg class="ico"><use href="#i-file"/></svg></span><div><b>Gather fresh evidence</b><span>docs · telemetry · logs · metrics · deploys</span></div></div><span class="arrow" aria-hidden="true"></span>
+    <div class="node "><span class="tile v"><svg class="ico"><use href="#i-network"/></svg></span><div><b>Correlate</b><span>symptoms to causes</span></div></div>
+  </div>
+  <div class="down" aria-hidden="true"></div>
+  <div class="decide"><b>Root cause confirmed?</b><span>only when the evidence supports it</span></div>
+  <div class="branch">
+    <div class="node release"><span class="tile ok"><svg class="ico"><use href="#i-check"/></svg></span><b>RCA + remediation steps</b><span>Root cause confirmed, with the evidence behind it</span><span class="vtag ok">Yes</span></div>
+    <div class="node "><span class="tile warn"><svg class="ico"><use href="#i-search"/></svg></span><b>Best-supported hypothesis</b><span>plus the next discriminating check to run</span><span class="vtag">Not yet</span></div>
+  </div>
+  <div class="down" aria-hidden="true"></div>
+  <div style="padding:0 1.5rem 1.5rem;display:grid;justify-items:center">
+    <div class="node gate" style="max-width:26rem"><span class="tile warn"><svg class="ico"><use href="#i-person"/></svg></span><div><b>Offer an RCA report</b><span>written only on approval; remediation stays in human hands</span></div></div>
+  </div>
+</div>
     </div>
   </section>
 

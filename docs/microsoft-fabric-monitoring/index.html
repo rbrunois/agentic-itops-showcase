@@ -72,7 +72,28 @@
         <a class="btn" href="https://github.com/rbrunois/agentic-itops-showcase/tree/main/Tools/microsoft-fabric-monitoring">View on GitHub</a>
       </div>
       <ul class="chips" aria-label="Services"><li>Azure SRE Agent</li><li>Microsoft Fabric</li><li>Power BI</li><li>Azure Container Apps</li><li>Azure Container Registry</li></ul>
-      <figure class="uc-visual"><img src="../files/Tools/microsoft-fabric-monitoring/docs/assets/live-report-overview.png" alt="Bilingual Live Report overview of Fabric capacities, workspaces, items and CU consumption" loading="lazy"></figure>
+      <div class="viz" role="img" aria-label="Microsoft Fabric monitoring in three levels. Discovery: Azure SRE Agent with the Fabric Core MCP connector answers questions and builds on-demand visuals. Basic: a read-only Fabric Admin MCP server on Azure Container Apps adds tenant inventory and recent CU, published in a bilingual Live Report. Advanced: a daily pipeline keeps at least 60 days of history in a Lakehouse with a semantic model and French and English Power BI reports. Write actions are disabled and need a matching approval and an audit record.">
+  <div class="d-head"><p class="lbl" style="margin:0">Azure SRE Agent · Microsoft Fabric · Power BI</p><h3>Start read-only, add history when you need it.</h3><p>Three progressive levels; each one builds on the previous.</p></div>
+  <div class="lane" style="border-top:0">
+    <div class="lane-h"><span class="num">1</span><b>DISCOVERY</b><span>Ask questions about your tenant in minutes</span></div>
+    <div class="node "><span class="tile v"><svg class="ico"><use href="#i-star"/></svg></span><b>Azure SRE Agent</b><span>created in the portal at sre.azure.com</span></div><span class="arrow" aria-hidden="true"></span>
+    <div class="node "><span class="tile "><svg class="ico"><use href="#i-network"/></svg></span><b>Fabric Core MCP</b><span>connector added under Builder → Connectors</span></div><span class="arrow" aria-hidden="true"></span>
+    <div class="node "><span class="tile "><svg class="ico"><use href="#i-search"/></svg></span><b>Questions and visuals</b><span>on-demand answers from the prompt catalog</span></div>
+  </div>
+  <div class="lane">
+    <div class="lane-h"><span class="num" style="background:var(--violet)">2</span><b>BASIC</b><span>Tenant inventory without a Fabric workspace</span></div>
+    <div class="node "><span class="tile ok"><svg class="ico"><use href="#i-lock"/></svg></span><b>Fabric Admin MCP</b><span>read-only tools on Azure Container Apps, behind an API key</span><span class="vtag ok">Read only</span></div><span class="arrow" aria-hidden="true"></span>
+    <div class="node "><span class="tile "><svg class="ico"><use href="#i-chart"/></svg></span><b>Inventory + recent CU</b><span>capacities, workspaces, items and CU consumption</span></div><span class="arrow" aria-hidden="true"></span>
+    <div class="node "><span class="tile v"><svg class="ico"><use href="#i-file"/></svg></span><b>Live Report</b><span>bilingual French / English</span></div>
+  </div>
+  <div class="lane">
+    <div class="lane-h"><span class="num" style="background:var(--ok)">3</span><b>ADVANCED</b><span>History beyond native retention</span></div>
+    <div class="node "><span class="tile "><svg class="ico"><use href="#i-clock"/></svg></span><b>Daily pipeline</b><span>notebooks collect into Delta tables</span></div><span class="arrow" aria-hidden="true"></span>
+    <div class="node "><span class="tile v"><svg class="ico"><use href="#i-cloud"/></svg></span><b>Fabric Administration workspace</b><span>Lakehouse with at least 60 days of history</span></div><span class="arrow" aria-hidden="true"></span>
+    <div class="node release"><span class="tile ok"><svg class="ico"><use href="#i-chart"/></svg></span><b>Semantic model + reports</b><span>shared model, separate FR / EN Power BI reports</span></div>
+  </div>
+  <div class="loop"><span class="tile warn"><svg class="ico"><use href="#i-person"/></svg></span><div><b>Write actions are off by default</b>Each one needs an explicit opt-in, a plan with impact and rollback, a matching approval ID that expires if the plan changes, and a record in <code>agent_action_audit</code>.</div></div>
+</div>
     </div>
   </section>
 

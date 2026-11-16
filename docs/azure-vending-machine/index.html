@@ -72,7 +72,26 @@
         <a class="btn" href="https://github.com/rbrunois/agentic-itops-showcase/tree/main/Tools/azure-vending-machine">View on GitHub</a>
       </div>
       <ul class="chips" aria-label="Services"><li>Microsoft Copilot Studio</li><li>Microsoft Teams</li><li>Power Automate</li><li>ServiceNow</li><li>Azure Verified Modules</li><li>GitHub</li></ul>
-      <figure class="uc-visual"><img src="../files/Tools/azure-vending-machine/assets/09-workflow-design.svg" alt="Workflow from Teams intake through ServiceNow approval and a reviewed pull request to deployment" loading="lazy"></figure>
+      <div class="viz" role="img" aria-label="Azure Subscription Vending: in Request, a user asks in Teams, the Copilot Studio agent validates and derives the configuration, and the user confirms. In Govern and review, a human approves in ServiceNow and a reviewed pull request is merged. In Deliver, only the AVM pipeline writes to Azure and status returns to Teams. Rejected or failed requests return status with no deployment.">
+  <div class="d-head"><p class="lbl" style="margin:0">Copilot Studio agent · Teams · ServiceNow · AVM</p><h3>Subscriptions on request, governed end to end.</h3><p>Conversational request, human governance, reviewed change, deterministic delivery.</p></div>
+  <div class="lane" style="border-top:0">
+    <div class="lane-h"><span class="num">1</span><b>REQUEST</b><span>The agent gathers and validates intent but has no Azure write access</span></div>
+    <div class="node "><span class="tile "><svg class="ico"><use href="#i-person"/></svg></span><b>Request in Teams</b><span>Microsoft Entra SSO · French / English intake</span></div><span class="arrow" aria-hidden="true"></span>
+    <div class="node "><span class="tile v"><svg class="ico"><use href="#i-search"/></svg></span><b>Validate & derive</b><span>Copilot Studio + deterministic flow · CMDB · cost centre · repo access</span></div><span class="arrow" aria-hidden="true"></span>
+    <div class="node gate"><span class="tile warn"><svg class="ico"><use href="#i-check"/></svg></span><b>Confirm request</b><span>Adaptive Card summary, explicit confirmation</span><span class="vtag">User gate</span></div>
+  </div>
+  <div class="lane two">
+    <div class="lane-h"><span class="num" style="background:var(--warn)">2</span><b>GOVERN &amp; REVIEW</b><span>Human approval and source-control review are mandatory gates</span></div>
+    <div class="node gate"><span class="tile warn"><svg class="ico"><use href="#i-person"/></svg></span><b>Approve in ServiceNow</b><span>human platform approval; restricted data → security review</span><span class="vtag">Human gate</span></div><span class="arrow" aria-hidden="true"></span>
+    <div class="node gate"><span class="tile warn"><svg class="ico"><use href="#i-file"/></svg></span><b>Create & review pull request</b><span>re-read Approved · generate <code>azure.yml</code> · human merge</span><span class="vtag">Review gate</span></div>
+  </div>
+  <div class="lane two">
+    <div class="lane-h"><span class="num" style="background:var(--ok)">3</span><b>DELIVER</b><span>Only the deterministic AVM pipeline can write to Azure</span></div>
+    <div class="node write"><span class="tile ok"><svg class="ico"><use href="#i-cloud"/></svg></span><b>Deploy with AVM</b><span>subscription · network · identity/RBAC · budget · policy</span><span class="vtag d">Only Azure write</span></div><span class="arrow" aria-hidden="true"></span>
+    <div class="node "><span class="tile ok"><svg class="ico"><use href="#i-check"/></svg></span><b>Return status in Teams</b><span>subscription details · access group · next steps</span></div>
+  </div>
+  <div class="d-foot"><span>Rejected or failed → status returned to Teams, no deployment</span><span>human gate · reviewed change · single Azure write scope</span></div>
+</div>
     </div>
   </section>
 
