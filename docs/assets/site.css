@@ -264,9 +264,10 @@ body > footer p { margin: 0; }
 .crumbs a { color: var(--muted); }
 .chips { list-style: none; margin: 1.6rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
 .chips li { padding: .3rem .8rem; border: 1px solid var(--border-muted); border-radius: 999px; background: var(--bg-2); font-size: .82rem; }
-.uc-visual { margin: 3rem 0 0; padding: 1rem; border-radius: 12px; background: var(--bg-2); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+/* The frame shrinks to the picture, so wide screens don't show empty bands beside it. */
+.uc-visual { width: fit-content; max-width: 100%; margin: 3rem auto 0; padding: 0; border-radius: 12px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
 .uc-visual::before { content: ""; position: absolute; inset: 0 0 auto; height: 1px; background: var(--grad); }
-.uc-visual img { display: block; width: 100%; height: auto; max-height: 34rem; object-fit: contain; border-radius: 6px; }
+.uc-visual img { display: block; width: auto; max-width: 100%; height: auto; max-height: 34rem; }
 
 .benefits { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
 .benefits li { padding: 1.3rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-2); }
