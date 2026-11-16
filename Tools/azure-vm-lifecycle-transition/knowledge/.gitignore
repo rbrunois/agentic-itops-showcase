@@ -1,0 +1,4 @@
+# Customer-specific notes (inventory exports, workload classifications, account
+# context, vendor certification letters) stay on your machine or in the customer's
+# own agent knowledge base. Never commit them to this repository.
+customer-specific/

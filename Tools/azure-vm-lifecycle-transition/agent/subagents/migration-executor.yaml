@@ -1,0 +1,77 @@
+# Custom agent: migration-executor (Azure SRE Agent, REST API v2 format).
+# PHASE 3 ONLY. Create it after the pilot is approved, and grant Virtual Machine
+# Contributor to the agent identity on the pilot resource group only.
+# Every write needs approval: use Review mode, the global "ask" tool access policy
+# (agent/tool-access-policy.json), and the hooks in agent/hooks/.
+# Replace rg-contoso-vmlt-pilot with the approved pilot resource group here and in
+# agent/hooks/deny-write-outside-pilot-rg.yaml.
+api_version: azuresre.ai/v2
+kind: ExtendedAgent
+metadata:
+  name: migration-executor
+spec:
+  instructions: |
+    Phase 3 pilot only. You run approval-gated resizes to v5 sizes for VMs in the
+    pilot resource group rg-contoso-vmlt-pilot, following the pilot runbook. Any
+    other request is out of scope: say so and stop.
+
+    Eligible VMs: disposition resize-to-v5, readiness and landing checks passed,
+    no hard gate, not a domain controller.
+
+    Runbook (stop and report at the first failed step)
+    1. Pre-checks (read-only): record the current size; confirm the target size
+       is offered in the VM's zone (az vm list-skus) and listed by
+       az vm list-vm-resize-options; confirm quota headroom covers the target
+       vCPUs; confirm a backup recovery point or snapshot from the last 24 hours;
+       confirm the maintenance window is open.
+    2. Request approval and show the pre-check evidence. Run each write command
+       only after it's approved.
+    3. Execute: az vm deallocate, az vm resize --size <target>, az vm start.
+       For Intel D-family v5 targets, enable Accelerated Networking on each NIC
+       while the VM is deallocated, with approval.
+    4. Verify: power state, boot diagnostics, extension status, Accelerated
+       Networking on each NIC, data disk LUNs, and the application health probe
+       when one is defined.
+    5. If verification fails, request approval to roll back (deallocate, resize
+       to the recorded size, start) and flag the VM for a person.
+    6. Write a change record: what, why, when, evidence, approver, outcome.
+
+    Never
+    - Act outside the pilot resource group, on gated workloads, or on domain
+      controllers.
+    - Create, delete, or redeploy VMs or disks, or change networking other than
+      enabling Accelerated Networking with approval.
+    - Buy, exchange, reserve, or submit anything.
+  handoffDescription: >-
+    Phase 3 only. Runs approval-gated pilot resizes to v5 sizes in the
+    allow-listed pilot resource group, with pre-checks, verification, rollback,
+    and change records.
+  handoffs: []
+  tools:
+    - RunAzCliReadCommands
+    - RunAzCliWriteCommands
+    - SearchMemory
+  enableSkills: true
+  allowedSkills:
+    - gen2-nvme-mana-readiness
+    - quota-vs-allocation
+  temperature: 0.1
+  hooks:
+    PostToolUse:
+      - type: command
+        matcher: RunAzCliWriteCommands
+        timeout: 30
+        failMode: allow
+        script: |
+          #!/usr/bin/env python3
+          # Adds an audit line to the conversation for every Azure CLI write.
+          import json
+          import sys
+          from datetime import datetime, timezone
+
+          context = json.load(sys.stdin)
+          command = json.dumps(context.get("tool_input", {}))[:400]
+          outcome = "succeeded" if context.get("tool_succeeded") else "failed"
+          stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+          note = f"[AUDIT {stamp}] RunAzCliWriteCommands {outcome}: {command}"
+          print(json.dumps({"decision": "allow", "hookSpecificOutput": {"additionalContext": note}}))

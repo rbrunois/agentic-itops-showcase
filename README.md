@@ -30,16 +30,17 @@ Agentic ITOps Showcase is a collection of AI-powered IT automation use cases tha
 | 07 | [Azure Retirement Readiness](Tools/azure-retirement-readiness/README.md) | Builds an evidence-based retirement dashboard from Azure inventory, lifecycle documentation, Service Health coverage, and direct subscription ownership, then can refresh it on a controlled schedule | Gives service owners a prioritized migration plan and communication-ready context while keeping Azure discovery read-only and changes human-approved | [Romain Brunois](https://github.com/rbrunois) |
 | 08 | [Microsoft Fabric monitoring](Tools/microsoft-fabric-monitoring/README.md) | Monitors Microsoft Fabric capacities, workspaces, items, and CU consumption through Azure SRE Agent, a bilingual Live Report, and optional historical Power BI analytics | Provides proactive, read-only operational visibility and guided investigation while keeping every write action behind explicit approval and audit controls | [Franck Mercier](https://github.com/franmer2) |
 | 09 | [Azure SRE Network Troubleshooting](Tools/azure-sre-network-troubleshooting/README.md) | Correlates VNet Flow Logs, Traffic Analytics, NSGs, and independent application health with Azure SRE Agent; optional additive Connection Monitor | Distinguishes network-policy denial from application failure with evidence-labeled investigation and separately human-approved fault, restoration, and cleanup operations | [Ifeoma Aniagolu](https://github.com/Ifyagolu) |
+| 10 | [Azure VM Lifecycle Transition](Tools/azure-vm-lifecycle-transition/README.md) | Finds VMs and scale sets on End of Life VM size series with Azure SRE Agent, proposes a target family for each with evidence, checks quota, zone availability, and Azure Policy, and reports drift every week | Turns VM size retirements into a per-VM plan that stays current, with read-only analysis and approval-gated pilot resizes | [Aldo Andrade](https://github.com/andrade-aldo) |
 
 ### Use case types
 
 | Type | Use cases | What you get |
 | --- | --- | --- |
-| Runnable demo | 01, 05, 06, 08, 09 | Scripts, infrastructure as code, sample apps, or reports you can run in a dedicated environment |
+| Runnable demo | 01, 05, 06, 08, 09, 10 | Scripts, infrastructure as code, sample apps, or reports you can run in a dedicated environment |
 | Design or guidance package | 02, 03, 04, 07 | Agent instructions, procedures, templates, diagrams, and illustrative outputs to adapt to your environment |
 
 > [!WARNING]
-> Use cases 05, 06, and 09 deploy billable Azure resources and include deliberate, human-approved fault injection. Use case 08 requires an existing Microsoft Fabric capacity and Azure SRE Agent. Use a dedicated, non-production subscription and follow each package's cleanup steps.
+> Use cases 05, 06, and 09 deploy billable Azure resources and include deliberate, human-approved fault injection. Use case 08 requires an existing Microsoft Fabric capacity and Azure SRE Agent. The demo lab for use case 10 deploys billable VMs and an Azure SRE Agent. Use a dedicated, non-production subscription and follow each package's cleanup steps.
 
 ## Getting started
 

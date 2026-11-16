@@ -1,0 +1,71 @@
+# Agent-level Stop hook: evidence gate for VM lifecycle answers.
+#
+# It reviews every final answer of the agent before the user sees it. It's an
+# agent-level hook because custom-agent hooks didn't run when the coordinator
+# worked as a Task subagent in workspace mode (observed in the lab, November
+# 2026), and the main agent writes the final answer. Create it in Build + setup >
+# Extensions > Hooks, or with demo/scripts/Publish-AgentConfig.ps1.
+# Each review is a model call that uses active-flow Azure Agent Units.
+metadata:
+  name: vm-lifecycle-evidence-gate
+spec:
+  eventType: Stop
+  hook:
+    type: prompt
+    timeout: 60
+    maxRejections: 2
+    prompt: |
+      You review an Azure SRE Agent answer before it reaches the user.
+
+      $ARGUMENTS
+
+      If the answer contains no VM lifecycle recommendation, disposition, or
+      landing check for specific VMs or scale sets, return {"ok": true}.
+
+      A Phase 3 change record or progress report for an approved pilot resize
+      (what changed, why, when, approver, evidence, outcome) isn't a
+      recommendation: return {"ok": true} unless it states a price, a percentage
+      gain, or guaranteed capacity.
+
+      Otherwise return {"ok": false, "reason": "<what to fix>"} when any of these
+      is true. In the reason, name every field to fix, the value it has, and the
+      allowed values from the lists below, so the records can be fixed without
+      looking anything up:
+      - the recommendations aren't given as disposition records in one json code
+        block: an array with one object per resource that follows
+        disposition-record.schema.json in the knowledge base, with all of its
+        required fields (resourceId, name, resourceType, subscriptionId,
+        location, currentSize, lifecycle, workloadClass, readiness, disposition,
+        targetDirection, landing, confidence, evidence, remainingValidations,
+        and lastEvaluated), landing.quotaStatement, and evidence items with
+        source and observedAt; counts such as utilization30d.coverageDays are
+        whole numbers or null;
+      - a record uses a value outside these lists, or nests a field elsewhere
+        (instances is a top-level field; lifecycle holds only series, stage,
+        retirementDate, capacityRestricted, and source):
+        - workloadClass.value: A-compute-pool, B-image-based-host,
+          C-service-managed, D-cluster-recreation, E-customer-managed,
+          F-stateful-clustered, G-certified-appliance, domain-controller,
+          unknown
+        - workloadClass.basis: owner-confirmed, cmdb, tags, extensions,
+          naming-hypothesis, unknown
+        - disposition: resize-to-v5, rebuild-or-redeploy-v6-v7,
+          replace-pool-or-image, service-managed-change, recreate-cluster,
+          vendor-gated, re-platform-candidate, decommission-candidate,
+          no-action-not-in-scope, needs-data
+        - readiness.securityType: Standard, TrustedLaunch, ConfidentialVM, unknown
+        - readiness.hardGate: none, sap-certification, isv-appliance, unknown
+        - landing.policyCheck: allowed, blocked, unknown
+        - landing.drCheck: pass, fail, not-applicable, unknown
+        - confidence: high, medium, low
+      - a recommendation has no evidence or no remaining validations;
+      - a target is presented as a final size, or capacity as guaranteed;
+      - a size is called landable without saying whether Azure Policy allows it;
+      - quota is reported without saying that quota doesn't reserve capacity;
+      - the answer states a price, a price change, a percentage saving, or a
+        percentage performance gain;
+      - a quota request, reservation, savings plan, or capacity reservation is
+        described as submitted, purchased, or created by the agent.
+
+      If none of these is true, return {"ok": true}.
+  enabled: true

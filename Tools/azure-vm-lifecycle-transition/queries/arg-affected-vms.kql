@@ -1,0 +1,72 @@
+// Azure Resource Graph: VMs and scale sets on End of Life or retired VM series.
+//
+// Run with the skill `arg-retiring-series` (az graph query) or in Resource Graph
+// Explorer. Read-only. Scope it with --subscriptions or --management-groups.
+//
+// Series keys, retirement dates, and capacity restrictions must match
+// knowledge/lifecycle-dates-authoritative.md. tests/test_package.py checks this.
+// Size names are matched in lower case. Flexible scale sets are skipped because
+// their instances are already returned as virtual machines. Patterns use
+// isnotempty(extract()) rather than matches regex so that the same block also
+// works in Log Analytics through arg(""), where matches regex returns no rows.
+Resources
+| where type in~ ('microsoft.compute/virtualmachines', 'microsoft.compute/virtualmachinescalesets')
+| where not(type =~ 'microsoft.compute/virtualmachinescalesets' and tostring(properties.orchestrationMode) =~ 'Flexible')
+| extend vmSize = iff(type =~ 'microsoft.compute/virtualmachines', tostring(properties.hardwareProfile.vmSize), tostring(sku.name))
+| extend sizeKey = tolower(vmSize)
+| extend lifecycleSeries = case(
+    isnotempty(extract(@'^standard_d\d+$', 0, sizeKey)),                     'D',
+    isnotempty(extract(@'^standard_ds\d+(-\d+)?$', 0, sizeKey)),             'Ds',
+    isnotempty(extract(@'^standard_d\d+_v2(_promo)?$', 0, sizeKey)),         'Dv2',
+    isnotempty(extract(@'^standard_ds\d+(-\d+)?_v2(_promo)?$', 0, sizeKey)), 'Dsv2',
+    isnotempty(extract(@'^standard_d\d+_v3$', 0, sizeKey)),                  'Dv3',
+    isnotempty(extract(@'^standard_d\d+s_v3$', 0, sizeKey)),                 'Dsv3',
+    isnotempty(extract(@'^standard_e\d+i?_v3$', 0, sizeKey)),                'Ev3',
+    isnotempty(extract(@'^standard_e\d+(-\d+)?i?s_v3$', 0, sizeKey)),        'Esv3',
+    isnotempty(extract(@'^standard_a\d+_v2$', 0, sizeKey)),                  'Av2',
+    isnotempty(extract(@'^standard_a\d+m_v2$', 0, sizeKey)),                 'Amv2',
+    isnotempty(extract(@'^standard_b\d+(ls|s|ms)$', 0, sizeKey)),            'Bv1',
+    isnotempty(extract(@'^standard_f\d+$', 0, sizeKey)),                     'F',
+    isnotempty(extract(@'^standard_f\d+s$', 0, sizeKey)),                    'Fs',
+    isnotempty(extract(@'^standard_f\d+s_v2$', 0, sizeKey)),                 'Fsv2',
+    isnotempty(extract(@'^standard_g\d+$', 0, sizeKey)),                     'G',
+    isnotempty(extract(@'^standard_gs\d+(-\d+)?$', 0, sizeKey)),             'Gs',
+    isnotempty(extract(@'^standard_l\d+s$', 0, sizeKey)),                    'Ls',
+    isnotempty(extract(@'^standard_l\d+s_v2$', 0, sizeKey)),                 'Lsv2',
+    isnotempty(extract(@'^standard_np\d+s$', 0, sizeKey)),                   'NP',
+    isnotempty(extract(@'^standard_hc\d+(-\d+)?rs$', 0, sizeKey)),           'HC',
+    isnotempty(extract(@'^standard_hb\d+(-\d+)?rs_v2$', 0, sizeKey)),        'HBv2',
+    isnotempty(extract(@'^standard_nv\d+s_v3$', 0, sizeKey)),                'NVv3',
+    isnotempty(extract(@'^standard_nv\d+as_v4$', 0, sizeKey)),               'NVv4',
+    isnotempty(extract(@'^standard_m192id?m?s_v2$', 0, sizeKey)),            'M192i_v2',
+    isnotempty(extract(@'^standard_dc\d+s_v3$', 0, sizeKey)),                'DCsv3',
+    isnotempty(extract(@'^standard_dc\d+ds_v3$', 0, sizeKey)),               'DCdsv3',
+    isnotempty(extract(@'^standard_dc\d+s?_v2$', 0, sizeKey)),               'DCsv2',
+    isnotempty(extract(@'^standard_nc\d+r?s_v3$', 0, sizeKey)),              'NCv3',
+    '')
+| where isnotempty(lifecycleSeries)
+| extend retirementDate = case(
+    lifecycleSeries in ('NCv3'),                                              datetime(2025-09-30),
+    lifecycleSeries in ('DCsv2'),                                             datetime(2026-06-30),
+    lifecycleSeries in ('NVv3', 'NVv4'),                                      datetime(2026-09-30),
+    lifecycleSeries in ('M192i_v2'),                                          datetime(2027-03-31),
+    lifecycleSeries in ('NP', 'HC', 'HBv2'),                                  datetime(2027-05-31),
+    lifecycleSeries in ('D', 'Ds', 'Dv2', 'Dsv2', 'Ls'),                      datetime(2028-05-01),
+    lifecycleSeries in ('Av2', 'Amv2', 'Bv1', 'F', 'Fs', 'Fsv2', 'G', 'Gs', 'Lsv2'), datetime(2028-11-15),
+    lifecycleSeries in ('DCsv3', 'DCdsv3'),                                   datetime(2029-10-31),
+    lifecycleSeries in ('Dv3', 'Dsv3', 'Ev3', 'Esv3'),                        datetime(2029-11-15),
+    datetime(null))
+| extend capacityRestricted = lifecycleSeries in ('F', 'Fs', 'Fsv2', 'D', 'Ds', 'Dv2', 'Dsv2', 'Dv3', 'Dsv3', 'Bv1', 'Av2', 'Amv2', 'Ev3', 'Esv3', 'G', 'Gs', 'Ls', 'Lsv2')
+| extend daysToRetirement = datetime_diff('day', retirementDate, now())
+| extend lifecycleStage = iff(daysToRetirement <= 0, 'Retired', 'End of Life')
+| extend priority = case(
+    daysToRetirement <= 0,   'P0 - retired, VM can no longer run',
+    daysToRetirement <= 365, 'P1 - retires within 12 months',
+    daysToRetirement <= 730, 'P2 - retires within 24 months',
+                             'P3 - retires later')
+| extend instances = iff(type =~ 'microsoft.compute/virtualmachinescalesets', toint(sku.capacity), 1)
+| extend powerState = tostring(properties.extended.instanceView.powerState.code)
+| project id, name, type, subscriptionId, resourceGroup, location, zones, vmSize, lifecycleSeries,
+          lifecycleStage, retirementDate, daysToRetirement, priority, capacityRestricted,
+          instances, powerState, tags
+| order by daysToRetirement asc, subscriptionId asc, name asc

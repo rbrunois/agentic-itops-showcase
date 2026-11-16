@@ -1,0 +1,50 @@
+// Log Analytics: 30-day utilization baseline per VM from VM insights.
+//
+// Run with QueryLogAnalyticsByWorkspaceId, or create a custom Kusto tool from this
+// query. Read-only. Needs VM insights (Azure Monitor Agent) data in InsightsMetrics.
+// VMs without VM insights return no row: report their utilization as unknown,
+// never as zero. Join the results to Resource Graph on lower-case resource ID.
+// Scale-set instances return one row each; scaleSetId groups them by scale set.
+let lookback = 30d;
+let binSize = 5m;
+let vmMetrics = InsightsMetrics
+    | where TimeGenerated > ago(lookback)
+    | where Origin == 'vm.azm.ms'
+    | extend resourceId = tolower(_ResourceId);
+let cpu = vmMetrics
+    | where Namespace == 'Processor' and Name == 'UtilizationPercentage'
+    | summarize cpuP50 = percentile(Val, 50), cpuP95 = percentile(Val, 95), cpuMax = max(Val),
+                firstSample = min(TimeGenerated), lastSample = max(TimeGenerated)
+      by resourceId;
+let memory = vmMetrics
+    | where Namespace == 'Memory' and Name == 'AvailableMB'
+    | extend memorySizeMB = todouble(todynamic(Tags)['vm.azm.ms/memorySizeMB'])
+    | where memorySizeMB > 0
+    | extend memUsedPct = 100.0 * (1.0 - Val / memorySizeMB)
+    | summarize memUsedP95 = percentile(memUsedPct, 95), memUsedMax = max(memUsedPct) by resourceId;
+// Average each disk or NIC per bin, then add devices together, so the result is
+// per-VM throughput regardless of the collection interval.
+let disk = vmMetrics
+    | where Namespace == 'LogicalDisk' and Name == 'TransfersPerSecond'
+    | extend device = tostring(todynamic(Tags)['vm.azm.ms/mountId'])
+    | summarize deviceIops = avg(Val) by resourceId, device, bin(TimeGenerated, binSize)
+    | summarize vmIops = sum(deviceIops) by resourceId, TimeGenerated
+    | summarize diskIopsP95 = percentile(vmIops, 95) by resourceId;
+let network = vmMetrics
+    | where Namespace == 'Network' and Name in ('ReadBytesPerSecond', 'WriteBytesPerSecond')
+    | extend device = strcat(tostring(todynamic(Tags)['vm.azm.ms/networkDeviceId']), '/', Name)
+    | summarize deviceBytes = avg(Val) by resourceId, device, bin(TimeGenerated, binSize)
+    | summarize vmBytes = sum(deviceBytes) by resourceId, TimeGenerated
+    | summarize netMbpsP95 = percentile(vmBytes * 8.0 / 1000000.0, 95) by resourceId;
+cpu
+| join kind=leftouter memory on resourceId
+| join kind=leftouter disk on resourceId
+| join kind=leftouter network on resourceId
+| extend coverageDays = datetime_diff('day', lastSample, firstSample),
+         scaleSetId = extract(@'^(.+/virtualmachinescalesets/[^/]+)/virtualmachines/', 1, resourceId)
+| project resourceId, scaleSetId,
+          cpuP50 = round(cpuP50, 1), cpuP95 = round(cpuP95, 1), cpuMax = round(cpuMax, 1),
+          memUsedP95 = round(memUsedP95, 1), memUsedMax = round(memUsedMax, 1),
+          diskIopsP95 = round(diskIopsP95, 0), netMbpsP95 = round(netMbpsP95, 1),
+          coverageDays, firstSample, lastSample
+| order by cpuP95 desc
