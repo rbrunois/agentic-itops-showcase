@@ -1,0 +1,55 @@
+# Agent-level hook: require approval before VM power, size, or NIC changes.
+#
+# Create it in Build + setup > Extensions > Hooks, or with
+# demo/scripts/Publish-AgentConfig.ps1. The format follows microsoft/sre-agent
+# sreagent-templates (config/hooks).
+# The script asks through hookSpecificOutput.permissionDecision. A top-level
+# "decision" accepts only allow or block: in the lab, {"decision": "ask"} was
+# logged as Allowed, which could skip the approval it's meant to require.
+# Primary controls: the global "ask" policy on RunAzCliWriteCommands
+# (agent/tool-access-policy.json) and Review mode on every Phase 3 task. In
+# Autonomous mode an "ask" policy is auto-approved, so never use Autonomous here.
+# The script never returns an explicit allow.
+metadata:
+  name: require-approval-on-resize
+spec:
+  eventType: PreToolUse
+  hook:
+    type: command
+    matcher: RunAzCliWriteCommands|RunShellCommand|RunInTerminal
+    timeout: 30
+    failMode: block
+    script: |
+      #!/usr/bin/env python3
+      import json
+      import re
+      import sys
+
+
+      def flatten(value):
+          if isinstance(value, dict):
+              return " ".join(flatten(item) for item in value.values())
+          if isinstance(value, list):
+              return " ".join(flatten(item) for item in value)
+          return str(value)
+
+
+      GATED = re.compile(
+          r"\baz\s+(?:vm|vmss)\s+(?:deallocate|resize|start|restart|stop|redeploy|reapply|reimage|"
+          r"run-command|update|update-instances|scale)\b|\baz\s+network\s+nic\s+update\b",
+          re.IGNORECASE,
+      )
+
+      context = json.load(sys.stdin)
+      if GATED.search(flatten(context.get("tool_input", {}))):
+          reason = "VM power, size, and NIC changes need approval from an SRE Agent Administrator."
+          print(json.dumps({
+              "reason": reason,
+              "hookSpecificOutput": {
+                  "hookEventName": "PreToolUse",
+                  "permissionDecision": "ask",
+                  "permissionDecisionReason": reason,
+              },
+          }))
+  permissionDecision: ask
+  enabled: true

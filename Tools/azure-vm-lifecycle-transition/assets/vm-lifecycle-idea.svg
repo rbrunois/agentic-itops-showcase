@@ -1,0 +1,185 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" aria-labelledby="title desc">
+  <title id="title">Finding End of Life VMs a new home with Azure SRE Agent</title>
+  <desc id="desc">Every Azure VM size series moves through four lifecycle stages over time: Current (v6 and v7 general purpose, adopt for new deployments), Extended (v4 and v5, fully supported and the smoothest step), End of Life (v1 to v3 with a retirement date, plan and finish the move), and Retired (VMs can't be created, resized into, or run, and remaining VMs are deallocated). Example VMs on End of Life series, Dsv2 retiring 2028-05-01, Fsv2 retiring 2028-11-15, and Esv3 retiring 2029-11-15, need a new home: v5 for the smoothest move, or v6 and v7 for the latest features through a planned upgrade. Without a plan, VMs stop at the retirement date. Azure SRE Agent runs in the customer's tenant with its own managed identity and finds each VM a new home in four steps: Analyze, Recommend, and Validate, which are read-only, and Automate, which needs a person's approval. A weekly read-only scheduled task rescans, compares, and reports what drifted, and memory keeps decisions and exceptions. Each VM gets a proposed new home with evidence and landing checks. Guardrails: read-only first, people approve every change, no prices, purchases, capacity promises, or quota submissions, and vendor appliances and domain controllers stay manual.</desc>
+  <defs>
+    <marker id="arrow-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a8a8a"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e8b57"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c50f1f"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0f6cbd"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: "Segoe UI", Helvetica, Arial, sans-serif; fill: #1b1b1b; }
+    .title { font-size: 26px; font-weight: 700; }
+    .subtitle { font-size: 14px; fill: #424242; }
+    .section { font-size: 12px; font-weight: 700; letter-spacing: 1px; fill: #616161; }
+    .meta { font-size: 12px; fill: #616161; }
+    .stage { font-size: 16px; font-weight: 700; }
+    .stage-current { fill: #1d6b41; }
+    .stage-extended { fill: #0f5ca8; }
+    .stage-eol { fill: #a35a0c; }
+    .stage-retired { fill: #a4262c; }
+    .stage-line { font-size: 12.5px; }
+    .stage-note { font-size: 12px; fill: #424242; }
+    .chip-heading { font-size: 12px; font-weight: 700; fill: #a35a0c; }
+    .chip { font-size: 11.5px; }
+    .move { font-size: 12px; font-weight: 700; fill: #1d6b41; }
+    .stop { font-size: 12px; fill: #a4262c; }
+    .hint { font-size: 11.5px; font-style: italic; fill: #616161; }
+    .agent { font-size: 16px; font-weight: 700; fill: #0f6cbd; }
+    .agent-meta { font-size: 12.5px; fill: #424242; }
+    .step { font-size: 15px; font-weight: 700; }
+    .step-gated { fill: #a4262c; }
+    .step-number { font-size: 13px; font-weight: 700; fill: #ffffff; }
+    .pill { font-size: 10.5px; font-weight: 600; fill: #0f5ca8; }
+    .pill-gated { fill: #a4262c; }
+    .body { font-size: 12px; }
+    .uses { font-size: 11px; fill: #6b5bd2; }
+    .loop-label { font-size: 12px; font-weight: 600; fill: #0f5ca8; }
+    .box-heading { font-size: 14px; font-weight: 700; }
+    .bullet { font-size: 12.5px; }
+    .footnote { font-size: 11px; font-style: italic; fill: #616161; }
+    .flow { stroke: #0f6cbd; stroke-width: 1.5; fill: none; }
+    .flow-gated { stroke: #c50f1f; stroke-width: 1.5; stroke-dasharray: 6 4; fill: none; }
+    .move-line { stroke: #2e8b57; stroke-width: 2; fill: none; }
+    .stop-line { stroke: #c50f1f; stroke-width: 1.5; stroke-dasharray: 6 4; fill: none; }
+  </style>
+
+  <rect x="0" y="0" width="1280" height="800" fill="#ffffff"/>
+
+  <text class="title" x="40" y="48">Finding End of Life VMs a new home with Azure SRE Agent</text>
+  <text class="subtitle" x="40" y="76">Every VM size series ages. SRE Agent finds the VMs on series that are ending, plans where each one moves, and checks that it can land.</text>
+
+  <!-- The VM size lifecycle -->
+  <text class="section" x="40" y="106">THE VM SIZE LIFECYCLE</text>
+  <text class="meta" x="1006" y="106" text-anchor="end">time</text>
+  <line x1="1014" y1="102" x2="1236" y2="102" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#arrow-grey)"/>
+
+  <polygon points="40,118 318,118 340,157 318,196 40,196" fill="#e7f5ec" stroke="#2e8b57" stroke-width="1.5"/>
+  <text class="stage stage-current" x="180" y="147" text-anchor="middle">Current</text>
+  <text class="stage-line" x="180" y="168" text-anchor="middle">v6 and v7 general purpose</text>
+  <text class="stage-note" x="180" y="186" text-anchor="middle">Adopt for new deployments</text>
+
+  <polygon points="340,118 618,118 640,157 618,196 340,196 362,157" fill="#e8f1fb" stroke="#0f6cbd" stroke-width="1.5"/>
+  <text class="stage stage-extended" x="490" y="147" text-anchor="middle">Extended</text>
+  <text class="stage-line" x="490" y="168" text-anchor="middle">v4 and v5 general purpose</text>
+  <text class="stage-note" x="490" y="186" text-anchor="middle">Fully supported; smoothest step</text>
+
+  <polygon points="640,118 918,118 940,157 918,196 640,196 662,157" fill="#fff4e6" stroke="#d9822b" stroke-width="1.5"/>
+  <text class="stage stage-eol" x="790" y="147" text-anchor="middle">End of Life</text>
+  <text class="stage-line" x="790" y="168" text-anchor="middle">v1 to v3 with a retirement date</text>
+  <text class="stage-note" x="790" y="186" text-anchor="middle">Plan and finish the move</text>
+
+  <polygon points="940,118 1240,118 1240,196 940,196 962,157" fill="#fde7e9" stroke="#c50f1f" stroke-width="1.5"/>
+  <text class="stage stage-retired" x="1098" y="147" text-anchor="middle">Retired</text>
+  <text class="stage-line" x="1098" y="168" text-anchor="middle">Can't create, resize into, or run</text>
+  <text class="stage-note" x="1098" y="186" text-anchor="middle">Remaining VMs are deallocated</text>
+
+  <!-- VMs on End of Life series and their possible moves -->
+  <rect x="652" y="208" width="276" height="104" rx="8" fill="#fffaf3" stroke="#d9822b"/>
+  <text class="chip-heading" x="790" y="228" text-anchor="middle">Your VMs on End of Life series</text>
+  <rect x="668" y="238" width="244" height="20" rx="10" fill="#ffffff" stroke="#e3b27a"/>
+  <text class="chip" x="790" y="252" text-anchor="middle">Dsv2 · retires 2028-05-01</text>
+  <rect x="668" y="261" width="244" height="20" rx="10" fill="#ffffff" stroke="#e3b27a"/>
+  <text class="chip" x="790" y="275" text-anchor="middle">Fsv2 · retires 2028-11-15</text>
+  <rect x="668" y="284" width="244" height="20" rx="10" fill="#ffffff" stroke="#e3b27a"/>
+  <text class="chip" x="790" y="298" text-anchor="middle">Esv3 · retires 2029-11-15</text>
+
+  <path class="move-line" d="M652,242 L490,242 L490,201" marker-end="url(#arrow-green)"/>
+  <text class="move" x="571" y="234" text-anchor="middle">v5: smoothest move</text>
+  <path class="move-line" d="M652,292 L182,292 L182,201" marker-end="url(#arrow-green)"/>
+  <text class="move" x="345" y="284" text-anchor="middle">v6 or v7: latest features, planned upgrade</text>
+  <text class="hint" x="200" y="262">New homes that SRE Agent plans and checks</text>
+
+  <path class="stop-line" d="M928,260 L1098,260 L1098,201" marker-end="url(#arrow-red)"/>
+  <text class="stop" x="1098" y="282" text-anchor="middle">Without a plan, VMs stop</text>
+  <text class="stop" x="1098" y="298" text-anchor="middle">at the retirement date</text>
+
+  <!-- Azure SRE Agent -->
+  <text class="section" x="40" y="344">HOW AZURE SRE AGENT FINDS EACH VM A NEW HOME</text>
+  <text class="meta" x="1240" y="344" text-anchor="end">In your tenant · its own managed identity · on demand and every week</text>
+
+  <rect x="40" y="356" width="1200" height="256" rx="12" fill="#f7f9fc" stroke="#0f6cbd" stroke-width="1.5"/>
+  <text class="agent" x="60" y="384">Azure SRE Agent</text>
+  <text class="agent-meta" x="212" y="384">custom agents · skills · knowledge files · memory · a weekly scheduled task</text>
+
+  <rect x="60" y="400" width="263" height="148" rx="8" fill="#ffffff" stroke="#0f6cbd"/>
+  <circle cx="84" cy="421" r="12" fill="#0f6cbd"/>
+  <text class="step-number" x="84" y="426" text-anchor="middle">1</text>
+  <text class="step" x="104" y="426">Analyze</text>
+  <rect x="237" y="411" width="70" height="20" rx="10" fill="#e8f1fb" stroke="#0f6cbd"/>
+  <text class="pill" x="272" y="425" text-anchor="middle">read-only</text>
+  <text class="body" x="76" y="454">Find every VM and scale set on an</text>
+  <text class="body" x="76" y="472">End of Life series. Profile size,</text>
+  <text class="body" x="76" y="490">generation, disks, network, and use.</text>
+  <text class="body" x="76" y="508">Classify the workload pattern.</text>
+  <text class="uses" x="76" y="534">Resource Graph · Azure Monitor</text>
+
+  <line class="flow" x1="323" y1="474" x2="357" y2="474" marker-end="url(#arrow-blue)"/>
+
+  <rect x="359" y="400" width="263" height="148" rx="8" fill="#ffffff" stroke="#0f6cbd"/>
+  <circle cx="383" cy="421" r="12" fill="#0f6cbd"/>
+  <text class="step-number" x="383" y="426" text-anchor="middle">2</text>
+  <text class="step" x="403" y="426">Recommend</text>
+  <rect x="536" y="411" width="70" height="20" rx="10" fill="#e8f1fb" stroke="#0f6cbd"/>
+  <text class="pill" x="571" y="425" text-anchor="middle">read-only</text>
+  <text class="body" x="375" y="454">Choose the path: resize to v5,</text>
+  <text class="body" x="375" y="472">upgrade to v6 or v7, or replace</text>
+  <text class="body" x="375" y="490">the pool. Propose a target family</text>
+  <text class="body" x="375" y="508">and size class, with the evidence.</text>
+  <text class="uses" x="375" y="534">Skills · knowledge files</text>
+
+  <line class="flow" x1="622" y1="474" x2="656" y2="474" marker-end="url(#arrow-blue)"/>
+
+  <rect x="658" y="400" width="263" height="148" rx="8" fill="#ffffff" stroke="#0f6cbd"/>
+  <circle cx="682" cy="421" r="12" fill="#0f6cbd"/>
+  <text class="step-number" x="682" y="426" text-anchor="middle">3</text>
+  <text class="step" x="702" y="426">Validate</text>
+  <rect x="835" y="411" width="70" height="20" rx="10" fill="#e8f1fb" stroke="#0f6cbd"/>
+  <text class="pill" x="870" y="425" text-anchor="middle">read-only</text>
+  <text class="body" x="674" y="454">Check quota headroom, zone</text>
+  <text class="body" x="674" y="472">availability, capacity, and the</text>
+  <text class="body" x="674" y="490">disaster recovery footprint. Draft</text>
+  <text class="body" x="674" y="508">quota requests for people to send.</text>
+  <text class="uses" x="674" y="534">Azure CLI reads · quota and SKU data</text>
+
+  <line class="flow-gated" x1="921" y1="474" x2="955" y2="474" marker-end="url(#arrow-red)"/>
+
+  <rect x="957" y="400" width="263" height="148" rx="8" fill="#fffafa" stroke="#c50f1f" stroke-dasharray="6 4"/>
+  <circle cx="981" cy="421" r="12" fill="#c50f1f"/>
+  <text class="step-number" x="981" y="426" text-anchor="middle">4</text>
+  <text class="step step-gated" x="1001" y="426">Automate</text>
+  <rect x="1108" y="411" width="96" height="20" rx="10" fill="#fde7e9" stroke="#c50f1f"/>
+  <text class="pill pill-gated" x="1156" y="425" text-anchor="middle">needs approval</text>
+  <text class="body" x="973" y="454">Resize pilot VMs in one resource</text>
+  <text class="body" x="973" y="472">group after a person approves.</text>
+  <text class="body" x="973" y="490">Verify each change; roll back if</text>
+  <text class="body" x="973" y="508">a check fails. Every step is logged.</text>
+  <text class="uses" x="973" y="534">Review mode · tool policies · hooks</text>
+
+  <path class="flow" d="M789,548 L789,572 L191,572 L191,551" marker-end="url(#arrow-blue)"/>
+  <text class="loop-label" x="490" y="594" text-anchor="middle">Every week, a read-only scheduled task rescans, compares, and reports what drifted</text>
+  <text class="meta" x="1220" y="594" text-anchor="end">Memory keeps decisions and exceptions</text>
+
+  <!-- Outcomes and guardrails -->
+  <rect x="40" y="632" width="590" height="110" rx="10" fill="#eefaf0" stroke="#2e8b57"/>
+  <text class="box-heading" x="58" y="657">What each VM gets</text>
+  <text class="bullet" x="58" y="682">• A new home: the path, target family, and size class, never a final size</text>
+  <text class="bullet" x="58" y="704">• The evidence behind it, and what's still left to check</text>
+  <text class="bullet" x="58" y="726">• Landing checks for quota, zones, and capacity, plus quota request drafts</text>
+
+  <rect x="650" y="632" width="590" height="110" rx="10" fill="#fff4e6" stroke="#d9822b"/>
+  <text class="box-heading" x="668" y="657">Guardrails</text>
+  <text class="bullet" x="668" y="682">• Read-only first; people approve every change</text>
+  <text class="bullet" x="668" y="704">• No prices, purchases, capacity promises, or quota submissions</text>
+  <text class="bullet" x="668" y="726">• Vendor appliances and domain controllers stay manual</text>
+
+  <text class="footnote" x="40" y="776">Lifecycle stages, retirement dates, and target families: Microsoft Learn, verified 2026-11-11. Example VMs are synthetic.</text>
+</svg>

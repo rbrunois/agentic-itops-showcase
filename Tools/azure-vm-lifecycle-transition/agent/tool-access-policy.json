@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "RunAzCliReadCommands",
+      "QueryLogAnalyticsByWorkspaceId",
+      "SearchMemory"
+    ],
+    "ask": [
+      "RunAzCliWriteCommands"
+    ],
+    "deny": [
+      "RunAzCliWriteCommands(az reservations *)",
+      "RunAzCliWriteCommands(az billing-benefits *)",
+      "RunAzCliWriteCommands(az capacity reservation *)",
+      "RunAzCliWriteCommands(az quota *)",
+      "RunAzCliWriteCommands(az support *)",
+      "RunAzCliWriteCommands(az role *)",
+      "RunAzCliWriteCommands(az deployment *)",
+      "RunAzCliWriteCommands(az vm create *)",
+      "RunAzCliWriteCommands(az vmss create *)",
+      "RunAzCliWriteCommands(az rest *)",
+      "bash(az * delete *)"
+    ]
+  }
+}

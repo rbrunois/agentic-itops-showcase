@@ -1,0 +1,134 @@
+// Log Analytics: VM lifecycle transition board, for demo/scripts/New-TransitionBoard.ps1
+// or an Azure SRE Agent live report.
+//
+// Run it through the agent's Log Analytics connector or with the Log Analytics API.
+// It reads Azure Resource
+// Graph with arg("") (cross-service query, preview) and VM insights data, so a
+// refresh needs no model call. Read-only. arg("") returns only the resources that
+// the identity running the query can read.
+//
+// The lifecycle block, from sizeKey to capacityRestricted, must stay identical to
+// arg-affected-vms.kql; tests/test_package.py checks this.
+// nextStep is a deterministic first action from tags and configuration, not a
+// disposition. Confirm it with the owner and the agent's disposition record.
+//
+// arg("") limits found in the lab (November 2026): use a single arg("")
+// reference, because joining two of them returns no rows; and join Log Analytics
+// data before date arithmetic on retirementDate, which otherwise returns no rows.
+let lookback = 30d;
+// Scale-set instances are rolled up to their scale set.
+let utilization = InsightsMetrics
+    | where TimeGenerated > ago(lookback) and Origin == 'vm.azm.ms'
+    | where Namespace == 'Processor' and Name == 'UtilizationPercentage'
+    | extend resourceId = tolower(_ResourceId)
+    | extend resourceId = coalesce(extract(@'^(.+/virtualmachinescalesets/[^/]+)/virtualmachines/', 1, resourceId), resourceId)
+    | summarize cpuP95 = round(percentile(Val, 95), 1), firstSample = min(TimeGenerated), lastSample = max(TimeGenerated) by resourceId
+    | extend coverageDays = datetime_diff('day', lastSample, firstSample);
+// One Resource Graph read: VMs, scale sets, and the NICs of each VM, rolled up per VM.
+arg("").Resources
+| where type in~ ('microsoft.compute/virtualmachines', 'microsoft.compute/virtualmachinescalesets', 'microsoft.network/networkinterfaces')
+| where not(type =~ 'microsoft.compute/virtualmachinescalesets' and tostring(properties.orchestrationMode) =~ 'Flexible')
+| extend isNic = type =~ 'microsoft.network/networkinterfaces'
+| extend resourceId = iff(isNic, tolower(tostring(properties.virtualMachine.id)), tolower(id))
+| where isnotempty(resourceId)
+| extend vmType = iff(isNic, '', type),
+         vmName = iff(isNic, '', name),
+         vmResourceGroup = iff(isNic, '', resourceGroup),
+         vmLocation = iff(isNic, '', location),
+         size = iff(isNic, '', iff(type =~ 'microsoft.compute/virtualmachines', tostring(properties.hardwareProfile.vmSize), tostring(sku.name))),
+         capacity = iff(type =~ 'microsoft.compute/virtualmachinescalesets', toint(sku.capacity), iff(isNic, 0, 1)),
+         power = iff(isNic, '', tostring(properties.extended.instanceView.powerState.code)),
+         gen = iff(isNic, '', tostring(properties.extended.instanceView.hyperVGeneration)),
+         marketplace = iff(isNic, 0, toint(isnotempty(plan))),
+         ownerTag = iff(isNic, '', coalesce(tostring(tags['owner']), tostring(tags['Owner']))),
+         roleTag = iff(isNic, '', tolower(coalesce(tostring(tags['role']), tostring(tags['Role'])))),
+         drTag = iff(isNic, '', coalesce(tostring(tags['dr-region']), tostring(tags['DR-Region']))),
+         acceleratedNic = iff(isNic, toint(tobool(properties.enableAcceleratedNetworking)), 0),
+         forwardingNic = iff(isNic, toint(tobool(properties.enableIPForwarding)), 0)
+| summarize type = max(vmType), name = max(vmName), resourceGroup = max(vmResourceGroup), location = max(vmLocation),
+            vmSize = max(size), instances = max(capacity), powerState = max(power), generation = max(gen),
+            isMarketplace = max(marketplace), owner = max(ownerTag), role = max(roleTag), drRegion = max(drTag),
+            acceleratedNics = sum(acceleratedNic), forwardingNics = sum(forwardingNic)
+  by resourceId
+| where isnotempty(name)
+// Optional: limit the board to resource groups.
+// | where resourceGroup in~ ('<resourceGroup1>', '<resourceGroup2>')
+| extend sizeKey = tolower(vmSize)
+| extend lifecycleSeries = case(
+    isnotempty(extract(@'^standard_d\d+$', 0, sizeKey)),                     'D',
+    isnotempty(extract(@'^standard_ds\d+(-\d+)?$', 0, sizeKey)),             'Ds',
+    isnotempty(extract(@'^standard_d\d+_v2(_promo)?$', 0, sizeKey)),         'Dv2',
+    isnotempty(extract(@'^standard_ds\d+(-\d+)?_v2(_promo)?$', 0, sizeKey)), 'Dsv2',
+    isnotempty(extract(@'^standard_d\d+_v3$', 0, sizeKey)),                  'Dv3',
+    isnotempty(extract(@'^standard_d\d+s_v3$', 0, sizeKey)),                 'Dsv3',
+    isnotempty(extract(@'^standard_e\d+i?_v3$', 0, sizeKey)),                'Ev3',
+    isnotempty(extract(@'^standard_e\d+(-\d+)?i?s_v3$', 0, sizeKey)),        'Esv3',
+    isnotempty(extract(@'^standard_a\d+_v2$', 0, sizeKey)),                  'Av2',
+    isnotempty(extract(@'^standard_a\d+m_v2$', 0, sizeKey)),                 'Amv2',
+    isnotempty(extract(@'^standard_b\d+(ls|s|ms)$', 0, sizeKey)),            'Bv1',
+    isnotempty(extract(@'^standard_f\d+$', 0, sizeKey)),                     'F',
+    isnotempty(extract(@'^standard_f\d+s$', 0, sizeKey)),                    'Fs',
+    isnotempty(extract(@'^standard_f\d+s_v2$', 0, sizeKey)),                 'Fsv2',
+    isnotempty(extract(@'^standard_g\d+$', 0, sizeKey)),                     'G',
+    isnotempty(extract(@'^standard_gs\d+(-\d+)?$', 0, sizeKey)),             'Gs',
+    isnotempty(extract(@'^standard_l\d+s$', 0, sizeKey)),                    'Ls',
+    isnotempty(extract(@'^standard_l\d+s_v2$', 0, sizeKey)),                 'Lsv2',
+    isnotempty(extract(@'^standard_np\d+s$', 0, sizeKey)),                   'NP',
+    isnotempty(extract(@'^standard_hc\d+(-\d+)?rs$', 0, sizeKey)),           'HC',
+    isnotempty(extract(@'^standard_hb\d+(-\d+)?rs_v2$', 0, sizeKey)),        'HBv2',
+    isnotempty(extract(@'^standard_nv\d+s_v3$', 0, sizeKey)),                'NVv3',
+    isnotempty(extract(@'^standard_nv\d+as_v4$', 0, sizeKey)),               'NVv4',
+    isnotempty(extract(@'^standard_m192id?m?s_v2$', 0, sizeKey)),            'M192i_v2',
+    isnotempty(extract(@'^standard_dc\d+s_v3$', 0, sizeKey)),                'DCsv3',
+    isnotempty(extract(@'^standard_dc\d+ds_v3$', 0, sizeKey)),               'DCdsv3',
+    isnotempty(extract(@'^standard_dc\d+s?_v2$', 0, sizeKey)),               'DCsv2',
+    isnotempty(extract(@'^standard_nc\d+r?s_v3$', 0, sizeKey)),              'NCv3',
+    '')
+| where isnotempty(lifecycleSeries)
+| extend retirementDate = case(
+    lifecycleSeries in ('NCv3'),                                              datetime(2025-09-30),
+    lifecycleSeries in ('DCsv2'),                                             datetime(2026-06-30),
+    lifecycleSeries in ('NVv3', 'NVv4'),                                      datetime(2026-09-30),
+    lifecycleSeries in ('M192i_v2'),                                          datetime(2027-03-31),
+    lifecycleSeries in ('NP', 'HC', 'HBv2'),                                  datetime(2027-05-31),
+    lifecycleSeries in ('D', 'Ds', 'Dv2', 'Dsv2', 'Ls'),                      datetime(2028-05-01),
+    lifecycleSeries in ('Av2', 'Amv2', 'Bv1', 'F', 'Fs', 'Fsv2', 'G', 'Gs', 'Lsv2'), datetime(2028-11-15),
+    lifecycleSeries in ('DCsv3', 'DCdsv3'),                                   datetime(2029-10-31),
+    lifecycleSeries in ('Dv3', 'Dsv3', 'Ev3', 'Esv3'),                        datetime(2029-11-15),
+    datetime(null))
+| extend capacityRestricted = lifecycleSeries in ('F', 'Fs', 'Fsv2', 'D', 'Ds', 'Dv2', 'Dsv2', 'Dv3', 'Dsv3', 'Bv1', 'Av2', 'Amv2', 'Ev3', 'Esv3', 'G', 'Gs', 'Ls', 'Lsv2')
+| join kind=leftouter utilization on resourceId
+| extend daysToRetirement = datetime_diff('day', retirementDate, now())
+| extend priority = case(
+    daysToRetirement <= 0,   'P0 - retired, VM can no longer run',
+    daysToRetirement <= 365, 'P1 - retires within 12 months',
+    daysToRetirement <= 730, 'P2 - retires within 24 months',
+                             'P3 - retires later')
+| extend isScaleSet = type =~ 'microsoft.compute/virtualmachinescalesets'
+| extend acceleratedNetworking = iff(isScaleSet, bool(null), acceleratedNics > 0),
+         ipForwarding = forwardingNics > 0
+| extend nextStep = case(
+    isMarketplace == 1 or ipForwarding or role in ('nva', 'firewall', 'appliance'),
+        'Vendor gate: get vendor certification for the target family. No automation.',
+    role == 'domain-controller',
+        'Build a new domain controller on a current size, replicate, then demote this one.',
+    isScaleSet,
+        'Update the scale set model or image to a current family, then replace instances in batches.',
+    powerState =~ 'PowerState/deallocated' or isempty(owner),
+        'Needs data: confirm the owner and whether the VM is still needed.',
+    role in ('database', 'sql') or isnotempty(drRegion),
+        strcat('Stateful: plan the move with replication and check the DR footprint', iff(isnotempty(drRegion), strcat(' in ', drRegion), ''), '.'),
+    generation =~ 'V1',
+        strcat(iff(acceleratedNetworking, 'Resize to v5', 'Enable Accelerated Networking, then resize to v5'), '; v6 or v7 needs a Generation 2 rebuild.'),
+    not(acceleratedNetworking),
+        'Enable Accelerated Networking, then resize to v5.',
+    cpuP95 >= 80,
+        'Resize to v5 and evaluate a larger size class: CPU p95 is 80% or more.',
+    'Resize to v5 in the same size class after the owner confirms.')
+| extend utilizationNote = case(
+    isnull(cpuP95), 'No VM insights data',
+    coverageDays < 14, strcat('Only ', coverageDays, ' days of data'),
+    'OK')
+| project name, resourceGroup, location, vmSize, lifecycleSeries, retirementDate, daysToRetirement, priority,
+          capacityRestricted, instances, powerState, generation, owner, role, cpuP95, utilizationNote, nextStep
+| order by daysToRetirement asc, name asc

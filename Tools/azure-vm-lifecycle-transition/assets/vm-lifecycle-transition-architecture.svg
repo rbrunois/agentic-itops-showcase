@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="820" viewBox="0 0 1280 820" role="img" aria-labelledby="title desc">
+  <title id="title">Azure VM Lifecycle Transition Accelerator architecture</title>
+  <desc id="desc">Chat, a weekly scheduled task in Review mode, or an optional HTTP wave gate start the vm-lifecycle-coordinator custom agent in Azure SRE Agent. The coordinator runs four read-only steps, each with its own skill: inventory with arg-retiring-series, readiness with gen2-nvme-mana-readiness, a new home with resize-vs-redeploy-decision, and landing with quota-vs-allocation. They read Azure Resource Graph, VM, NIC and SKU properties, Azure Monitor and Log Analytics, quota usage, SKU availability, Azure Policy, and optionally reservations. In Phase 3 only, after human approval by an SRE Agent Administrator, migration-executor resizes VMs in the pilot resource group. Knowledge files, agent memory, and governance controls (RBAC, tool access policies, Review mode, hooks, and an agent-level Stop hook that checks the evidence) support every step. Outputs for people are disposition records, a transition board, weekly drift reports, quota request drafts, redeploy runbook drafts, and pilot change records. The agent never buys commitments, submits quota requests, or creates capacity reservations.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#424242"/>
+    </marker>
+    <marker id="arrow-gated" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c50f1f"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: "Segoe UI", Helvetica, Arial, sans-serif; fill: #1b1b1b; }
+    .title { font-size: 24px; font-weight: 700; }
+    .subtitle { font-size: 14px; fill: #424242; }
+    .heading { font-size: 14px; font-weight: 700; }
+    .agent-heading { font-size: 15px; font-weight: 700; fill: #0f6cbd; }
+    .name { font-size: 12px; font-weight: 700; }
+    .label { font-size: 12px; }
+    .small { font-size: 11px; fill: #424242; }
+    .note { font-size: 11px; font-style: italic; fill: #616161; }
+    .skill-tag { font-size: 10.5px; fill: #6b5bd2; }
+    .gated { font-size: 12px; font-weight: 700; fill: #c50f1f; }
+    .item { font-size: 11.5px; }
+    .flow { stroke: #424242; stroke-width: 1.5; fill: none; }
+    .flow-gated { stroke: #c50f1f; stroke-width: 1.5; stroke-dasharray: 6 4; fill: none; }
+  </style>
+
+  <rect x="0" y="0" width="1280" height="820" fill="#ffffff"/>
+
+  <text class="title" x="40" y="44">Azure VM Lifecycle Transition Accelerator</text>
+  <text class="subtitle" x="40" y="72">Azure SRE Agent finds VMs on End of Life series, proposes evidence-backed new homes, and checks that they can land.</text>
+
+  <!-- Triggers -->
+  <rect x="40" y="100" width="190" height="250" rx="10" fill="#f5f5f5" stroke="#8a8a8a"/>
+  <text class="heading" x="135" y="124" text-anchor="middle">Triggers</text>
+  <rect x="55" y="140" width="160" height="56" rx="8" fill="#ffffff" stroke="#8a8a8a"/>
+  <text class="name" x="135" y="163" text-anchor="middle">Chat</text>
+  <text class="small" x="135" y="183" text-anchor="middle">/agent in the portal</text>
+  <rect x="55" y="206" width="160" height="56" rx="8" fill="#ffffff" stroke="#8a8a8a"/>
+  <text class="name" x="135" y="229" text-anchor="middle">Scheduled task</text>
+  <text class="small" x="135" y="249" text-anchor="middle">weekly, Review mode</text>
+  <rect x="55" y="272" width="160" height="56" rx="8" fill="#ffffff" stroke="#8a8a8a"/>
+  <text class="name" x="135" y="295" text-anchor="middle">Wave gate</text>
+  <text class="small" x="135" y="315" text-anchor="middle">HTTP trigger, optional</text>
+
+  <!-- Azure SRE Agent -->
+  <rect x="250" y="100" width="740" height="600" rx="12" fill="#f7f9fc" stroke="#0f6cbd" stroke-width="1.5"/>
+  <text class="agent-heading" x="270" y="127">Azure SRE Agent · customer tenant · managed identity</text>
+
+  <rect x="270" y="142" width="700" height="58" rx="8" fill="#e8f1fb" stroke="#0f6cbd"/>
+  <text class="heading" x="620" y="166" text-anchor="middle">vm-lifecycle-coordinator</text>
+  <text class="label" x="620" y="187" text-anchor="middle">Runs the four steps with their skills and assembles one disposition record per VM</text>
+  <line class="flow" x1="230" y1="171" x2="269" y2="171" marker-end="url(#arrow)"/>
+
+  <line class="flow" x1="347" y1="200" x2="347" y2="239" marker-end="url(#arrow)"/>
+  <text class="note" x="356" y="224">runs each step</text>
+  <line class="flow" x1="893" y1="240" x2="893" y2="201" marker-end="url(#arrow)"/>
+  <text class="note" x="884" y="224" text-anchor="end">results</text>
+
+  <!-- Steps -->
+  <rect x="270" y="240" width="154" height="70" rx="8" fill="#ffffff" stroke="#0f6cbd"/>
+  <text class="name" x="347" y="268" text-anchor="middle">1. Inventory</text>
+  <text class="small" x="347" y="290" text-anchor="middle">Analyze</text>
+  <rect x="452" y="240" width="154" height="70" rx="8" fill="#ffffff" stroke="#0f6cbd"/>
+  <text class="name" x="529" y="268" text-anchor="middle">2. Readiness</text>
+  <text class="small" x="529" y="290" text-anchor="middle">Analyze</text>
+  <rect x="634" y="240" width="154" height="70" rx="8" fill="#ffffff" stroke="#0f6cbd"/>
+  <text class="name" x="711" y="268" text-anchor="middle">3. New home</text>
+  <text class="small" x="711" y="290" text-anchor="middle">Recommend</text>
+  <rect x="816" y="240" width="154" height="70" rx="8" fill="#ffffff" stroke="#0f6cbd"/>
+  <text class="name" x="893" y="268" text-anchor="middle">4. Landing</text>
+  <text class="small" x="893" y="290" text-anchor="middle">Validate: quota, size, policy</text>
+  <line class="flow" x1="424" y1="275" x2="451" y2="275" marker-end="url(#arrow)"/>
+  <line class="flow" x1="606" y1="275" x2="633" y2="275" marker-end="url(#arrow)"/>
+  <line class="flow" x1="788" y1="275" x2="815" y2="275" marker-end="url(#arrow)"/>
+
+  <!-- Skills -->
+  <line x1="347" y1="310" x2="347" y2="330" stroke="#6b5bd2"/>
+  <line x1="529" y1="310" x2="529" y2="330" stroke="#6b5bd2"/>
+  <line x1="711" y1="310" x2="711" y2="330" stroke="#6b5bd2"/>
+  <line x1="893" y1="310" x2="893" y2="330" stroke="#6b5bd2"/>
+  <rect x="270" y="330" width="154" height="46" rx="8" fill="#f3f0ff" stroke="#6b5bd2"/>
+  <text class="skill-tag" x="347" y="347" text-anchor="middle">skill</text>
+  <text class="small" x="347" y="365" text-anchor="middle">arg-retiring-series</text>
+  <rect x="452" y="330" width="154" height="46" rx="8" fill="#f3f0ff" stroke="#6b5bd2"/>
+  <text class="skill-tag" x="529" y="347" text-anchor="middle">skill</text>
+  <text class="small" x="529" y="365" text-anchor="middle">gen2-nvme-mana-readiness</text>
+  <rect x="634" y="330" width="154" height="46" rx="8" fill="#f3f0ff" stroke="#6b5bd2"/>
+  <text class="skill-tag" x="711" y="347" text-anchor="middle">skill</text>
+  <text class="small" x="711" y="365" text-anchor="middle">resize-vs-redeploy-decision</text>
+  <rect x="816" y="330" width="154" height="46" rx="8" fill="#f3f0ff" stroke="#6b5bd2"/>
+  <text class="skill-tag" x="893" y="347" text-anchor="middle">skill</text>
+  <text class="small" x="893" y="365" text-anchor="middle">quota-vs-allocation</text>
+
+  <!-- Phase 3 lane -->
+  <text class="gated" x="270" y="426">Phase 3 only</text>
+  <text class="small" x="270" y="444">approval-gated</text>
+  <path class="flow-gated" d="M893,376 L893,388 L529,388 L529,401" marker-end="url(#arrow-gated)"/>
+  <rect x="452" y="402" width="154" height="58" rx="8" fill="#fde7e9" stroke="#c50f1f"/>
+  <text class="name" x="529" y="426" text-anchor="middle">Human approval</text>
+  <text class="small" x="529" y="446" text-anchor="middle">SRE Agent Administrator</text>
+  <line class="flow-gated" x1="606" y1="431" x2="633" y2="431" marker-end="url(#arrow-gated)"/>
+  <rect x="634" y="402" width="154" height="58" rx="8" fill="#ffffff" stroke="#c50f1f" stroke-dasharray="6 4"/>
+  <text class="name" x="711" y="426" text-anchor="middle">migration-executor</text>
+  <text class="small" x="711" y="446" text-anchor="middle">pilot resource group</text>
+
+  <!-- Knowledge and governance -->
+  <rect x="270" y="490" width="330" height="190" rx="8" fill="#ffffff" stroke="#8a8a8a"/>
+  <text class="heading" x="286" y="514">Knowledge and memory</text>
+  <text class="item" x="286" y="540">• lifecycle-dates-authoritative (public dates)</text>
+  <text class="item" x="286" y="562">• legacy-series-to-target-framework</text>
+  <text class="item" x="286" y="584">• Disposition schema and report templates</text>
+  <text class="item" x="286" y="606">• Agent memory: decisions and exceptions</text>
+  <text class="item" x="286" y="628">• Customer notes stay in the customer tenant</text>
+
+  <rect x="620" y="490" width="350" height="190" rx="8" fill="#fff4e6" stroke="#d9822b"/>
+  <text class="heading" x="636" y="514">Governance (defense in depth)</text>
+  <text class="item" x="636" y="540">• RBAC: Reader roles; pilot RG write in Phase 3</text>
+  <text class="item" x="636" y="562">• Tool access policy: ask on writes, deny buys</text>
+  <text class="item" x="636" y="584">• Run mode: Review on every scheduled task</text>
+  <text class="item" x="636" y="606">• Hooks: pilot scope, approval, no purchases</text>
+  <text class="item" x="636" y="628">• Agent-level Stop hook checks the evidence</text>
+  <text class="item" x="636" y="650">• Model provider and region documented</text>
+
+  <!-- Azure data -->
+  <line class="flow" x1="970" y1="275" x2="1029" y2="275" marker-end="url(#arrow)"/>
+  <rect x="1030" y="100" width="230" height="280" rx="10" fill="#eef5ff" stroke="#2f6fb3"/>
+  <text class="heading" x="1046" y="124">Azure data (read-only)</text>
+  <text class="item" x="1046" y="150">• Azure Resource Graph</text>
+  <text class="item" x="1046" y="172">• VM, NIC, and SKU properties</text>
+  <text class="item" x="1046" y="194">• Azure Monitor, Log Analytics</text>
+  <text class="item" x="1060" y="214">(VM insights)</text>
+  <text class="item" x="1046" y="236">• Quota usage (az vm list-usage)</text>
+  <text class="item" x="1046" y="258">• SKU and zone availability</text>
+  <text class="item" x="1046" y="280">• Azure Policy (allowed sizes)</text>
+  <text class="item" x="1046" y="302">• Reservations and savings plans</text>
+  <text class="item" x="1060" y="322">(optional, read access only)</text>
+
+  <!-- Outputs -->
+  <line class="flow" x1="990" y1="560" x2="1029" y2="560" marker-end="url(#arrow)"/>
+  <path class="flow-gated" d="M788,431 L1029,431" marker-end="url(#arrow-gated)"/>
+  <rect x="1030" y="400" width="230" height="300" rx="10" fill="#eefaf0" stroke="#2e8b57"/>
+  <text class="heading" x="1046" y="424">Outputs for people</text>
+  <text class="item" x="1046" y="452">• Disposition record per VM</text>
+  <text class="item" x="1046" y="474">• Weekly drift report</text>
+  <text class="item" x="1060" y="494">(thread, Teams, or email)</text>
+  <text class="item" x="1046" y="516">• Quota request drafts</text>
+  <text class="item" x="1060" y="536">(the customer submits)</text>
+  <text class="item" x="1046" y="558">• Redeploy runbook drafts</text>
+  <text class="item" x="1060" y="578">(people run them)</text>
+  <text class="item" x="1046" y="600">• Pilot change records</text>
+  <text class="item" x="1060" y="620">and rollback log</text>
+  <text class="item" x="1046" y="642">• Transition board</text>
+  <text class="item" x="1060" y="662">(refreshes without model calls)</text>
+
+  <!-- Legend -->
+  <line class="flow" x1="40" y1="735" x2="90" y2="735" marker-end="url(#arrow)"/>
+  <text class="label" x="100" y="739">Read-only flow (Phases 1 and 2)</text>
+  <line class="flow-gated" x1="330" y1="735" x2="380" y2="735" marker-end="url(#arrow-gated)"/>
+  <text class="label" x="390" y="739">Approval-gated write (Phase 3, pilot resource group only)</text>
+  <text class="label" x="40" y="770" fill="#424242">The agent never buys commitments, submits quota requests, or creates capacity reservations. People own every decision.</text>
+  <text class="note" x="40" y="792">Illustration with synthetic names. Tested in a lab agent in November 2026; Azure SRE Agent preview features can change.</text>
+</svg>

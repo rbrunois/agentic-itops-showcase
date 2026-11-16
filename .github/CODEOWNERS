@@ -5,9 +5,11 @@
 /Tools/azure-sre-incident-response/       @jnephtali-msft @rbrunois
 /Tools/azure-sre-network-troubleshooting/ @rbrunois
 /Tools/microsoft-fabric-monitoring/       @franmer2 @rbrunois
+/Tools/azure-vm-lifecycle-transition/     @andrade-aldo @rbrunois
 /.github/workflows/validate-sre-incident-response.yml         @jnephtali-msft @rbrunois
 /.github/workflows/validate-sre-network-troubleshooting.yml   @rbrunois
 /.github/workflows/validate-microsoft-fabric-monitoring.yml   @franmer2 @rbrunois
+/.github/workflows/validate-vm-lifecycle-transition.yml       @andrade-aldo @rbrunois
 
 # Security-sensitive paths: keep at the end (last match wins)
 /.github/                    @rbrunois
