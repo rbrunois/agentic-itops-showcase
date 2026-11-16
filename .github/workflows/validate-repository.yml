@@ -6,11 +6,8 @@ on:
       - "Tools/**"
       - ".github/**"
       - "*.md"
+  # No paths filter: this is a required status check and must run on every PR.
   pull_request:
-    paths:
-      - "Tools/**"
-      - ".github/**"
-      - "*.md"
   workflow_dispatch:
 
 permissions:
