@@ -15,7 +15,9 @@ use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   social preview image.
 - Use case pages: each use case has a marketing page on the project site
   (problem, benefits, how it works, an interactive sample run, safety and fit),
-  linked from the landing page catalogue. The site is static HTML in `docs/`,
+  linked from the landing page catalogue. Each page opens with an architecture
+  diagram drawn in the site style, and each catalogue card shows its owners as
+  chips that link to their GitHub profiles. The site is static HTML in `docs/`,
   published by GitHub Pages from `main`.
 - Dedicated Azure SRE Agent instructions
   (`sre-agent-assets/sre-agent-instructions.md`) for Architecture Writer, Fleet
