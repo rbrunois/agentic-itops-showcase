@@ -1,5 +1,12 @@
 # Agentic ITOps Showcase: AI Agents for IT Operations
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner-dark.svg">
+  <img alt="Agentic ITOps Showcase: Azure SRE Agent does the work, humans stay in control" src="docs/assets/banner-light.svg">
+</picture>
+
+**[Visit the site →](https://rbrunois.github.io/agentic-itops-showcase/)**
+
 [![Validate repository](https://github.com/rbrunois/agentic-itops-showcase/actions/workflows/validate-repository.yml/badge.svg)](https://github.com/rbrunois/agentic-itops-showcase/actions/workflows/validate-repository.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 

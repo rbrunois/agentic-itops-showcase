@@ -8,6 +8,15 @@ use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Repository branding and a GitHub Pages landing page (`docs/`): an interactive
+  Azure SRE Agent workspace example across four use cases, the Trigger →
+  Analyze → Approve → Apply operating model, the guardrails, and a filterable
+  use case catalogue. Includes the logo, light and dark README banners, and a
+  social preview image.
+- Use case pages: each use case has a marketing page on the project site
+  (problem, benefits, how it works, an interactive sample run, safety and fit),
+  linked from the landing page catalogue. The site is static HTML in `docs/`,
+  published by GitHub Pages from `main`.
 - Dedicated Azure SRE Agent instructions
   (`sre-agent-assets/sre-agent-instructions.md`) for Architecture Writer, Fleet
   Security & Patch Remediation, Retirement Readiness, and SRE Incident Response,
