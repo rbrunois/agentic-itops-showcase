@@ -10,3 +10,4 @@ __pycache__/
 infra/main.json
 .env
 .env.*
+src/frontend/data/

@@ -14,6 +14,9 @@ use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   GitHub sample issues, source diagnosis and review-only customer triage.
   Includes attribution/MIT notices, offline tests, scoped CI/Dependabot coverage,
   catalogue and site page. Existing Azure SRE Incident Response is unchanged.
+  Preserves the current original Trailhead storefront's photographs, product
+  pages, and shared sales/outage strip, with a Node presentation server,
+  separate image-license credits, and offline presentation-server tests.
 
 - Azure VM Lifecycle Transition (`Tools/azure-vm-lifecycle-transition`): Azure
   SRE Agent custom agents, skills, hooks, a tool access policy, and a weekly

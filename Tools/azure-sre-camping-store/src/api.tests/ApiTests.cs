@@ -36,6 +36,22 @@ public class ApiTests
         Assert.Equal(0, factory.Services.GetRequiredService<IRequestAnalyticsCache>().EntryCount);
     }
 
+    [Fact]
+    public void Presentation_probe_does_not_accumulate_fault_buffers()
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new CampingApiOptions
+        {
+            AnalyticsEntryMegabytes = 1
+        });
+        var cache = new RequestAnalyticsCache(
+            options, Microsoft.Extensions.Logging.Abstractions.NullLogger<RequestAnalyticsCache>.Instance);
+        cache.Record("presentation-probe");
+        cache.Record("presentation-probe");
+        Assert.Equal(0, cache.EntryCount);
+        cache.Record("shopper-synthetic");
+        Assert.Equal(1, cache.EntryCount);
+    }
+
     private sealed class CountingAnalytics : IRequestAnalyticsCache
     {
         public int EntryCount { get; private set; }

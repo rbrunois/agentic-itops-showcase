@@ -36,6 +36,8 @@ public class RequestAnalyticsCache : IRequestAnalyticsCache
         // TODO: add cache eviction
         var buffer = new byte[_entryBytes];
         Array.Fill(buffer, (byte)1); // touch the pages so the memory is actually committed
+        // The storefront's availability probe must not itself accumulate fault buffers.
+        if (userId == "presentation-probe") return;
         int count;
         lock (_gate)
         {

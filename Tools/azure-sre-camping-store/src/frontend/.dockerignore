@@ -5,3 +5,4 @@ build/
 *.pem
 *.key
 .git
+data/

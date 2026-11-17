@@ -57,6 +57,9 @@ jobs:
       - name: Build frontend
         run: npm --prefix src/frontend ci && npm --prefix src/frontend run build
 
+      - name: Test shared presentation server without Azure
+        run: npm --prefix src/frontend run test:server
+
       - name: Compile Bicep without deployment
         run: az bicep build --file infra/main.bicep --outfile "$RUNNER_TEMP/camping-sre.json"
 

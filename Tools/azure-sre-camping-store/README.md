@@ -3,7 +3,7 @@
 ## What it is
 
 A self-contained, **runnable demo** for SREs, developers, and support engineers:
-deploy a fictional Contoso camping storefront, onboard Azure SRE Agent, and
+deploy Contoso's fictional Trailhead Outfitters storefront, onboard Azure SRE Agent, and
 practice operations investigation, source-code diagnosis, and customer issue
 triage. The React frontend, .NET API, Bicep, operator scripts, custom agents,
 knowledge, and offline tests are included here. Owner: [@aj-enns](https://github.com/aj-enns).
@@ -61,6 +61,7 @@ python -m pip install -r requirements.txt
 dotnet test src\api.tests\CampingApi.Tests.csproj
 npm --prefix src\frontend ci
 npm --prefix src\frontend run build
+npm --prefix src\frontend run test:server
 python -m unittest discover -s tests -v
 ```
 
@@ -70,7 +71,16 @@ In one terminal, start the API:
 dotnet run --project src\api --urls http://localhost:5000
 ```
 
-In another terminal at the same package directory:
+In a second terminal, start the presentation server. It proxies the API and
+tracks synthetic orders and availability (no Azure connection):
+
+```powershell
+cd src\frontend
+$env:REACT_APP_API_BASE_URL = "http://localhost:5000/api"
+npm run demo-server
+```
+
+In a third terminal at the package directory, start Vite:
 
 ```powershell
 npm --prefix src\frontend run dev
@@ -78,8 +88,22 @@ npm --prefix src\frontend run dev
 
 Open `http://localhost:3000`. Browse products, add an item, and check out with a
 fictional address and any synthetic payment-method text. No external payment
-service is called. Stop both terminals with Ctrl+C. Memory fault allocation is
-disabled by default; local startup does not contact Azure.
+service is called. The original storefront includes product photography,
+product-detail routes, category/search filters, and a pinned sales/outage strip.
+The presentation server listens on loopback port 3088; Vite on port 3000 proxies
+`/api` and `/demo` to it. Stop all three terminals with Ctrl+C. Memory fault
+allocation is disabled by default; local startup does not contact Azure.
+
+The presentation server automatically adds and clears a synthetic
+`presentation-probe` cart every five seconds to measure cart availability.
+This intentionally mutates **demo API data**, not Azure configuration; it does
+not retain memory-fault buffers. It persists synthetic checkout receipts and
+aggregate metrics in ignored `src/frontend/data/presentation.json`. Order
+history comes from this ledger; API carts remain in memory. Never enter real
+addresses or payment information. To clear presentation totals, stop shoppers
+and run `node server/reset.mjs` from `src/frontend` while the server is running.
+The reset control listens only on loopback port 8081 and is not public ingress.
+Reset does not clear API carts; restarting the API does.
 
 ### 2. Review and provision the isolated Azure lab
 
@@ -285,13 +309,20 @@ Customer report: Bug / memory-leak; propose needs-more-info if timing is missing
   If onboarding fails, stop and inspect the failing response/portal state;
   do not work around it by granting Contributor or enabling write tools.
 - `/health` is liveness only; it reports the configured payment version, not
-  memory health or successful checkout. App state is non-durable and per-replica.
+  memory health or successful checkout. API carts/orders are per-replica and
+  non-durable. The Node frontend uses a single replica with a local JSON ledger,
+  **not a database or durable volume**; replacement/redeployment can lose it.
+  Sales/outage estimates are illustrative, not financial or SLA measurements.
+  The public `/demo/metrics` route exposes aggregate synthetic totals.
 - Fault outcomes and automated alert delivery depend on load, scaling, ingestion,
   permissions, and portal setup. No automatic incident-delivery SLA is claimed.
 - The source application's separate `API_VERSION=v2` simulated payment failure
   remains covered by offline tests; this guide's live fault exercise is memory.
 - Dependency/runtime baselines are demo choices, not a production security
   attestation. .NET/container baselines are updated to .NET 10 / Node 24 here.
+- Bundled product/hero photographs retain their separate
+  [Pexels/Unsplash credits and licenses](src/frontend/IMAGE-CREDITS.md).
+  They are illustrative, not exact product photographs.
 
 ## Cleanup
 
@@ -328,7 +359,9 @@ gh issue close "<sample-issue-number>" --repo "<your-owner>/<your-demo-repo>" --
 ```
 
 Repeat only for the three synthetic issue numbers you created. Stop local app
-processes with Ctrl+C. `.azure` state, binaries, dependencies, and generated
+processes with Ctrl+C. After stopping the presentation server, delete only
+`src/frontend/data/presentation.json` if you no longer want the local synthetic
+ledger. `.azure` state, binaries, dependencies, and generated
 outputs are ignored and must not be committed.
 
 ## References
