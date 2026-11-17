@@ -127,6 +127,67 @@ test('a failed atomic write restores in-memory state and never claims reset succ
   assert.equal(store.state.requests['new-order-00000001'], undefined);
 });
 
+const inheritedKeys = ['__proto__', 'constructor', 'toString', 'propertyIsEnumerable', 'hasOwnProperty'];
+
+test('special ledger keys stay isolated through checkout, JSON reload, failure, and reset', (t) => {
+  const { store, file } = fixture(t);
+  const prototypes = [Object.prototype, Object, ...inheritedKeys.slice(2).map((key) => Object.prototype[key])];
+  const before = prototypes.map((prototype) => Object.getOwnPropertyDescriptors(prototype));
+  let current = store;
+  for (const key of inheritedKeys) {
+    assert.equal(Object.getPrototypeOf(current.state.requests), null);
+    assert.equal(current.complete(key, current.state.sessionId, receipt()), false);
+    const pending = current.begin(key, 'shopper-one');
+    assert.ok(Object.hasOwn(current.state.requests, key));
+    current = new DemoStore(file);
+    assert.deepEqual(current.begin(key, 'shopper-one'), pending);
+    assert.throws(() => current.begin(key, 'shopper-two'), /different shopper/);
+    assert.equal(Object.getPrototypeOf(current.state.requests), null);
+    current.failed(key, pending.sessionId);
+    assert.equal(Object.hasOwn(current.state.requests, key), false);
+    const retry = current.begin(key, 'shopper-one');
+    assert.equal(current.complete(key, retry.sessionId, receipt()), true);
+    current = new DemoStore(file);
+    assert.equal(current.begin(key, 'shopper-one').status, 'complete');
+    assert.equal(current.complete(key, retry.sessionId, receipt()), false);
+  }
+  assert.equal(current.snapshot().orderCount, inheritedKeys.length);
+  const oldSession = current.state.sessionId;
+  current.reset();
+  assert.equal(Object.getPrototypeOf(current.state.requests), null);
+  current.begin('__proto__', 'shopper-one');
+  current.failed('__proto__', oldSession);
+  assert.ok(Object.hasOwn(current.state.requests, '__proto__'));
+  assert.equal(current.complete('__proto__', oldSession, receipt()), false);
+  prototypes.forEach((prototype, index) => assert.deepEqual(Object.getOwnPropertyDescriptors(prototype), before[index]));
+});
+
+test('legacy JSON special keys and save-failure rollback preserve a prototype-free ledger', (t) => {
+  const { store, file } = fixture(t);
+  const legacy = JSON.parse(readFileSync(file, 'utf8'));
+  legacy.requests = Object.fromEntries(inheritedKeys.map((key) => [
+    key, { userId: 'shopper-one', sessionId: legacy.sessionId, status: 'pending' },
+  ]));
+  writeFileSync(file, JSON.stringify(legacy));
+  const restored = new DemoStore(file);
+  assert.equal(Object.getPrototypeOf(restored.state.requests), null);
+  for (const key of inheritedKeys) {
+    assert.ok(Object.hasOwn(restored.state.requests, key));
+    assert.equal(restored.complete(key, legacy.sessionId, receipt()), true);
+  }
+  const save = restored.save.bind(restored);
+  restored.save = () => { throw new Error('Disk is full'); };
+  assert.throws(() => restored.failed('__proto__', legacy.sessionId), /Disk is full/);
+  assert.equal(Object.getPrototypeOf(restored.state.requests), null);
+  assert.equal(restored.state.requests.__proto__.status, 'complete');
+  restored.save = save;
+  restored.failed('__proto__', legacy.sessionId);
+  const retry = restored.begin('__proto__', 'shopper-one');
+  assert.equal(restored.complete('__proto__', retry.sessionId, receipt()), true);
+  assert.equal(new DemoStore(file).state.requests.__proto__.receipt.total, 100);
+  assert.equal(store.snapshot().orderCount, 0);
+});
+
 async function serve(t, options = {}) {
   const state = fixture(t);
   const { server, probe } = createDemoServer({
@@ -160,6 +221,20 @@ test('shared metrics, API-backed checkout, replay and order history work without
   assert.equal((await fetch(`${base}/reset`, { method: 'POST' })).status, 405);
   const config = await (await fetch(`${base}/config.js`)).text();
   assert.ok(config.includes('apiBaseUrl: "/api"'));
+});
+
+test('checkout rejects invalid special keys and safely replays a valid inherited-name key after reload', async (t) => {
+  let calls = 0;
+  const runtime = await serve(t, { fetcher: async () => { calls++; return Response.json(receipt(), { status: 201 }); } });
+  for (const key of ['__proto__', 'constructor', 'toString', 'hasOwnProperty']) {
+    assert.equal((await checkout(runtime.base, key)).status, 400);
+  }
+  assert.equal(calls, 0);
+  assert.equal((await checkout(runtime.base, 'propertyIsEnumerable')).status, 201);
+  runtime.store.state = new DemoStore(runtime.file).state;
+  assert.equal((await checkout(runtime.base, 'propertyIsEnumerable')).status, 200);
+  assert.equal(calls, 1);
+  assert.equal(runtime.store.snapshot().orderCount, 1);
 });
 
 test('pending/uncertain checkout is never automatically duplicated or tallied', async (t) => {

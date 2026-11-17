@@ -2,10 +2,13 @@ using System.Net;
 using System.Net.Http.Json;
 using CampingApi.Models;
 using CampingApi.Services;
+using CampingApi.Controllers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CampingApi.Tests;
 
@@ -56,6 +59,45 @@ public class ApiTests
     {
         public int EntryCount { get; private set; }
         public void Record(string userId) => EntryCount++;
+    }
+
+    private sealed class RecordingLogger<T> : ILogger<T>
+    {
+        public List<string> Messages { get; } = new();
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => true;
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state,
+            Exception? exception, Func<TState, Exception?, string> formatter) =>
+            Messages.Add(formatter(state, exception));
+    }
+
+    [Fact]
+    public void Analytics_logs_keep_metrics_without_untrusted_user_text()
+    {
+        var logger = new RecordingLogger<RequestAnalyticsCache>();
+        var cache = new RequestAnalyticsCache(
+            Microsoft.Extensions.Options.Options.Create(new CampingApiOptions { AnalyticsEntryMegabytes = 1 }),
+            logger);
+        cache.Record("shopper\r\nforged-log-entry\u2028");
+        var message = Assert.Single(logger.Messages);
+        Assert.Contains("Entries=1", message);
+        Assert.Contains("ApproxSizeMB=1", message);
+        Assert.DoesNotContain("forged-log-entry", message);
+        Assert.DoesNotContain("\r", message);
+        Assert.DoesNotContain("\n", message);
+    }
+
+    [Fact]
+    public void Payment_failure_logs_do_not_include_untrusted_user_text()
+    {
+        using var factory = CreateFactory("v2", new CountingAnalytics());
+        const string userId = "shopper\r\nforged-log-entry\u2028";
+        factory.Services.GetRequiredService<ICartService>().AddItem(userId, 1, 1);
+        var logger = new RecordingLogger<OrdersController>();
+        var controller = new OrdersController(factory.Services.GetRequiredService<IOrderService>(), logger);
+        var result = controller.PlaceOrder(new PlaceOrderRequest(userId, "Demo address", "card"));
+        Assert.Equal(500, Assert.IsType<ObjectResult>(result.Result).StatusCode);
+        Assert.Equal("Payment processing failed", Assert.Single(logger.Messages));
     }
 
     private static WebApplicationFactory<Program> CreateFactory(string apiVersion = "v1", CountingAnalytics? analytics = null) =>

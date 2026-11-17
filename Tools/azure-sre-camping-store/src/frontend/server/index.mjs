@@ -74,7 +74,7 @@ export function createDemoServer({ store, upstream, root, fetcher = fetch }) {
               typeof request.userId !== 'string' || !request.userId.startsWith('shopper-')) {
             return send(res, 400, { message: 'A valid shopper and checkout key are required.' });
           }
-          const existing = store.state.requests[key];
+          const existing = Object.hasOwn(store.state.requests, key) ? store.state.requests[key] : undefined;
           if (existing) {
             if (existing.userId !== request.userId) return send(res, 409, { message: 'Checkout key conflict.' });
             if (existing.status === 'complete') return send(res, 200, existing.receipt);

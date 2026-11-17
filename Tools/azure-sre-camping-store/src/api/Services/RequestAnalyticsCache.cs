@@ -46,7 +46,7 @@ public class RequestAnalyticsCache : IRequestAnalyticsCache
         }
 
         _logger.LogInformation(
-            "Analytics cache: recorded request for {UserId}. Entries={Entries} ApproxSizeMB={SizeMb}",
-            userId, count, (long)count * _entryBytes / (1024 * 1024));
+            "Analytics cache: recorded cart request. Entries={Entries} ApproxSizeMB={SizeMb}",
+            count, (long)count * _entryBytes / (1024 * 1024));
     }
 }

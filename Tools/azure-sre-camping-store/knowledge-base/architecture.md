@@ -25,6 +25,8 @@ to measure availability. That user does not retain analytics buffers even when
 the fault is enabled; attendee cart requests still do.
 `api/Services/PaymentGateway.cs` simulates checkout failure with `API_VERSION=v2`;
 default `v1` is healthy. Do not infer either fault from health alone.
+API diagnostic logs retain payment failures and aggregate cache counts/sizes,
+but omit user-supplied shopper IDs to prevent forged log lines.
 
 The API uses 0.5 CPU / 1 GiB RAM (1-5 replicas); frontend uses 0.25 CPU / 0.5 GiB
 (one replica, port 8080). Only one active revision serves each app. Azure Monitor 5xx

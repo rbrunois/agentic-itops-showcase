@@ -36,7 +36,7 @@ public class OrdersController : ControllerBase
         }
         catch (PaymentFailedException ex)
         {
-            _logger.LogError(ex, "Payment processing failed for user {UserId}", request.UserId);
+            _logger.LogError(ex, "Payment processing failed");
             return StatusCode(StatusCodes.Status500InternalServerError, new
             {
                 error = "Payment processing failed",

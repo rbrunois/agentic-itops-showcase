@@ -17,6 +17,8 @@ use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Preserves the current original Trailhead storefront's photographs, product
   pages, and shared sales/outage strip, with a Node presentation server,
   separate image-license credits, and offline presentation-server tests.
+  Hardens checkout-ledger keys across JSON reload/rollback against prototype
+  pollution and omits untrusted shopper IDs from API diagnostic logs.
 
 - Azure VM Lifecycle Transition (`Tools/azure-vm-lifecycle-transition`): Azure
   SRE Agent custom agents, skills, hooks, a tool access policy, and a weekly

@@ -2,9 +2,11 @@ import { mkdirSync, readFileSync, writeFileSync, renameSync, existsSync } from '
 import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
+const requestLedger = (entries) => Object.assign(Object.create(null), entries);
+
 const fresh = (now) => ({
   version: 1, sessionId: randomUUID(), startedAt: now, healthyMs: 0,
-  lastCheckAt: null, status: 'unknown', orders: [], requests: {}, outages: [],
+  lastCheckAt: null, status: 'unknown', orders: [], requests: requestLedger(), outages: [],
 });
 
 export class DemoStore {
@@ -13,9 +15,11 @@ export class DemoStore {
     this.now = now;
     mkdirSync(dirname(file), { recursive: true });
     this.state = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : fresh(now());
-    if (this.state.version !== 1 || !Array.isArray(this.state.orders) || !Array.isArray(this.state.outages)) {
+    if (this.state.version !== 1 || !Array.isArray(this.state.orders) || !Array.isArray(this.state.outages) ||
+        !this.state.requests || typeof this.state.requests !== 'object' || Array.isArray(this.state.requests)) {
       throw new Error('Unsupported or invalid demo JSON file. Restore a backup before starting.');
     }
+    this.state.requests = requestLedger(this.state.requests);
     // A monitor gap is unknown time, not evidence of availability or an outage.
     const active = this.state.outages.find((outage) => outage.endedAt === null);
     if (active) {
@@ -42,6 +46,8 @@ export class DemoStore {
 
   mutate(action) {
     const before = structuredClone(this.state);
+    // structuredClone does not preserve a dictionary's null prototype.
+    before.requests = requestLedger(before.requests);
     try {
       const result = action(this.state);
       this.save();
@@ -61,7 +67,7 @@ export class DemoStore {
 
   begin(key, userId) {
     return this.mutate((state) => {
-      if (state.requests[key]) {
+      if (Object.hasOwn(state.requests, key)) {
         if (state.requests[key].userId !== userId) throw new Error('Checkout key belongs to a different shopper.');
         return state.requests[key];
       }
@@ -75,6 +81,7 @@ export class DemoStore {
   complete(key, sessionId, order) {
     if (sessionId !== this.state.sessionId) return false;
     return this.mutate((state) => {
+      if (!Object.hasOwn(state.requests, key)) return false;
       const entry = state.requests[key];
       if (!entry || entry.status === 'complete') return false;
       if (!Number.isFinite(order.total) || order.total < 0 || !Array.isArray(order.items)) throw new Error('Invalid order receipt from API.');
