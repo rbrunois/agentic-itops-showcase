@@ -1,0 +1,12 @@
+# Azure Developer CLI (azd) template for Azure SRE Agent - Camping Store
+# Run azd provision, then the separate approved operator commands in README.md.
+name: azure-sre-camping-store
+metadata:
+  template: azure-sre-camping-store@1.0.0
+
+infra:
+  provider: bicep
+  path: infra
+
+# Provision, image build/deployment, and agent onboarding are separate operator
+# decisions. See README.md; there are deliberately no automatic write hooks.

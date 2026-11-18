@@ -6,6 +6,8 @@
 /Tools/azure-sre-network-troubleshooting/ @rbrunois
 /Tools/microsoft-fabric-monitoring/       @franmer2 @rbrunois
 /Tools/azure-vm-lifecycle-transition/     @andrade-aldo @rbrunois
+/Tools/azure-sre-camping-store/           @aj-enns
+/docs/azure-sre-camping-store/            @aj-enns
 /.github/workflows/validate-sre-incident-response.yml         @jnephtali-msft @rbrunois
 /.github/workflows/validate-sre-network-troubleshooting.yml   @rbrunois
 /.github/workflows/validate-microsoft-fabric-monitoring.yml   @franmer2 @rbrunois

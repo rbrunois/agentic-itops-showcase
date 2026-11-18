@@ -1,0 +1,13 @@
+.azure/
+.tmp/
+bin/
+obj/
+TestResults/
+node_modules/
+build/
+__pycache__/
+*.pyc
+infra/main.json
+.env
+.env.*
+src/frontend/data/

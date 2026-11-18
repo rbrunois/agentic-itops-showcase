@@ -8,6 +8,18 @@ use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Azure SRE Agent — Camping Store (`Tools/azure-sre-camping-store`): self-contained
+  React/.NET storefront, Bicep deployment and SRE onboarding, read-only custom
+  agents and knowledge, approval-gated memory injection/recovery and optional
+  GitHub sample issues, source diagnosis and review-only customer triage.
+  Includes attribution/MIT notices, offline tests, scoped CI/Dependabot coverage,
+  catalogue and site page. Existing Azure SRE Incident Response is unchanged.
+  Preserves the current original Trailhead storefront's photographs, product
+  pages, and shared sales/outage strip, with a Node presentation server,
+  separate image-license credits, and offline presentation-server tests.
+  Hardens checkout-ledger keys across JSON reload/rollback against prototype
+  pollution and omits untrusted shopper IDs from API diagnostic logs.
+
 - Azure VM Lifecycle Transition (`Tools/azure-vm-lifecycle-transition`): Azure
   SRE Agent custom agents, skills, hooks, a tool access policy, and a weekly
   scheduled task that find VMs and scale sets on End of Life VM size series,
