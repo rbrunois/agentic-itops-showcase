@@ -12,7 +12,7 @@
     "node": ">=24 <25"
   },
   "dependencies": {
-    "applicationinsights": "^3.17.0",
+    "applicationinsights": "^3.17.1",
     "express": "^5.2.1"
   }
 }
