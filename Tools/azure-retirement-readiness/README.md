@@ -100,27 +100,31 @@ If a source is unavailable, the workflow reports the missing coverage rather tha
    - Query Azure Resource Graph for all resources.
    - Inspect retirement-sensitive resource types and configuration, including Bing accounts, Bot Service, App Service and Functions, Logic Apps, Application Insights, classic resource providers, API Management, SQL, and PostgreSQL.
 
-3. **Check Service Health coverage**
+3. **Match announced retirements**
+   - Query Azure Updates retirement posts through the Microsoft Release Communications MCP Server.
+   - Keep only posts that match resource types or services in the inventory, and record the post ID.
+
+4. **Check Service Health coverage**
    - Query exportable `Microsoft.ResourceHealth/events` resources.
    - List Activity Log alerts to determine whether Service Health notifications are configured.
    - Treat an empty event result as a coverage limitation, not proof that no notices exist.
 
-4. **Verify lifecycle evidence**
-   - Use current Microsoft documentation to confirm dates for services or runtimes identified in the inventory.
+5. **Verify lifecycle evidence**
+   - Use current Microsoft documentation to confirm dates for services or runtimes identified in the inventory and for matched Azure Updates posts.
    - Record the exact deadline, the affected resource, and the evidence source.
 
-5. **Resolve communication ownership**
+6. **Resolve communication ownership**
    - Retrieve direct subscription-scope RBAC Owner assignments.
    - Resolve display names and email addresses only when directory access is authorized.
    - Clearly label direct assignments and do not imply inherited management-group ownership was assessed.
 
-6. **Publish the dashboard**
+7. **Publish the dashboard**
    - Use an Azure-blue, executive-ready visual system.
    - Present the Retirement Queue with confirmed actions, validation requirements, and no-action findings.
    - Place subscription name, ID, and direct Owner assignments in a dedicated Subscription Context column next to the queue.
    - Include a migration plan, governance controls, evidence sources, and gaps.
 
-7. **Automate only when requested**
+8. **Automate only when requested**
    - Schedule a recurring refresh only after the user explicitly requests it.
    - Keep scheduled runs read-only, scoped to the subscription, and idempotent.
    - Preserve the existing report rather than creating duplicate dashboards.
