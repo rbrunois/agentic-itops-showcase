@@ -8,6 +8,9 @@ use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Azure Retirement Readiness: the Microsoft Release Communications MCP Server
+  (Azure Updates) is listed as a prerequisite for announced Azure retirements.
+
 - Azure SRE Agent — Camping Store (`Tools/azure-sre-camping-store`): self-contained
   React/.NET storefront, Bicep deployment and SRE onboarding, read-only custom
   agents and knowledge, approval-gated memory injection/recovery and optional
