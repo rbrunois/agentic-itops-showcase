@@ -81,6 +81,7 @@ Use this workflow when a team needs to:
 | Microsoft Entra ID directory-read access, when available | Resolves direct RBAC Owner object IDs to display names and email addresses. |
 | Access to Azure Resource Health and Activity Log alert configuration | Identifies exportable health events and Service Health monitoring coverage. |
 | Access to Microsoft Learn | Verifies current lifecycle dates against authoritative documentation. |
+| [Microsoft Release Communications MCP Server](https://learn.microsoft.com/microsoft-365/admin/manage/mrc-mcp) (Azure Updates), endpoint `https://www.microsoft.com/releasecommunications/mcp` | Lists announced Azure retirements from [Azure Updates](https://azure.microsoft.com/updates) (`get_recent_azure_updates` filtered on the Retirements tag, `get_azure_update_by_id`). Public, no authentication or license; use is subject to the Microsoft API Terms of Use. |
 | Live Report capability, optional | Stores the dashboard for repeated review. |
 | Scheduled task capability, optional | Refreshes the report weekly after user approval. |
 | [Agent instructions](sre-agent-assets/sre-agent-instructions.md), for Azure SRE Agent | Sets the agent's read-only guardrails, procedure, and dashboard contract. |
@@ -218,6 +219,7 @@ If you asked the assistant to create a live report or a weekly scheduled refresh
 - [Azure SRE Agent instructions](sre-agent-assets/sre-agent-instructions.md)
 - [Azure Resource Graph documentation](https://learn.microsoft.com/azure/governance/resource-graph/overview)
 - [Azure Service Health documentation](https://learn.microsoft.com/azure/service-health/overview)
+- [Get started with the Microsoft Release Communications MCP Server](https://learn.microsoft.com/microsoft-365/admin/manage/mrc-mcp)
 - [Azure Functions supported languages](https://learn.microsoft.com/azure/azure-functions/supported-languages) — .NET 8 support in Azure Functions ends November 10, 2026; .NET 10 is supported until November 14, 2028.
 - [Migrate C# apps from the in-process model to the isolated worker model](https://learn.microsoft.com/azure/azure-functions/migrate-dotnet-to-isolated-model) — in-process model support ends November 10, 2026.
 - [Azure Functions .NET isolated worker guide](https://learn.microsoft.com/azure/azure-functions/dotnet-isolated-process-guide)
